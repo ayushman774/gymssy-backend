@@ -5,6 +5,14 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
 import categoryRoutes from "./routes/categories/category.routes.js";
+import recentlyViewedRoutes from "./routes/recentlyViewed/recentlyViewed.routes.js";
+import authRoutes from "./routes/auth/auth.routes.js";
+import gymRoutes from "./routes/gyms/gym.routes.js";
+import trainerRoutes from "./routes/trainers/trainer.routes.js";
+import experienceRoutes from "./routes/experiences/experience.routes.js";
+import cityRoutes from "./routes/cities/city.routes.js";
+import partnerSuccessRoutes from "./routes/partnerSuccess/partnerSuccess.routes.js";
+import partnerApplicationRoutes from "./routes/partnerApplications/partnerApplication.routes.js";
 
 const app = express();
 
@@ -30,5 +38,13 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/categories", categoryRoutes);
+app.use("/api/recently-viewed", recentlyViewedRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/gyms", gymRoutes);
+app.use("/api/trainers", trainerRoutes);
+app.use("/api/experiences", experienceRoutes);
+app.use("/api/cities", cityRoutes);
+app.use("/api/partner-success", partnerSuccessRoutes);
+app.use("/api/partner-applications", partnerApplicationRoutes);
 
 export default app;
