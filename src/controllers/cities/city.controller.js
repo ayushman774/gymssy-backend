@@ -1,7 +1,10 @@
 import City from "../../models/cities/City.js";
+import connectDB from "../../config/db.js";
 
 export const getPopularCities = async (req, res) => {
   try {
+    await connectDB();
+
     const cities = await City.aggregate([
       {
         $match: {
