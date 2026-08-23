@@ -22,9 +22,31 @@ const app = express();
    MIDDLEWARE
 ================================ */
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://gymssy.com",
+  "https://www.gymssy.com",
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow requests with no Origin header
+      // (Postman, server-to-server requests, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.error(`❌ CORS blocked origin: ${origin}`);
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+
     credentials: true,
   }),
 );
