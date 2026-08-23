@@ -4,147 +4,305 @@ dotenv.config();
 import connectDB from "../config/db.js";
 import Category from "../models/categories/Category.js";
 
-const categories = [
+const mainCategories = [
   {
-    name: "Gyms",
-    slug: "gyms",
-    icon: "🏋",
-    description: "Premium fitness centers with world-class equipment",
+    name: "Fitness",
+    slug: "fitness",
+    type: "main",
+    parentCategory: null,
+    icon: "Dumbbell",
+    description: "Gyms, trainers, fitness classes & more",
     image: {
-      url: "",
-      alt: "Premium fitness center with world-class equipment",
+      url: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=85&fit=crop&auto=format",
+      alt: "Modern fitness center with professional equipment",
     },
-    count: 2400,
     isActive: true,
     order: 1,
   },
 
   {
-    name: "Yoga",
-    slug: "yoga",
-    icon: "🧘",
-    description: "Find your flow with certified yoga instructors",
+    name: "Wellness",
+    slug: "wellness",
+    type: "main",
+    parentCategory: null,
+    icon: "HeartPulse",
+    description: "Yoga, meditation, spa, nutrition & more",
     image: {
-      url: "",
-      alt: "Yoga class with certified yoga instructors",
+      url: "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1200&q=85&fit=crop&auto=format",
+      alt: "Peaceful wellness and yoga environment",
     },
-    count: 890,
     isActive: true,
     order: 2,
   },
 
   {
-    name: "Personal Trainers",
-    slug: "trainers",
-    icon: "💪",
-    description: "One-on-one coaching tailored to your goals",
+    name: "Sports",
+    slug: "sports",
+    type: "main",
+    parentCategory: null,
+    icon: "Trophy",
+    description: "Coaching, academies, courts & more",
     image: {
-      url: "",
-      alt: "Personal trainer coaching a client",
+      url: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=1200&q=85&fit=crop&auto=format",
+      alt: "Athletes training in a sports facility",
     },
-    count: 1200,
     isActive: true,
     order: 3,
   },
-
-  {
-    name: "Pilates",
-    slug: "pilates",
-    icon: "🤸",
-    description: "Strengthen your core with expert-led sessions",
-    image: {
-      url: "",
-      alt: "Pilates training session",
-    },
-    count: 540,
-    isActive: true,
-    order: 4,
-  },
-
-  {
-    name: "Cardio",
-    slug: "cardio",
-    icon: "🏃",
-    description: "High-energy cardio classes for every level",
-    image: {
-      url: "",
-      alt: "People doing cardio exercises",
-    },
-    count: 780,
-    isActive: true,
-    order: 5,
-  },
-
-  {
-    name: "Martial Arts",
-    slug: "martial-arts",
-    icon: "🥊",
-    description: "MMA, boxing, BJJ and more from elite coaches",
-    image: {
-      url: "",
-      alt: "Martial arts training session",
-    },
-    count: 420,
-    isActive: true,
-    order: 6,
-  },
-
-  {
-    name: "Dance",
-    slug: "dance",
-    icon: "💃",
-    description: "Zumba, contemporary, hip-hop and more",
-    image: {
-      url: "",
-      alt: "People participating in a dance fitness class",
-    },
-    count: 360,
-    isActive: true,
-    order: 7,
-  },
-
-  {
-    name: "Swimming",
-    slug: "swimming",
-    icon: "🏊",
-    description: "Pools, academies, and aqua fitness classes",
-    image: {
-      url: "",
-      alt: "Swimming pool and swimming training",
-    },
-    count: 290,
-    isActive: true,
-    order: 8,
-  },
-
-  {
-    name: "Running Clubs",
-    slug: "running",
-    icon: "🏃",
-    description: "Join a community of passionate runners",
-    image: {
-      url: "",
-      alt: "Community of runners exercising together",
-    },
-    count: 180,
-    isActive: true,
-    order: 9,
-  },
-
-  {
-    name: "Sports Academies",
-    slug: "sports",
-    icon: "🏸",
-    description: "Multi-sport academies for all skill levels",
-    image: {
-      url: "",
-      alt: "Athletes training at a sports academy",
-    },
-    count: 310,
-    isActive: true,
-    order: 10,
-  },
 ];
+
+const subcategories = {
+  fitness: [
+    {
+      name: "Gyms",
+      slug: "gyms",
+      icon: "Dumbbell",
+      description: "Premium fitness centers with world-class equipment",
+      count: 2400,
+      image: {
+        url: "",
+        alt: "Premium fitness center with world-class equipment",
+      },
+    },
+    {
+      name: "Personal Trainers",
+      slug: "personal-trainers",
+      icon: "UserRound",
+      description: "One-on-one coaching tailored to your goals",
+      count: 1200,
+      image: {
+        url: "",
+        alt: "Personal trainer coaching a client",
+      },
+    },
+    {
+      name: "CrossFit",
+      slug: "crossfit",
+      icon: "Flame",
+      description: "High-intensity functional fitness training",
+      count: 340,
+      image: {
+        url: "",
+        alt: "CrossFit training session",
+      },
+    },
+    {
+      name: "Pilates",
+      slug: "pilates",
+      icon: "PersonStanding",
+      description: "Strengthen your core with expert-led sessions",
+      count: 540,
+      image: {
+        url: "",
+        alt: "Pilates training session",
+      },
+    },
+    {
+      name: "Cardio",
+      slug: "cardio",
+      icon: "HeartPulse",
+      description: "High-energy cardio classes for every level",
+      count: 780,
+      image: {
+        url: "",
+        alt: "Cardio fitness training",
+      },
+    },
+    {
+      name: "HIIT",
+      slug: "hiit",
+      icon: "Zap",
+      description: "High-intensity interval training",
+      count: 220,
+      image: {
+        url: "",
+        alt: "HIIT workout session",
+      },
+    },
+    {
+      name: "Fitness Classes",
+      slug: "fitness-classes",
+      icon: "Target",
+      description: "Group fitness classes for every goal",
+      count: 560,
+      image: {
+        url: "",
+        alt: "Group fitness class",
+      },
+    },
+  ],
+
+  wellness: [
+    {
+      name: "Yoga",
+      slug: "yoga",
+      icon: "Flower2",
+      description: "Find your flow with certified yoga instructors",
+      count: 890,
+      image: {
+        url: "",
+        alt: "Yoga class with certified yoga instructors",
+      },
+    },
+    {
+      name: "Meditation",
+      slug: "meditation",
+      icon: "Leaf",
+      description: "Mindfulness and meditation experiences",
+      count: 310,
+      image: {
+        url: "",
+        alt: "Meditation and mindfulness session",
+      },
+    },
+    {
+      name: "Spa & Recovery",
+      slug: "spa-recovery",
+      icon: "Sparkles",
+      description: "Relaxation, recovery and rejuvenation",
+      count: 280,
+      image: {
+        url: "",
+        alt: "Spa and recovery treatment",
+      },
+    },
+    {
+      name: "Nutrition",
+      slug: "nutrition",
+      icon: "Salad",
+      description: "Nutrition guidance and wellness programs",
+      count: 190,
+      image: {
+        url: "",
+        alt: "Healthy nutrition and wellness",
+      },
+    },
+    {
+      name: "Wellness Centers",
+      slug: "wellness-centers",
+      icon: "House",
+      description: "Complete wellness destinations",
+      count: 240,
+      image: {
+        url: "",
+        alt: "Modern wellness center",
+      },
+    },
+    {
+      name: "Recovery",
+      slug: "recovery",
+      icon: "HeartPulse",
+      description: "Recovery therapies for body and mind",
+      count: 160,
+      image: {
+        url: "",
+        alt: "Recovery therapy session",
+      },
+    },
+    {
+      name: "Mobility",
+      slug: "mobility",
+      icon: "Move",
+      description: "Improve flexibility, movement and mobility",
+      count: 140,
+      image: {
+        url: "",
+        alt: "Mobility training session",
+      },
+    },
+  ],
+
+  sports: [
+    {
+      name: "Swimming",
+      slug: "swimming",
+      icon: "Waves",
+      description: "Pools, academies and swimming classes",
+      count: 290,
+      image: {
+        url: "",
+        alt: "Swimming pool and training",
+      },
+    },
+    {
+      name: "Martial Arts",
+      slug: "martial-arts",
+      icon: "Swords",
+      description: "MMA, boxing, BJJ and martial arts training",
+      count: 420,
+      image: {
+        url: "",
+        alt: "Martial arts training session",
+      },
+    },
+    {
+      name: "Boxing",
+      slug: "boxing",
+      icon: "Dumbbell",
+      description: "Boxing training with experienced coaches",
+      count: 280,
+      image: {
+        url: "",
+        alt: "Boxing training session",
+      },
+    },
+    {
+      name: "Sports Coaching",
+      slug: "sports-coaching",
+      icon: "Trophy",
+      description: "Professional coaching across multiple sports",
+      count: 360,
+      image: {
+        url: "",
+        alt: "Sports coaching session",
+      },
+    },
+    {
+      name: "Running Clubs",
+      slug: "running-clubs",
+      icon: "PersonStanding",
+      description: "Join a community of passionate runners",
+      count: 180,
+      image: {
+        url: "",
+        alt: "Community of runners",
+      },
+    },
+    {
+      name: "Tennis",
+      slug: "tennis",
+      icon: "CircleDot",
+      description: "Tennis courts, academies and coaching",
+      count: 220,
+      image: {
+        url: "",
+        alt: "Tennis training",
+      },
+    },
+    {
+      name: "Badminton",
+      slug: "badminton",
+      icon: "CircleDot",
+      description: "Badminton courts, clubs and coaching",
+      count: 175,
+      image: {
+        url: "",
+        alt: "Badminton training",
+      },
+    },
+    {
+      name: "Football",
+      slug: "football",
+      icon: "CircleDot",
+      description: "Football academies, clubs and coaching",
+      count: 145,
+      image: {
+        url: "",
+        alt: "Football training",
+      },
+    },
+  ],
+};
 
 const seedCategories = async () => {
   try {
@@ -152,10 +310,40 @@ const seedCategories = async () => {
 
     await Category.deleteMany({});
 
-    await Category.insertMany(categories);
+    // 1. Create main categories
+    const createdMainCategories = await Category.insertMany(mainCategories);
+
+    // 2. Create a map: fitness -> MongoDB ID
+    const parentMap = {};
+
+    createdMainCategories.forEach((category) => {
+      parentMap[category.slug] = category._id;
+    });
+
+    // 3. Build subcategories with parent IDs
+    const subcategoryDocuments = [];
+
+    Object.entries(subcategories).forEach(([parentSlug, children]) => {
+      children.forEach((child, index) => {
+        subcategoryDocuments.push({
+          ...child,
+          type: "subcategory",
+          parentCategory: parentMap[parentSlug],
+          isActive: true,
+          order: index + 1,
+        });
+      });
+    });
+
+    // 4. Insert subcategories
+    await Category.insertMany(subcategoryDocuments);
+
+    const total = createdMainCategories.length + subcategoryDocuments.length;
 
     console.log("✅ Categories seeded successfully");
-    console.log(`📦 ${categories.length} categories added`);
+    console.log(`📦 ${total} categories added`);
+    console.log(`   Main categories: ${createdMainCategories.length}`);
+    console.log(`   Subcategories: ${subcategoryDocuments.length}`);
 
     process.exit(0);
   } catch (error) {

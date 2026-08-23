@@ -5,16 +5,27 @@ const categorySchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
 
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
+    },
+
+    type: {
+      type: String,
+      enum: ["main", "subcategory"],
+      required: true,
+      default: "subcategory",
+    },
+
+    parentCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
     },
 
     icon: {
@@ -35,6 +46,7 @@ const categorySchema = new mongoose.Schema(
         default: "",
         trim: true,
       },
+
       alt: {
         type: String,
         default: "",
@@ -60,11 +72,24 @@ const categorySchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-categorySchema.index({ slug: 1 });
-categorySchema.index({ isActive: 1, order: 1 });
+// Unique slug
+categorySchema.index({ slug: 1 }, { unique: true });
+
+// Main/subcategory queries
+categorySchema.index({
+  parentCategory: 1,
+  isActive: 1,
+  order: 1,
+});
+
+categorySchema.index({
+  type: 1,
+  isActive: 1,
+  order: 1,
+});
 
 const Category = mongoose.model("Category", categorySchema);
 

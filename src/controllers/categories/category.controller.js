@@ -3,14 +3,36 @@ import Category from "../../models/categories/Category.js";
 // GET /api/categories
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({
+    const mainCategories = await Category.find({
+      type: "main",
+      parentCategory: null,
       isActive: true,
-    }).sort({ order: 1 });
+    })
+      .sort({ order: 1 })
+      .lean();
+
+    const mainCategoryIds = mainCategories.map((category) => category._id);
+
+    const subcategories = await Category.find({
+      type: "subcategory",
+      parentCategory: { $in: mainCategoryIds },
+      isActive: true,
+    })
+      .sort({ order: 1 })
+      .lean();
+
+    const data = mainCategories.map((category) => ({
+      ...category,
+      subcategories: subcategories.filter(
+        (subcategory) =>
+          subcategory.parentCategory.toString() === category._id.toString(),
+      ),
+    }));
 
     return res.status(200).json({
       success: true,
-      count: categories.length,
-      data: categories,
+      count: data.length,
+      data,
     });
   } catch (error) {
     console.error("Get categories error:", error);
@@ -30,7 +52,7 @@ export const getCategoryBySlug = async (req, res) => {
     const category = await Category.findOne({
       slug,
       isActive: true,
-    });
+    }).lean();
 
     if (!category) {
       return res.status(404).json({
@@ -39,9 +61,20 @@ export const getCategoryBySlug = async (req, res) => {
       });
     }
 
+    const subcategories = await Category.find({
+      parentCategory: category._id,
+      type: "subcategory",
+      isActive: true,
+    })
+      .sort({ order: 1 })
+      .lean();
+
     return res.status(200).json({
       success: true,
-      data: category,
+      data: {
+        ...category,
+        subcategories,
+      },
     });
   } catch (error) {
     console.error("Get category by slug error:", error);
