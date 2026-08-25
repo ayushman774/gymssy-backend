@@ -1,5 +1,7 @@
 import express from "express";
+
 import {
+  getGyms,
   getFeaturedGyms,
   getGymBySlug,
   getGymsByCategory,
@@ -7,9 +9,27 @@ import {
 
 const router = express.Router();
 
+/* ================================
+   ALL GYMS / FILTERED GYMS
+================================ */
+
+router.get("/", getGyms);
+
+/* ================================
+   FEATURED
+================================ */
+
 router.get("/featured", getFeaturedGyms);
 
+/* ================================
+   CATEGORY
+================================ */
+
 router.get("/category/:category", getGymsByCategory);
+
+/* ================================
+   SINGLE GYM
+================================ */
 
 router.get("/:slug", getGymBySlug);
 
