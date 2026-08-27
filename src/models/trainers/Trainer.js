@@ -2,6 +2,13 @@ import mongoose from "mongoose";
 
 const trainerSchema = new mongoose.Schema(
   {
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+
     name: {
       type: String,
       required: true,
@@ -16,16 +23,28 @@ const trainerSchema = new mongoose.Schema(
       trim: true,
     },
 
-    specialization: {
+    role: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    specialty: {
       type: String,
       required: true,
       trim: true,
     },
 
     experience: {
-      type: Number,
+      type: String,
       required: true,
-      min: 0,
+      trim: true,
+    },
+
+    sessions: {
+      type: String,
+      required: true,
+      trim: true,
     },
 
     rating: {
@@ -35,26 +54,31 @@ const trainerSchema = new mongoose.Schema(
       default: 0,
     },
 
-    reviewCount: {
+    reviews: {
       type: Number,
       default: 0,
     },
 
-    image: {
-      url: {
-        type: String,
-        default: "",
-      },
-      alt: {
-        type: String,
-        default: "",
-      },
+    clients: {
+      type: String,
+      required: true,
+      trim: true,
     },
 
-    pricePerSession: {
-      type: Number,
-      required: true,
-      min: 0,
+    certifications: {
+      type: [String],
+      default: [],
+    },
+
+    specializations: {
+      type: [String],
+      default: [],
+    },
+
+    bio: {
+      type: String,
+      default: "",
+      trim: true,
     },
 
     available: {
@@ -65,6 +89,55 @@ const trainerSchema = new mongoose.Schema(
     featured: {
       type: Boolean,
       default: false,
+    },
+
+    image: {
+      src: {
+        type: String,
+        default: "",
+      },
+
+      srcSet: {
+        type: String,
+        default: "",
+      },
+
+      sizes: {
+        type: String,
+        default: "",
+      },
+
+      alt: {
+        type: String,
+        default: "",
+      },
+    },
+
+    social: {
+      instagram: {
+        type: String,
+        default: null,
+      },
+
+      twitter: {
+        type: String,
+        default: null,
+      },
+
+      linkedin: {
+        type: String,
+        default: null,
+      },
+
+      youtube: {
+        type: String,
+        default: null,
+      },
+    },
+
+    href: {
+      type: String,
+      default: "",
     },
 
     isVerified: {

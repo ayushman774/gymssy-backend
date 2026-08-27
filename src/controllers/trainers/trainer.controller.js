@@ -27,3 +27,33 @@ export const getFeaturedTrainers = async (req, res) => {
     });
   }
 };
+
+export const getTrainerBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const trainer = await Trainer.findOne({
+      slug,
+      isActive: true,
+    }).lean();
+
+    if (!trainer) {
+      return res.status(404).json({
+        success: false,
+        message: "Trainer not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: trainer,
+    });
+  } catch (error) {
+    console.error("Get trainer by slug error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch trainer",
+    });
+  }
+};
