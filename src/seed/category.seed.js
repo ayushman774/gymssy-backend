@@ -140,10 +140,11 @@ const subcategories = {
       description: "Find your flow with certified yoga instructors",
       count: 890,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80&fit=crop&auto=format",
         alt: "Yoga class with certified yoga instructors",
       },
     },
+
     {
       name: "Meditation",
       slug: "meditation",
@@ -151,10 +152,11 @@ const subcategories = {
       description: "Mindfulness and meditation experiences",
       count: 310,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&q=80&fit=crop&auto=format",
         alt: "Meditation and mindfulness session",
       },
     },
+
     {
       name: "Spa & Recovery",
       slug: "spa-recovery",
@@ -162,10 +164,11 @@ const subcategories = {
       description: "Relaxation, recovery and rejuvenation",
       count: 280,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80&fit=crop&auto=format",
         alt: "Spa and recovery treatment",
       },
     },
+
     {
       name: "Nutrition",
       slug: "nutrition",
@@ -173,32 +176,35 @@ const subcategories = {
       description: "Nutrition guidance and wellness programs",
       count: 190,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80&fit=crop&auto=format",
         alt: "Healthy nutrition and wellness",
       },
     },
+
     {
       name: "Wellness Centers",
       slug: "wellness-centers",
       icon: "House",
-      description: "Complete wellness destinations",
+      description: "Holistic spaces for mind and body",
       count: 240,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800&q=80&fit=crop&auto=format",
         alt: "Modern wellness center",
       },
     },
+
     {
       name: "Recovery",
       slug: "recovery",
       icon: "HeartPulse",
-      description: "Recovery therapies for body and mind",
+      description: "Rest and recover the right way",
       count: 160,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=800&q=80&fit=crop&auto=format",
         alt: "Recovery therapy session",
       },
     },
+
     {
       name: "Mobility",
       slug: "mobility",
@@ -206,8 +212,32 @@ const subcategories = {
       description: "Improve flexibility, movement and mobility",
       count: 140,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&q=80&fit=crop&auto=format",
         alt: "Mobility training session",
+      },
+    },
+
+    {
+      name: "Mindfulness",
+      slug: "mindfulness",
+      icon: "Brain",
+      description: "Be present, reduce anxiety",
+      count: 120,
+      image: {
+        url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=800&q=80&fit=crop&auto=format",
+        alt: "Mindfulness and meditation practice",
+      },
+    },
+
+    {
+      name: "Holistic Wellness",
+      slug: "holistic-wellness",
+      icon: "Sparkles",
+      description: "Whole-body wellness approaches",
+      count: 95,
+      image: {
+        url: "https://images.unsplash.com/photo-1616279967983-ec413476e824?w=800&q=80&fit=crop&auto=format",
+        alt: "Holistic wellness and relaxation",
       },
     },
   ],
