@@ -3,12 +3,44 @@ import City from "../../models/cities/City.js";
 
 export const getFeaturedGyms = async (req, res) => {
   try {
-    const gyms = await Gym.find({
+    const { type } = req.query;
+
+    const filter = {
       isActive: true,
-    })
+    };
+
+    /*
+    =================================
+    TYPE FILTER
+    =================================
+    */
+
+    if (type) {
+      const normalizedType = type.trim().toLowerCase();
+
+      const allowedTypes = ["fitness", "wellness", "sports"];
+
+      if (!allowedTypes.includes(normalizedType)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid type. Allowed values: ${allowedTypes.join(", ")}`,
+        });
+      }
+
+      filter.type = normalizedType;
+    }
+
+    /*
+    =================================
+    FETCH FEATURED GYMS
+    =================================
+    */
+
+    const gyms = await Gym.find(filter)
       .sort({
         featured: -1,
         rating: -1,
+        reviewCount: -1,
       })
       .limit(10)
       .lean();
@@ -16,6 +48,7 @@ export const getFeaturedGyms = async (req, res) => {
     return res.status(200).json({
       success: true,
       count: gyms.length,
+      type: type ? type.trim().toLowerCase() : null,
       data: gyms,
     });
   } catch (error) {
