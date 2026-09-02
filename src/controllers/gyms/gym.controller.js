@@ -1,5 +1,6 @@
 import Gym from "../../models/gyms/Gym.js";
 import City from "../../models/cities/City.js";
+import Category from "../../models/categories/Category.js";
 
 export const getFeaturedGyms = async (req, res) => {
   try {
@@ -27,7 +28,67 @@ export const getFeaturedGyms = async (req, res) => {
         });
       }
 
-      filter.type = normalizedType;
+      /*
+      =================================
+      FIND SUBCATEGORIES FOR TYPE
+      =================================
+      */
+
+      const parentCategory = await Category.findOne({
+        slug: normalizedType,
+        type: "main",
+        isActive: true,
+      }).lean();
+
+      if (!parentCategory) {
+        return res.status(404).json({
+          success: false,
+          message: `${normalizedType} category not found`,
+        });
+      }
+
+      const subcategories = await Category.find({
+        parentCategory: parentCategory._id,
+        type: "subcategory",
+        isActive: true,
+      })
+        .select("name slug")
+        .lean();
+
+      const categoryNames = subcategories.map((item) => item.name);
+
+      const categorySlugs = subcategories.map((item) =>
+        item.slug.replace(/-/g, " "),
+      );
+
+      /*
+      =================================
+      MATCH CATEGORY OR TAGS
+      =================================
+      */
+
+      filter.$or = [
+        {
+          category: {
+            $in: categoryNames,
+          },
+        },
+        {
+          tags: {
+            $in: categoryNames,
+          },
+        },
+        {
+          category: {
+            $in: categorySlugs,
+          },
+        },
+        {
+          tags: {
+            $in: categorySlugs,
+          },
+        },
+      ];
     }
 
     /*
