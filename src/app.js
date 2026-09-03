@@ -15,6 +15,7 @@ import experienceRoutes from "./routes/experiences/experience.routes.js";
 import cityRoutes from "./routes/cities/city.routes.js";
 import partnerSuccessRoutes from "./routes/partnerSuccess/partnerSuccess.routes.js";
 import partnerApplicationRoutes from "./routes/partnerApplications/partnerApplication.routes.js";
+import nutritionistRoutes from "./routes/nutritionists/nutritionist.routes.js";
 
 const app = express();
 
@@ -100,5 +101,6 @@ app.use("/api/experiences", experienceRoutes);
 app.use("/api/cities", cityRoutes);
 app.use("/api/partner-success", partnerSuccessRoutes);
 app.use("/api/partner-applications", partnerApplicationRoutes);
+app.use("/api/nutritionists", nutritionistRoutes);
 
 export default app;
