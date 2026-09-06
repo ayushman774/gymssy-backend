@@ -79,7 +79,10 @@ const seedGyms = async () => {
 
         reviewCount: gym.reviewCount ?? 0,
 
-        priceFrom: getPriceFrom(gym.memberships),
+        priceFrom:
+          typeof gym.priceFrom === "number"
+            ? gym.priceFrom
+            : getPriceFrom(gym.memberships),
 
         openNow: gym.openNow ?? false,
 

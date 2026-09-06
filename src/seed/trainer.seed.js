@@ -468,19 +468,47 @@ const seedTrainers = async () => {
   try {
     await connectDB();
 
-    await Trainer.deleteMany({});
-
     const fitnessTrainers = TRAINERS.map((trainer) => ({
       ...trainer,
-      category: trainer.category || "fitness",
+      category: "fitness",
     }));
 
     const allTrainers = [...fitnessTrainers, ...SPORTS_TRAINERS];
 
-    await Trainer.insertMany(allTrainers);
+    let inserted = 0;
+    let updated = 0;
 
-    console.log("✅ TRAINERS seeded successfully");
-    console.log(`📦 ${allTrainers.length} trainers added`);
+    for (const trainer of allTrainers) {
+      const existingTrainer = await Trainer.findOne({
+        id: trainer.id,
+      });
+
+      await Trainer.findOneAndUpdate(
+        { id: trainer.id },
+        {
+          $set: trainer,
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true,
+        },
+      );
+
+      if (existingTrainer) {
+        updated++;
+        console.log(`🔄 Updated: ${trainer.name}`);
+      } else {
+        inserted++;
+        console.log(`✅ Inserted: ${trainer.name}`);
+      }
+    }
+
+    console.log("");
+    console.log("🎉 Trainer seed completed");
+    console.log(`✅ Inserted: ${inserted}`);
+    console.log(`🔄 Updated: ${updated}`);
+    console.log(`📦 Total seed trainers: ${allTrainers.length}`);
     console.log(`💪 Fitness trainers: ${fitnessTrainers.length}`);
     console.log(`🏅 Sports coaches: ${SPORTS_TRAINERS.length}`);
 

@@ -946,4 +946,2358 @@ export const gymsData = [
       { stars: 1, percentage: 2 },
     ],
   },
+  {
+    id: "sports_001",
+    name: "Champion Sports Academy",
+    slug: "champion-sports-academy-bangalore",
+    verified: true,
+    rating: 4.8,
+    reviewCount: 342,
+    category: "Football & Multi-Sport",
+    tags: ["Football", "Sports Coaching", "Sports Academies", "Running Clubs"],
+
+    location: {
+      area: "Indiranagar",
+      city: "Bangalore",
+      state: "Karnataka",
+      pincode: "560038",
+      address: "12th Main Road, Indiranagar, Bangalore",
+      landmark: "Near Indiranagar Metro Station",
+      parking: "Dedicated parking available",
+    },
+
+    coordinates: {
+      lat: 12.9784,
+      lng: 77.6408,
+    },
+
+    distance: "2.1 km",
+    openNow: true,
+
+    phone: "+91 98765 31001",
+    email: "info@championsportsacademy.in",
+    website: "https://championsportsacademy.in",
+
+    description: `Champion Sports Academy is a premium multi-sport training destination in the heart of Indiranagar, Bangalore. The academy provides structured coaching programs for football, athletic conditioning, and youth sports development.
+
+    With professionally trained coaches, dedicated training zones, and age-specific programs, the academy caters to beginners as well as competitive athletes. Every program combines technical development, physical conditioning, tactical understanding, and performance tracking.
+
+    Whether you're looking to introduce your child to sports, improve your football skills, or prepare for competitive tournaments, Champion Sports Academy provides a structured environment to train, compete, and grow.`,
+
+    highlights: [
+      "Professional Football Coaching",
+      "Multi-Sport Training Programs",
+      "Certified Sports Coaches",
+      "Youth Development Programs",
+      "Dedicated Football Turf",
+      "Strength & Conditioning",
+      "Tournament Preparation",
+      "Performance Tracking",
+      "Weekend Training Camps",
+      "Beginner to Advanced Programs",
+    ],
+
+    images: {
+      cover:
+        "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&q=80",
+      gallery: [
+        {
+          id: "csa_img_01",
+          url: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80",
+          alt: "Football training session at Champion Sports Academy",
+          category: "football",
+        },
+        {
+          id: "csa_img_02",
+          url: "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&q=80",
+          alt: "Football players training on the field",
+          category: "training",
+        },
+        {
+          id: "csa_img_03",
+          url: "https://images.unsplash.com/photo-1553778263-73a83bab9b0c?w=800&q=80",
+          alt: "Professional football coaching",
+          category: "coaching",
+        },
+        {
+          id: "csa_img_04",
+          url: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&q=80",
+          alt: "Athletic conditioning session",
+          category: "fitness",
+        },
+        {
+          id: "csa_img_05",
+          url: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80",
+          alt: "Athletes running during conditioning training",
+          category: "training",
+        },
+      ],
+    },
+
+    facilities: [
+      {
+        id: "csa_fac_01",
+        icon: "FaFutbol",
+        name: "Football Turf",
+        description: "Professional-grade football training turf",
+        available: true,
+      },
+      {
+        id: "csa_fac_02",
+        icon: "FaRunning",
+        name: "Athletics Track",
+        description: "Dedicated running and conditioning area",
+        available: true,
+      },
+      {
+        id: "csa_fac_03",
+        icon: "FaDumbbell",
+        name: "Strength & Conditioning",
+        description: "Equipment for athletic strength development",
+        available: true,
+      },
+      {
+        id: "csa_fac_04",
+        icon: "FaUsers",
+        name: "Group Training",
+        description: "Structured group sessions for all age groups",
+        available: true,
+      },
+      {
+        id: "csa_fac_05",
+        icon: "FaShower",
+        name: "Changing Rooms",
+        description: "Clean and well-maintained changing facilities",
+        available: true,
+      },
+      {
+        id: "csa_fac_06",
+        icon: "FaTint",
+        name: "Drinking Water",
+        description: "Purified drinking water stations",
+        available: true,
+      },
+      {
+        id: "csa_fac_07",
+        icon: "FaCar",
+        name: "Parking",
+        description: "Dedicated parking for members",
+        available: true,
+      },
+      {
+        id: "csa_fac_08",
+        icon: "FaFirstAid",
+        name: "First Aid",
+        description: "First-aid support available during sessions",
+        available: true,
+      },
+    ],
+
+    memberships: [
+      {
+        id: "csa_plan_01",
+        name: "Starter",
+        duration: "1 Month",
+        price: 999,
+        originalPrice: null,
+        currency: "₹",
+        billingPeriod: "per month",
+        savings: null,
+        popular: false,
+        color: "default",
+        features: [
+          { text: "8 Group Training Sessions", included: true },
+          { text: "Football Skills Training", included: true },
+          { text: "Basic Fitness Assessment", included: true },
+          { text: "Training Equipment", included: true },
+          { text: "Tournament Participation", included: false },
+        ],
+        cta: "Choose Starter",
+      },
+      {
+        id: "csa_plan_02",
+        name: "Performance",
+        duration: "3 Months",
+        price: 2699,
+        originalPrice: 2997,
+        currency: "₹",
+        billingPeriod: "per quarter",
+        savings: "Save ₹298",
+        popular: true,
+        color: "accent",
+        features: [
+          { text: "Unlimited Group Training", included: true },
+          { text: "Football Skills Training", included: true },
+          { text: "Strength & Conditioning", included: true },
+          { text: "Monthly Performance Assessment", included: true },
+          { text: "Tournament Participation", included: true },
+          { text: "Video Performance Analysis", included: true },
+        ],
+        cta: "Choose Performance",
+      },
+      {
+        id: "csa_plan_03",
+        name: "Elite",
+        duration: "12 Months",
+        price: 8999,
+        originalPrice: 11988,
+        currency: "₹",
+        billingPeriod: "per year",
+        savings: "Save ₹2,989",
+        popular: false,
+        color: "premium",
+        features: [
+          { text: "Unlimited Academy Access", included: true },
+          { text: "Personalized Training Plan", included: true },
+          { text: "Strength & Conditioning", included: true },
+          { text: "Monthly Performance Testing", included: true },
+          { text: "Tournament Participation", included: true },
+          { text: "Video Analysis", included: true },
+          { text: "Priority Coaching", included: true },
+        ],
+        cta: "Choose Elite",
+      },
+    ],
+
+    trainers: [
+      {
+        id: "csa_trainer_01",
+        name: "Vikram Rao",
+        slug: "vikram-rao",
+        specialization: "Football & Tactical Training",
+        experience: "11 Years",
+        rating: 4.9,
+        reviewCount: 186,
+        sessionPrice: 1200,
+        currency: "₹",
+        certifications: ["AIFF D License", "NSNIS Sports Coaching"],
+        image:
+          "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80",
+        bio: "Football coach specializing in technical development, tactical awareness and competitive preparation.",
+        available: true,
+      },
+      {
+        id: "csa_trainer_02",
+        name: "Megha Iyer",
+        slug: "megha-iyer",
+        specialization: "Youth Sports Development",
+        experience: "8 Years",
+        rating: 4.8,
+        reviewCount: 143,
+        sessionPrice: 1000,
+        currency: "₹",
+        certifications: ["NSNIS", "Youth Sports Coaching"],
+        image:
+          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80",
+        bio: "Youth development specialist helping young athletes build confidence, coordination and sporting fundamentals.",
+        available: true,
+      },
+      {
+        id: "csa_trainer_03",
+        name: "Aditya Menon",
+        slug: "aditya-menon",
+        specialization: "Strength & Athletic Conditioning",
+        experience: "7 Years",
+        rating: 4.7,
+        reviewCount: 112,
+        sessionPrice: 900,
+        currency: "₹",
+        certifications: ["CSCS", "ASCA Level 1"],
+        image:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
+        bio: "Athletic conditioning coach focused on speed, agility, strength and injury prevention.",
+        available: true,
+      },
+    ],
+
+    classes: [
+      {
+        id: "csa_class_01",
+        name: "Football Fundamentals",
+        category: "Football",
+        image:
+          "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&q=80",
+        schedule: "Mon, Wed, Fri",
+        time: "6:00 AM",
+        duration: "60 min",
+        trainer: "Vikram Rao",
+        level: "Beginner",
+        spots: 20,
+        spotsLeft: 6,
+        description:
+          "Build fundamental football skills including passing, dribbling, ball control and movement.",
+      },
+      {
+        id: "csa_class_02",
+        name: "Elite Football Training",
+        category: "Football",
+        image:
+          "https://images.unsplash.com/photo-1553778263-73a83bab9b0c?w=600&q=80",
+        schedule: "Tue, Thu, Sat",
+        time: "6:30 PM",
+        duration: "90 min",
+        trainer: "Vikram Rao",
+        level: "Advanced",
+        spots: 16,
+        spotsLeft: 4,
+        description:
+          "Advanced technical and tactical football training for competitive players.",
+      },
+      {
+        id: "csa_class_03",
+        name: "Athletic Conditioning",
+        category: "Conditioning",
+        image:
+          "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&q=80",
+        schedule: "Mon, Wed, Fri",
+        time: "7:00 PM",
+        duration: "60 min",
+        trainer: "Aditya Menon",
+        level: "Intermediate",
+        spots: 18,
+        spotsLeft: 7,
+        description:
+          "Speed, agility, strength and endurance training designed for young athletes.",
+      },
+      {
+        id: "csa_class_04",
+        name: "Kids Football Academy",
+        category: "Youth",
+        image:
+          "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=600&q=80",
+        schedule: "Sat, Sun",
+        time: "9:00 AM",
+        duration: "60 min",
+        trainer: "Megha Iyer",
+        level: "Beginner",
+        spots: 20,
+        spotsLeft: 8,
+        description:
+          "Fun and structured football sessions designed for young beginners.",
+      },
+    ],
+
+    timings: [
+      { day: "Monday", open: "05:30", close: "21:30", isOpen: true },
+      { day: "Tuesday", open: "05:30", close: "21:30", isOpen: true },
+      { day: "Wednesday", open: "05:30", close: "21:30", isOpen: true },
+      { day: "Thursday", open: "05:30", close: "21:30", isOpen: true },
+      { day: "Friday", open: "05:30", close: "21:30", isOpen: true },
+      { day: "Saturday", open: "06:00", close: "20:00", isOpen: true },
+      { day: "Sunday", open: "07:00", close: "18:00", isOpen: true },
+    ],
+
+    reviews: [
+      {
+        id: "csa_rev_01",
+        user: {
+          name: "Rahul Kapoor",
+          image:
+            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
+          initials: "RK",
+        },
+        rating: 5,
+        date: "2026-07-18",
+        title: "Excellent football academy",
+        text: "My son has been training here for almost a year and the improvement has been incredible. The coaches are professional, patient and genuinely invested in the players.",
+        verifiedVisit: true,
+        helpfulCount: 31,
+      },
+      {
+        id: "csa_rev_02",
+        user: {
+          name: "Sneha Rao",
+          image:
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
+          initials: "SR",
+        },
+        rating: 5,
+        date: "2026-06-28",
+        title: "Great coaching and facilities",
+        text: "The football turf is excellent and the training sessions are very structured. I especially like the performance feedback after sessions.",
+        verifiedVisit: true,
+        helpfulCount: 24,
+      },
+      {
+        id: "csa_rev_03",
+        user: {
+          name: "Karan Shah",
+          image: null,
+          initials: "KS",
+        },
+        rating: 4,
+        date: "2026-05-14",
+        title: "Very good academy",
+        text: "Professional coaches and a great atmosphere. Weekend batches can get crowded but the quality of training remains excellent.",
+        verifiedVisit: true,
+        helpfulCount: 16,
+      },
+    ],
+
+    ratingBreakdown: [
+      { stars: 5, percentage: 84 },
+      { stars: 4, percentage: 11 },
+      { stars: 3, percentage: 3 },
+      { stars: 2, percentage: 1 },
+      { stars: 1, percentage: 1 },
+    ],
+
+    isActive: true,
+    featured: true,
+  },
+
+  {
+    id: "sports_002",
+    name: "Elite Cricket Academy",
+    slug: "elite-cricket-academy-mumbai",
+    verified: true,
+    rating: 4.9,
+    reviewCount: 519,
+    category: "Cricket",
+    tags: ["Cricket", "Sports Coaching", "Sports Academies"],
+
+    location: {
+      area: "Andheri West",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400058",
+      address: "Veera Desai Road, Andheri West, Mumbai",
+      landmark: "Near Andheri Sports Complex",
+      parking: "Limited on-site parking",
+    },
+
+    coordinates: {
+      lat: 19.1368,
+      lng: 72.8296,
+    },
+
+    distance: "1.8 km",
+    openNow: true,
+
+    phone: "+91 98765 31002",
+    email: "info@elitecricketacademy.in",
+    website: "https://elitecricketacademy.in",
+
+    description: `Elite Cricket Academy is a professional cricket training centre designed for players who want to develop their technical skills, tactical understanding and match performance.
+
+    The academy provides structured coaching for juniors, recreational players and competitive cricketers. Training sessions include batting, bowling, fielding, fitness, match simulation and video-based performance analysis.
+
+    With experienced coaches and dedicated cricket infrastructure, Elite Cricket Academy provides an environment where players can train consistently and prepare for competitive cricket.`,
+
+    highlights: [
+      "Professional Cricket Coaching",
+      "Dedicated Practice Nets",
+      "Batting & Bowling Specialists",
+      "Match Simulation",
+      "Video Performance Analysis",
+      "Fitness Conditioning",
+      "Junior Cricket Programs",
+      "Tournament Preparation",
+      "Experienced Coaches",
+    ],
+
+    images: {
+      cover:
+        "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=1200&q=80",
+      gallery: [
+        {
+          id: "eca_img_01",
+          url: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
+          alt: "Cricket academy training session",
+          category: "cricket",
+        },
+        {
+          id: "eca_img_02",
+          url: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&q=80",
+          alt: "Cricket stadium and playing field",
+          category: "facility",
+        },
+        {
+          id: "eca_img_03",
+          url: "https://images.unsplash.com/photo-1593766827228-8737b3b3f339?w=800&q=80",
+          alt: "Cricket batting practice",
+          category: "training",
+        },
+        {
+          id: "eca_img_04",
+          url: "https://images.unsplash.com/photo-1589801258579-18e091f4ca26?w=800&q=80",
+          alt: "Cricket player training",
+          category: "coaching",
+        },
+        {
+          id: "eca_img_05",
+          url: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&q=80",
+          alt: "Cricket practice ground",
+          category: "facility",
+        },
+      ],
+    },
+
+    facilities: [
+      {
+        id: "eca_fac_01",
+        icon: "FaBaseballBall",
+        name: "Practice Nets",
+        description: "Multiple professional cricket practice nets",
+        available: true,
+      },
+      {
+        id: "eca_fac_02",
+        icon: "FaBaseballBall",
+        name: "Bowling Machines",
+        description: "Advanced bowling machines for batting practice",
+        available: true,
+      },
+      {
+        id: "eca_fac_03",
+        icon: "FaDumbbell",
+        name: "Athletic Conditioning",
+        description: "Dedicated fitness and conditioning area",
+        available: true,
+      },
+      {
+        id: "eca_fac_04",
+        icon: "FaUsers",
+        name: "Team Training Area",
+        description: "Space for tactical and team sessions",
+        available: true,
+      },
+      {
+        id: "eca_fac_05",
+        icon: "FaVideo",
+        name: "Video Analysis",
+        description: "Session recording and performance analysis",
+        available: true,
+      },
+      {
+        id: "eca_fac_06",
+        icon: "FaShower",
+        name: "Changing Rooms",
+        description: "Player changing and shower facilities",
+        available: true,
+      },
+      {
+        id: "eca_fac_07",
+        icon: "FaFirstAid",
+        name: "First Aid",
+        description: "First-aid support during training",
+        available: true,
+      },
+    ],
+
+    memberships: [
+      {
+        id: "eca_plan_01",
+        name: "Junior",
+        duration: "1 Month",
+        price: 1299,
+        originalPrice: null,
+        currency: "₹",
+        billingPeriod: "per month",
+        savings: null,
+        popular: false,
+        color: "default",
+        features: [
+          { text: "8 Cricket Training Sessions", included: true },
+          { text: "Batting & Bowling Practice", included: true },
+          { text: "Basic Fitness Training", included: true },
+          { text: "Practice Equipment", included: true },
+          { text: "Match Practice", included: false },
+        ],
+        cta: "Choose Junior",
+      },
+      {
+        id: "eca_plan_02",
+        name: "Performance",
+        duration: "3 Months",
+        price: 3499,
+        originalPrice: 3897,
+        currency: "₹",
+        billingPeriod: "per quarter",
+        savings: "Save ₹398",
+        popular: true,
+        color: "accent",
+        features: [
+          { text: "Unlimited Practice Sessions", included: true },
+          { text: "Batting & Bowling Coaching", included: true },
+          { text: "Match Simulation", included: true },
+          { text: "Fitness Conditioning", included: true },
+          { text: "Video Analysis", included: true },
+          { text: "Tournament Preparation", included: true },
+        ],
+        cta: "Choose Performance",
+      },
+      {
+        id: "eca_plan_03",
+        name: "Elite",
+        duration: "12 Months",
+        price: 11999,
+        originalPrice: 15588,
+        currency: "₹",
+        billingPeriod: "per year",
+        savings: "Save ₹3,589",
+        popular: false,
+        color: "premium",
+        features: [
+          { text: "Unlimited Academy Access", included: true },
+          { text: "Personalized Coaching Plan", included: true },
+          { text: "Video Performance Analysis", included: true },
+          { text: "Strength & Conditioning", included: true },
+          { text: "Match Practice", included: true },
+          { text: "Tournament Support", included: true },
+          { text: "Quarterly Performance Review", included: true },
+        ],
+        cta: "Choose Elite",
+      },
+    ],
+
+    trainers: [
+      {
+        id: "eca_trainer_01",
+        name: "Saurabh Kulkarni",
+        slug: "saurabh-kulkarni",
+        specialization: "Batting & Technical Coaching",
+        experience: "14 Years",
+        rating: 4.9,
+        reviewCount: 218,
+        sessionPrice: 1500,
+        currency: "₹",
+        certifications: ["BCCI Level 2", "ICC Coaching Program"],
+        image:
+          "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&q=80",
+        bio: "Former competitive cricketer specializing in batting technique, match preparation and player development.",
+        available: true,
+      },
+      {
+        id: "eca_trainer_02",
+        name: "Nikhil Patil",
+        slug: "nikhil-patil",
+        specialization: "Fast Bowling & Conditioning",
+        experience: "10 Years",
+        rating: 4.8,
+        reviewCount: 174,
+        sessionPrice: 1300,
+        currency: "₹",
+        certifications: ["BCCI Level 1", "ASCA Conditioning"],
+        image:
+          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80",
+        bio: "Bowling specialist focused on pace development, biomechanics and athletic conditioning.",
+        available: true,
+      },
+      {
+        id: "eca_trainer_03",
+        name: "Riya Deshmukh",
+        slug: "riya-deshmukh",
+        specialization: "Junior Cricket Development",
+        experience: "8 Years",
+        rating: 4.9,
+        reviewCount: 129,
+        sessionPrice: 1100,
+        currency: "₹",
+        certifications: ["BCCI Level 1", "Youth Cricket Coaching"],
+        image:
+          "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&q=80",
+        bio: "Youth cricket coach specializing in foundational skills and long-term player development.",
+        available: true,
+      },
+    ],
+
+    classes: [
+      {
+        id: "eca_class_01",
+        name: "Batting Masterclass",
+        category: "Batting",
+        image:
+          "https://images.unsplash.com/photo-1593766827228-8737b3b3f339?w=600&q=80",
+        schedule: "Mon, Wed, Fri",
+        time: "6:00 AM",
+        duration: "90 min",
+        trainer: "Saurabh Kulkarni",
+        level: "Intermediate",
+        spots: 14,
+        spotsLeft: 5,
+        description:
+          "Technical batting sessions focused on footwork, shot selection and match awareness.",
+      },
+      {
+        id: "eca_class_02",
+        name: "Fast Bowling Lab",
+        category: "Bowling",
+        image:
+          "https://images.unsplash.com/photo-1589801258579-18e091f4ca26?w=600&q=80",
+        schedule: "Tue, Thu, Sat",
+        time: "5:30 PM",
+        duration: "90 min",
+        trainer: "Nikhil Patil",
+        level: "Intermediate",
+        spots: 12,
+        spotsLeft: 3,
+        description:
+          "Bowling mechanics, pace development and match-focused fast bowling drills.",
+      },
+      {
+        id: "eca_class_03",
+        name: "Junior Cricket",
+        category: "Youth",
+        image:
+          "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&q=80",
+        schedule: "Sat, Sun",
+        time: "8:00 AM",
+        duration: "60 min",
+        trainer: "Riya Deshmukh",
+        level: "Beginner",
+        spots: 20,
+        spotsLeft: 7,
+        description:
+          "Fun and structured cricket training for young players building their fundamentals.",
+      },
+      {
+        id: "eca_class_04",
+        name: "Match Simulation",
+        category: "Match Practice",
+        image:
+          "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=600&q=80",
+        schedule: "Sunday",
+        time: "4:00 PM",
+        duration: "120 min",
+        trainer: "Saurabh Kulkarni",
+        level: "Advanced",
+        spots: 22,
+        spotsLeft: 8,
+        description:
+          "Competitive match simulation designed to develop tactical decision-making.",
+      },
+    ],
+
+    timings: [
+      { day: "Monday", open: "05:30", close: "21:00", isOpen: true },
+      { day: "Tuesday", open: "05:30", close: "21:00", isOpen: true },
+      { day: "Wednesday", open: "05:30", close: "21:00", isOpen: true },
+      { day: "Thursday", open: "05:30", close: "21:00", isOpen: true },
+      { day: "Friday", open: "05:30", close: "21:00", isOpen: true },
+      { day: "Saturday", open: "06:00", close: "20:00", isOpen: true },
+      { day: "Sunday", open: "07:00", close: "19:00", isOpen: true },
+    ],
+
+    reviews: [
+      {
+        id: "eca_rev_01",
+        user: {
+          name: "Amit Shah",
+          image:
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
+          initials: "AS",
+        },
+        rating: 5,
+        date: "2026-07-22",
+        title: "Excellent cricket coaching",
+        text: "The coaching is genuinely professional. My son's batting technique and confidence have improved significantly in just a few months.",
+        verifiedVisit: true,
+        helpfulCount: 42,
+      },
+      {
+        id: "eca_rev_02",
+        user: {
+          name: "Neha Mehta",
+          image:
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
+          initials: "NM",
+        },
+        rating: 5,
+        date: "2026-06-19",
+        title: "Great environment for young players",
+        text: "Very disciplined and positive environment. The coaches focus on fundamentals rather than simply making kids play matches.",
+        verifiedVisit: true,
+        helpfulCount: 28,
+      },
+      {
+        id: "eca_rev_03",
+        user: {
+          name: "Vivek Nair",
+          image: null,
+          initials: "VN",
+        },
+        rating: 5,
+        date: "2026-05-30",
+        title: "Professional setup",
+        text: "Good nets, knowledgeable coaches and excellent match practice sessions. Highly recommended for serious players.",
+        verifiedVisit: true,
+        helpfulCount: 21,
+      },
+    ],
+
+    ratingBreakdown: [
+      { stars: 5, percentage: 89 },
+      { stars: 4, percentage: 8 },
+      { stars: 3, percentage: 2 },
+      { stars: 2, percentage: 1 },
+      { stars: 1, percentage: 0 },
+    ],
+
+    isActive: true,
+    featured: true,
+  },
+
+  {
+    id: "sports_003",
+    name: "Aqua Swim Club",
+    slug: "aqua-swim-club-delhi",
+    verified: true,
+    rating: 4.7,
+    reviewCount: 284,
+    category: "Swimming",
+    tags: ["Swimming", "Sports Coaching", "Sports Academies"],
+
+    location: {
+      area: "Vasant Kunj",
+      city: "Delhi",
+      state: "Delhi",
+      pincode: "110070",
+      address: "Nelson Mandela Road, Vasant Kunj, Delhi",
+      landmark: "Near Vasant Kunj Sports Complex",
+      parking: "Basement and surface parking",
+    },
+
+    coordinates: {
+      lat: 28.5273,
+      lng: 77.1517,
+    },
+
+    distance: "3.2 km",
+    openNow: true,
+
+    phone: "+91 98765 31003",
+    email: "hello@aquaswimclub.in",
+    website: "https://aquaswimclub.in",
+
+    description: `Aqua Swim Club is a premium swimming academy offering structured swimming programs for children, adults, beginners and competitive swimmers.
+
+    The club combines professional coaching with progressive skill development, water safety education and endurance training. Programs are designed according to age and ability, allowing swimmers to progress comfortably from basic water confidence to advanced competitive techniques.
+
+    With experienced instructors and professionally maintained swimming facilities, Aqua Swim Club provides a safe and motivating environment for swimmers of every level.`,
+
+    highlights: [
+      "Professional Swimming Coaches",
+      "Beginner Swimming Programs",
+      "Competitive Training",
+      "Kids Swimming Academy",
+      "Adult Swimming Classes",
+      "Water Safety Training",
+      "Endurance Training",
+      "Stroke Correction",
+      "Personal Coaching",
+    ],
+
+    images: {
+      cover:
+        "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=1200&q=80",
+      gallery: [
+        {
+          id: "asc_img_01",
+          url: "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&q=80",
+          alt: "Swimming pool at Aqua Swim Club",
+          category: "pool",
+        },
+        {
+          id: "asc_img_02",
+          url: "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?w=800&q=80",
+          alt: "Swimming training session",
+          category: "training",
+        },
+        {
+          id: "asc_img_03",
+          url: "https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?w=800&q=80",
+          alt: "Swimmer training in pool",
+          category: "coaching",
+        },
+        {
+          id: "asc_img_04",
+          url: "https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?w=800&q=80",
+          alt: "Professional swimming training",
+          category: "training",
+        },
+      ],
+    },
+
+    facilities: [
+      {
+        id: "asc_fac_01",
+        icon: "FaSwimmingPool",
+        name: "Olympic Training Pool",
+        description: "Professionally maintained swimming pool",
+        available: true,
+      },
+      {
+        id: "asc_fac_02",
+        icon: "FaShower",
+        name: "Shower Facilities",
+        description: "Clean pre and post-swim shower facilities",
+        available: true,
+      },
+      {
+        id: "asc_fac_03",
+        icon: "FaLock",
+        name: "Locker Rooms",
+        description: "Secure lockers for members",
+        available: true,
+      },
+      {
+        id: "asc_fac_04",
+        icon: "FaLifeRing",
+        name: "Safety Equipment",
+        description: "Professional pool safety equipment",
+        available: true,
+      },
+      {
+        id: "asc_fac_05",
+        icon: "FaUsers",
+        name: "Group Training",
+        description: "Small group swimming classes",
+        available: true,
+      },
+      {
+        id: "asc_fac_06",
+        icon: "FaCar",
+        name: "Parking",
+        description: "Dedicated member parking",
+        available: true,
+      },
+      {
+        id: "asc_fac_07",
+        icon: "FaTint",
+        name: "Water Quality Monitoring",
+        description: "Regularly monitored and maintained pool water",
+        available: true,
+      },
+    ],
+
+    memberships: [
+      {
+        id: "asc_plan_01",
+        name: "Beginner",
+        duration: "1 Month",
+        price: 899,
+        originalPrice: null,
+        currency: "₹",
+        billingPeriod: "per month",
+        savings: null,
+        popular: false,
+        color: "default",
+        features: [
+          { text: "8 Swimming Sessions", included: true },
+          { text: "Beginner Coaching", included: true },
+          { text: "Water Safety Training", included: true },
+          { text: "Pool Access During Session", included: true },
+          { text: "Personal Coaching", included: false },
+        ],
+        cta: "Choose Beginner",
+      },
+      {
+        id: "asc_plan_02",
+        name: "Performance",
+        duration: "3 Months",
+        price: 2399,
+        originalPrice: 2697,
+        currency: "₹",
+        billingPeriod: "per quarter",
+        savings: "Save ₹298",
+        popular: true,
+        color: "accent",
+        features: [
+          { text: "Unlimited Group Sessions", included: true },
+          { text: "Stroke Correction", included: true },
+          { text: "Endurance Training", included: true },
+          { text: "Monthly Assessment", included: true },
+          { text: "Water Safety Training", included: true },
+          { text: "Competitive Preparation", included: true },
+        ],
+        cta: "Choose Performance",
+      },
+      {
+        id: "asc_plan_03",
+        name: "Competitive",
+        duration: "12 Months",
+        price: 7999,
+        originalPrice: 10788,
+        currency: "₹",
+        billingPeriod: "per year",
+        savings: "Save ₹2,789",
+        popular: false,
+        color: "premium",
+        features: [
+          { text: "Unlimited Pool Sessions", included: true },
+          { text: "Competitive Coaching", included: true },
+          { text: "Personalized Training Plan", included: true },
+          { text: "Performance Tracking", included: true },
+          { text: "Race Preparation", included: true },
+          { text: "Quarterly Assessment", included: true },
+        ],
+        cta: "Choose Competitive",
+      },
+    ],
+
+    trainers: [
+      {
+        id: "asc_trainer_01",
+        name: "Rohan Malhotra",
+        slug: "rohan-malhotra",
+        specialization: "Competitive Swimming",
+        experience: "12 Years",
+        rating: 4.9,
+        reviewCount: 154,
+        sessionPrice: 1200,
+        currency: "₹",
+        certifications: ["ASCA Level 2", "AUSTSWIM"],
+        image:
+          "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=400&q=80",
+        bio: "Competitive swimming coach specializing in stroke technique, endurance and race preparation.",
+        available: true,
+      },
+      {
+        id: "asc_trainer_02",
+        name: "Anjali Kapoor",
+        slug: "anjali-kapoor",
+        specialization: "Kids & Beginner Swimming",
+        experience: "9 Years",
+        rating: 4.8,
+        reviewCount: 138,
+        sessionPrice: 900,
+        currency: "₹",
+        certifications: ["AUSTSWIM", "Water Safety Instructor"],
+        image:
+          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80",
+        bio: "Patient swimming instructor specializing in children, beginners and water confidence programs.",
+        available: true,
+      },
+      {
+        id: "asc_trainer_03",
+        name: "Kabir Singh",
+        slug: "kabir-singh",
+        specialization: "Stroke Technique & Fitness",
+        experience: "7 Years",
+        rating: 4.7,
+        reviewCount: 96,
+        sessionPrice: 1000,
+        currency: "₹",
+        certifications: ["FINA Coaching Program", "AUSTSWIM"],
+        image:
+          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80",
+        bio: "Swimming and aquatic fitness coach focused on technique refinement and endurance.",
+        available: true,
+      },
+    ],
+
+    classes: [
+      {
+        id: "asc_class_01",
+        name: "Learn to Swim",
+        category: "Beginner",
+        image:
+          "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=600&q=80",
+        schedule: "Mon, Wed, Fri",
+        time: "7:00 AM",
+        duration: "45 min",
+        trainer: "Anjali Kapoor",
+        level: "Beginner",
+        spots: 12,
+        spotsLeft: 4,
+        description:
+          "Beginner-friendly sessions focused on water confidence and fundamental swimming skills.",
+      },
+      {
+        id: "asc_class_02",
+        name: "Stroke Mastery",
+        category: "Technique",
+        image:
+          "https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?w=600&q=80",
+        schedule: "Tue, Thu, Sat",
+        time: "6:00 PM",
+        duration: "60 min",
+        trainer: "Rohan Malhotra",
+        level: "Intermediate",
+        spots: 10,
+        spotsLeft: 3,
+        description:
+          "Technique-focused sessions covering freestyle, backstroke, breaststroke and butterfly.",
+      },
+      {
+        id: "asc_class_03",
+        name: "Competitive Swim Training",
+        category: "Competitive",
+        image:
+          "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?w=600&q=80",
+        schedule: "Mon, Wed, Fri",
+        time: "6:30 PM",
+        duration: "90 min",
+        trainer: "Rohan Malhotra",
+        level: "Advanced",
+        spots: 12,
+        spotsLeft: 5,
+        description:
+          "High-performance swimming sessions for competitive swimmers preparing for races.",
+      },
+      {
+        id: "asc_class_04",
+        name: "Aqua Fitness",
+        category: "Fitness",
+        image:
+          "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=600&q=80",
+        schedule: "Tue, Thu",
+        time: "7:00 PM",
+        duration: "45 min",
+        trainer: "Kabir Singh",
+        level: "All Levels",
+        spots: 15,
+        spotsLeft: 7,
+        description:
+          "Low-impact aquatic fitness combining cardio, resistance and mobility training.",
+      },
+    ],
+
+    timings: [
+      { day: "Monday", open: "06:00", close: "21:00", isOpen: true },
+      { day: "Tuesday", open: "06:00", close: "21:00", isOpen: true },
+      { day: "Wednesday", open: "06:00", close: "21:00", isOpen: true },
+      { day: "Thursday", open: "06:00", close: "21:00", isOpen: true },
+      { day: "Friday", open: "06:00", close: "21:00", isOpen: true },
+      { day: "Saturday", open: "06:00", close: "20:00", isOpen: true },
+      { day: "Sunday", open: "07:00", close: "18:00", isOpen: true },
+    ],
+
+    reviews: [
+      {
+        id: "asc_rev_01",
+        user: {
+          name: "Priyanka Verma",
+          image:
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
+          initials: "PV",
+        },
+        rating: 5,
+        date: "2026-07-11",
+        title: "Perfect for beginners",
+        text: "The coaches are incredibly patient. I was nervous about learning to swim but after a few weeks I am completely comfortable in the water.",
+        verifiedVisit: true,
+        helpfulCount: 27,
+      },
+      {
+        id: "asc_rev_02",
+        user: {
+          name: "Arun Bhat",
+          image: null,
+          initials: "AB",
+        },
+        rating: 5,
+        date: "2026-06-23",
+        title: "Excellent coaching",
+        text: "The competitive program is very well structured. The coaches track progress and provide useful feedback after every session.",
+        verifiedVisit: true,
+        helpfulCount: 22,
+      },
+      {
+        id: "asc_rev_03",
+        user: {
+          name: "Meenal Joshi",
+          image:
+            "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80",
+          initials: "MJ",
+        },
+        rating: 4,
+        date: "2026-05-09",
+        title: "Clean and professional",
+        text: "Good facilities and very professional staff. The evening batches can be slightly busy but the coaching quality is excellent.",
+        verifiedVisit: true,
+        helpfulCount: 14,
+      },
+    ],
+
+    ratingBreakdown: [
+      { stars: 5, percentage: 78 },
+      { stars: 4, percentage: 15 },
+      { stars: 3, percentage: 5 },
+      { stars: 2, percentage: 1 },
+      { stars: 1, percentage: 1 },
+    ],
+
+    isActive: true,
+    featured: true,
+  },
+
+  {
+    id: "sports_004",
+    name: "Iron Fist Boxing Academy",
+    slug: "iron-fist-boxing-hyderabad",
+    verified: true,
+    rating: 4.8,
+    reviewCount: 196,
+    category: "Boxing",
+    tags: ["Boxing", "Sports Coaching", "Sports Academies"],
+
+    location: {
+      area: "Banjara Hills",
+      city: "Hyderabad",
+      state: "Telangana",
+      pincode: "500034",
+      address: "Road No. 12, Banjara Hills, Hyderabad",
+      landmark: "Near KBR Park",
+      parking: "Dedicated academy parking",
+    },
+
+    coordinates: {
+      lat: 17.4156,
+      lng: 78.4347,
+    },
+
+    distance: "1.5 km",
+    openNow: false,
+
+    phone: "+91 98765 31004",
+    email: "info@ironfistboxing.in",
+    website: "https://ironfistboxing.in",
+
+    description: `Iron Fist Boxing Academy is a dedicated boxing training centre focused on technical development, conditioning, fitness and competitive boxing.
+
+    The academy offers programs for complete beginners, fitness enthusiasts and competitive athletes. Sessions combine boxing fundamentals, footwork, pad work, bag work, defensive techniques, conditioning and controlled sparring.
+
+    With experienced boxing coaches and a focused training environment, Iron Fist provides a structured path from first-time boxing to competitive preparation.`,
+
+    highlights: [
+      "Professional Boxing Coaches",
+      "Boxing Ring",
+      "Heavy Bag Training",
+      "Pad Work",
+      "Strength & Conditioning",
+      "Sparring Sessions",
+      "Competition Preparation",
+      "Beginner Boxing Programs",
+      "Personal Boxing Training",
+    ],
+
+    images: {
+      cover:
+        "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=1200&q=80",
+      gallery: [
+        {
+          id: "ifa_img_01",
+          url: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=800&q=80",
+          alt: "Boxing training at Iron Fist Boxing Academy",
+          category: "boxing",
+        },
+        {
+          id: "ifa_img_02",
+          url: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=800&q=80",
+          alt: "Boxing ring and training area",
+          category: "facility",
+        },
+        {
+          id: "ifa_img_03",
+          url: "https://images.unsplash.com/photo-1583473848882-f9a5f2d8e5a0?w=800&q=80",
+          alt: "Boxing conditioning session",
+          category: "training",
+        },
+        {
+          id: "ifa_img_04",
+          url: "https://images.unsplash.com/photo-1517438322307-e67111335449?w=800&q=80",
+          alt: "Strength and conditioning equipment",
+          category: "fitness",
+        },
+      ],
+    },
+
+    facilities: [
+      {
+        id: "ifa_fac_01",
+        icon: "FaFistRaised",
+        name: "Professional Boxing Ring",
+        description:
+          "Dedicated boxing ring for technical and sparring sessions",
+        available: true,
+      },
+      {
+        id: "ifa_fac_02",
+        icon: "FaBullseye",
+        name: "Heavy Bags",
+        description: "Multiple heavy and speed bags for striking practice",
+        available: true,
+      },
+      {
+        id: "ifa_fac_03",
+        icon: "FaDumbbell",
+        name: "Strength Area",
+        description: "Strength and conditioning equipment for boxers",
+        available: true,
+      },
+      {
+        id: "ifa_fac_04",
+        icon: "FaUsers",
+        name: "Sparring Area",
+        description: "Controlled sparring area supervised by coaches",
+        available: true,
+      },
+      {
+        id: "ifa_fac_05",
+        icon: "FaShower",
+        name: "Changing Rooms",
+        description: "Clean changing and shower facilities",
+        available: true,
+      },
+      {
+        id: "ifa_fac_06",
+        icon: "FaFirstAid",
+        name: "First Aid",
+        description: "First-aid support available during training",
+        available: true,
+      },
+      {
+        id: "ifa_fac_07",
+        icon: "FaCar",
+        name: "Parking",
+        description: "Dedicated parking for members",
+        available: true,
+      },
+    ],
+
+    memberships: [
+      {
+        id: "ifa_plan_01",
+        name: "Boxing Fitness",
+        duration: "1 Month",
+        price: 1099,
+        originalPrice: null,
+        currency: "₹",
+        billingPeriod: "per month",
+        savings: null,
+        popular: false,
+        color: "default",
+        features: [
+          { text: "12 Boxing Fitness Sessions", included: true },
+          { text: "Bag Work", included: true },
+          { text: "Pad Work", included: true },
+          { text: "Conditioning", included: true },
+          { text: "Sparring", included: false },
+        ],
+        cta: "Choose Fitness",
+      },
+      {
+        id: "ifa_plan_02",
+        name: "Fighter",
+        duration: "3 Months",
+        price: 2999,
+        originalPrice: 3297,
+        currency: "₹",
+        billingPeriod: "per quarter",
+        savings: "Save ₹298",
+        popular: true,
+        color: "accent",
+        features: [
+          { text: "Unlimited Boxing Sessions", included: true },
+          { text: "Technical Coaching", included: true },
+          { text: "Pad & Bag Work", included: true },
+          { text: "Strength Conditioning", included: true },
+          { text: "Controlled Sparring", included: true },
+          { text: "Monthly Assessment", included: true },
+        ],
+        cta: "Choose Fighter",
+      },
+      {
+        id: "ifa_plan_03",
+        name: "Elite Fighter",
+        duration: "12 Months",
+        price: 9999,
+        originalPrice: 13188,
+        currency: "₹",
+        billingPeriod: "per year",
+        savings: "Save ₹3,189",
+        popular: false,
+        color: "premium",
+        features: [
+          { text: "Unlimited Academy Access", included: true },
+          { text: "Personal Training Plan", included: true },
+          { text: "Competition Preparation", included: true },
+          { text: "Sparring Sessions", included: true },
+          { text: "Strength & Conditioning", included: true },
+          { text: "Performance Testing", included: true },
+          { text: "Video Technique Review", included: true },
+        ],
+        cta: "Choose Elite",
+      },
+    ],
+
+    trainers: [
+      {
+        id: "ifa_trainer_01",
+        name: "Sameer Khan",
+        slug: "sameer-khan",
+        specialization: "Boxing & Competition Training",
+        experience: "13 Years",
+        rating: 4.9,
+        reviewCount: 142,
+        sessionPrice: 1400,
+        currency: "₹",
+        certifications: ["IBA Coaching Program", "Strength & Conditioning"],
+        image:
+          "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=400&q=80",
+        bio: "Former competitive boxer specializing in technical boxing and competition preparation.",
+        available: true,
+      },
+      {
+        id: "ifa_trainer_02",
+        name: "Arman Qureshi",
+        slug: "arman-qureshi",
+        specialization: "Boxing Fitness & Conditioning",
+        experience: "8 Years",
+        rating: 4.8,
+        reviewCount: 97,
+        sessionPrice: 1000,
+        currency: "₹",
+        certifications: ["Boxing Fitness Coach", "ACE CPT"],
+        image:
+          "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&q=80",
+        bio: "Boxing fitness coach combining striking technique with high-intensity conditioning.",
+        available: true,
+      },
+      {
+        id: "ifa_trainer_03",
+        name: "Neha Reddy",
+        slug: "neha-reddy-boxing",
+        specialization: "Beginner Boxing & Technique",
+        experience: "6 Years",
+        rating: 4.7,
+        reviewCount: 76,
+        sessionPrice: 900,
+        currency: "₹",
+        certifications: ["Boxing Coaching Level 1", "NASM CPT"],
+        image:
+          "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400&q=80",
+        bio: "Beginner-friendly boxing coach focused on technique, confidence and fitness.",
+        available: true,
+      },
+    ],
+
+    classes: [
+      {
+        id: "ifa_class_01",
+        name: "Boxing Fundamentals",
+        category: "Boxing",
+        image:
+          "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=600&q=80",
+        schedule: "Mon, Wed, Fri",
+        time: "6:00 AM",
+        duration: "60 min",
+        trainer: "Neha Reddy",
+        level: "Beginner",
+        spots: 18,
+        spotsLeft: 5,
+        description:
+          "Learn stance, footwork, punches, defense and basic combinations in a structured environment.",
+      },
+      {
+        id: "ifa_class_02",
+        name: "Boxing Conditioning",
+        category: "Fitness",
+        image:
+          "https://images.unsplash.com/photo-1583473848882-f9a5f2d8e5a0?w=600&q=80",
+        schedule: "Tue, Thu, Sat",
+        time: "7:00 AM",
+        duration: "45 min",
+        trainer: "Arman Qureshi",
+        level: "All Levels",
+        spots: 20,
+        spotsLeft: 8,
+        description:
+          "High-energy boxing workout combining bag work, circuits and conditioning.",
+      },
+      {
+        id: "ifa_class_03",
+        name: "Fight Camp",
+        category: "Competition",
+        image:
+          "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=600&q=80",
+        schedule: "Mon, Wed, Fri",
+        time: "7:00 PM",
+        duration: "90 min",
+        trainer: "Sameer Khan",
+        level: "Advanced",
+        spots: 12,
+        spotsLeft: 3,
+        description:
+          "Intensive competition-focused training with technical drills, conditioning and controlled sparring.",
+      },
+      {
+        id: "ifa_class_04",
+        name: "Boxing Sparring",
+        category: "Sparring",
+        image:
+          "https://images.unsplash.com/photo-1583473848882-f9a5f2d8e5a0?w=600&q=80",
+        schedule: "Saturday",
+        time: "5:00 PM",
+        duration: "90 min",
+        trainer: "Sameer Khan",
+        level: "Advanced",
+        spots: 14,
+        spotsLeft: 4,
+        description:
+          "Coach-supervised sparring sessions focused on applying technique under pressure.",
+      },
+    ],
+
+    timings: [
+      { day: "Monday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Tuesday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Wednesday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Thursday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Friday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Saturday", open: "06:00", close: "20:00", isOpen: true },
+      { day: "Sunday", open: "08:00", close: "16:00", isOpen: true },
+    ],
+
+    reviews: [
+      {
+        id: "ifa_rev_01",
+        user: {
+          name: "Rajat Mehra",
+          image:
+            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
+          initials: "RM",
+        },
+        rating: 5,
+        date: "2026-07-16",
+        title: "Best boxing gym I've trained at",
+        text: "The coaches actually teach proper technique instead of just making you hit bags. The atmosphere is serious but very welcoming.",
+        verifiedVisit: true,
+        helpfulCount: 29,
+      },
+      {
+        id: "ifa_rev_02",
+        user: {
+          name: "Ayesha Khan",
+          image:
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
+          initials: "AK",
+        },
+        rating: 5,
+        date: "2026-06-21",
+        title: "Amazing boxing fitness program",
+        text: "I joined for fitness and ended up loving boxing. The conditioning sessions are challenging and the coaches are very supportive.",
+        verifiedVisit: true,
+        helpfulCount: 21,
+      },
+      {
+        id: "ifa_rev_03",
+        user: {
+          name: "Harsh Vardhan",
+          image: null,
+          initials: "HV",
+        },
+        rating: 4,
+        date: "2026-05-12",
+        title: "Great coaching",
+        text: "Excellent technical coaching and good equipment. The advanced batches are particularly strong.",
+        verifiedVisit: true,
+        helpfulCount: 15,
+      },
+    ],
+
+    ratingBreakdown: [
+      { stars: 5, percentage: 82 },
+      { stars: 4, percentage: 12 },
+      { stars: 3, percentage: 4 },
+      { stars: 2, percentage: 1 },
+      { stars: 1, percentage: 1 },
+    ],
+
+    isActive: true,
+    featured: true,
+  },
+
+  {
+    id: "sports_005",
+    name: "Smash Badminton Academy",
+    slug: "smash-badminton-academy-pune",
+    verified: true,
+    rating: 4.6,
+    reviewCount: 231,
+    category: "Badminton",
+    tags: ["Badminton", "Sports Coaching", "Sports Academies"],
+
+    location: {
+      area: "Koregaon Park",
+      city: "Pune",
+      state: "Maharashtra",
+      pincode: "411001",
+      address: "North Main Road, Koregaon Park, Pune",
+      landmark: "Near Koregaon Park Plaza",
+      parking: "Dedicated two-wheeler and car parking",
+    },
+
+    coordinates: {
+      lat: 18.5362,
+      lng: 73.8939,
+    },
+
+    distance: "0.9 km",
+    openNow: true,
+
+    phone: "+91 98765 31005",
+    email: "hello@smashbadminton.in",
+    website: "https://smashbadminton.in",
+
+    description: `Smash Badminton Academy is a professionally managed badminton training centre offering coaching programs for beginners, recreational players and competitive athletes.
+
+    The academy focuses on technical fundamentals, footwork, agility, match strategy and physical conditioning. Small-group sessions allow coaches to provide individual feedback while maintaining a competitive and energetic environment.
+
+    From children picking up a racket for the first time to tournament-level players preparing for competition, Smash Badminton Academy offers structured programs for every level.`,
+
+    highlights: [
+      "Professional Badminton Courts",
+      "Certified Coaches",
+      "Individual Skill Assessment",
+      "Footwork & Agility Training",
+      "Match Practice",
+      "Junior Badminton Academy",
+      "Tournament Preparation",
+      "Personal Coaching",
+      "Performance Tracking",
+    ],
+
+    images: {
+      cover:
+        "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1200&q=80",
+      gallery: [
+        {
+          id: "sba_img_01",
+          url: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&q=80",
+          alt: "Badminton court at Smash Badminton Academy",
+          category: "badminton",
+        },
+        {
+          id: "sba_img_02",
+          url: "https://images.unsplash.com/photo-1613918431703-aa50889e3be9?w=800&q=80",
+          alt: "Badminton training session",
+          category: "training",
+        },
+        {
+          id: "sba_img_03",
+          url: "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=800&q=80",
+          alt: "Badminton player training",
+          category: "coaching",
+        },
+        {
+          id: "sba_img_04",
+          url: "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=800&q=80",
+          alt: "Professional badminton training",
+          category: "training",
+        },
+      ],
+    },
+
+    facilities: [
+      {
+        id: "sba_fac_01",
+        icon: "FaTableTennis",
+        name: "Professional Courts",
+        description: "High-quality badminton courts with professional flooring",
+        available: true,
+      },
+      {
+        id: "sba_fac_02",
+        icon: "FaLightbulb",
+        name: "Tournament Lighting",
+        description: "Bright, glare-controlled court lighting",
+        available: true,
+      },
+      {
+        id: "sba_fac_03",
+        icon: "FaDumbbell",
+        name: "Fitness Area",
+        description: "Dedicated strength and agility training area",
+        available: true,
+      },
+      {
+        id: "sba_fac_04",
+        icon: "FaUsers",
+        name: "Group Coaching",
+        description: "Small-group training with individual feedback",
+        available: true,
+      },
+      {
+        id: "sba_fac_05",
+        icon: "FaShower",
+        name: "Changing Rooms",
+        description: "Clean changing and shower facilities",
+        available: true,
+      },
+      {
+        id: "sba_fac_06",
+        icon: "FaCar",
+        name: "Parking",
+        description: "Dedicated member parking",
+        available: true,
+      },
+      {
+        id: "sba_fac_07",
+        icon: "FaStore",
+        name: "Equipment Shop",
+        description: "Rackets, grips, shuttlecocks and accessories",
+        available: true,
+      },
+    ],
+
+    memberships: [
+      {
+        id: "sba_plan_01",
+        name: "Starter",
+        duration: "1 Month",
+        price: 799,
+        originalPrice: null,
+        currency: "₹",
+        billingPeriod: "per month",
+        savings: null,
+        popular: false,
+        color: "default",
+        features: [
+          { text: "8 Coaching Sessions", included: true },
+          { text: "Court Training", included: true },
+          { text: "Basic Footwork Training", included: true },
+          { text: "Equipment Guidance", included: true },
+          { text: "Match Practice", included: false },
+        ],
+        cta: "Choose Starter",
+      },
+      {
+        id: "sba_plan_02",
+        name: "Performance",
+        duration: "3 Months",
+        price: 2199,
+        originalPrice: 2397,
+        currency: "₹",
+        billingPeriod: "per quarter",
+        savings: "Save ₹198",
+        popular: true,
+        color: "accent",
+        features: [
+          { text: "Unlimited Group Coaching", included: true },
+          { text: "Technical Training", included: true },
+          { text: "Footwork & Agility", included: true },
+          { text: "Match Practice", included: true },
+          { text: "Monthly Assessment", included: true },
+          { text: "Tournament Preparation", included: true },
+        ],
+        cta: "Choose Performance",
+      },
+      {
+        id: "sba_plan_03",
+        name: "Elite",
+        duration: "12 Months",
+        price: 7499,
+        originalPrice: 9588,
+        currency: "₹",
+        billingPeriod: "per year",
+        savings: "Save ₹2,089",
+        popular: false,
+        color: "premium",
+        features: [
+          { text: "Unlimited Academy Access", included: true },
+          { text: "Personalized Training Plan", included: true },
+          { text: "Match Analysis", included: true },
+          { text: "Strength & Agility Training", included: true },
+          { text: "Tournament Support", included: true },
+          { text: "Quarterly Performance Review", included: true },
+        ],
+        cta: "Choose Elite",
+      },
+    ],
+
+    trainers: [
+      {
+        id: "sba_trainer_01",
+        name: "Amit Kulkarni",
+        slug: "amit-kulkarni-badminton",
+        specialization: "Competitive Badminton",
+        experience: "12 Years",
+        rating: 4.8,
+        reviewCount: 132,
+        sessionPrice: 1100,
+        currency: "₹",
+        certifications: ["BAI Level 2", "Sports Authority Coaching"],
+        image:
+          "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80",
+        bio: "Badminton coach specializing in competitive technique, strategy and match preparation.",
+        available: true,
+      },
+      {
+        id: "sba_trainer_02",
+        name: "Pooja Desai",
+        slug: "pooja-desai-badminton",
+        specialization: "Junior Badminton",
+        experience: "8 Years",
+        rating: 4.7,
+        reviewCount: 104,
+        sessionPrice: 900,
+        currency: "₹",
+        certifications: ["BAI Level 1", "Youth Coaching Certification"],
+        image:
+          "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&q=80",
+        bio: "Junior badminton specialist helping young players develop technique and confidence.",
+        available: true,
+      },
+      {
+        id: "sba_trainer_03",
+        name: "Rishabh Jain",
+        slug: "rishabh-jain-badminton",
+        specialization: "Footwork & Athletic Performance",
+        experience: "7 Years",
+        rating: 4.6,
+        reviewCount: 78,
+        sessionPrice: 850,
+        currency: "₹",
+        certifications: ["BAI Coaching", "CSCS"],
+        image:
+          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80",
+        bio: "Performance coach specializing in footwork, speed, agility and badminton conditioning.",
+        available: true,
+      },
+    ],
+
+    classes: [
+      {
+        id: "sba_class_01",
+        name: "Badminton Basics",
+        category: "Beginner",
+        image:
+          "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=600&q=80",
+        schedule: "Mon, Wed, Fri",
+        time: "6:00 AM",
+        duration: "60 min",
+        trainer: "Pooja Desai",
+        level: "Beginner",
+        spots: 16,
+        spotsLeft: 5,
+        description:
+          "Learn grip, stance, basic strokes, movement and court positioning.",
+      },
+      {
+        id: "sba_class_02",
+        name: "Performance Badminton",
+        category: "Performance",
+        image:
+          "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=600&q=80",
+        schedule: "Tue, Thu, Sat",
+        time: "6:30 PM",
+        duration: "90 min",
+        trainer: "Amit Kulkarni",
+        level: "Intermediate",
+        spots: 14,
+        spotsLeft: 4,
+        description:
+          "Advanced technical training covering strokes, movement and match strategy.",
+      },
+      {
+        id: "sba_class_03",
+        name: "Junior Smashers",
+        category: "Youth",
+        image:
+          "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=600&q=80",
+        schedule: "Sat, Sun",
+        time: "9:00 AM",
+        duration: "60 min",
+        trainer: "Pooja Desai",
+        level: "Beginner",
+        spots: 18,
+        spotsLeft: 7,
+        description:
+          "Fun and structured badminton development for young players.",
+      },
+      {
+        id: "sba_class_04",
+        name: "Agility & Footwork",
+        category: "Conditioning",
+        image:
+          "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&q=80",
+        schedule: "Mon, Wed",
+        time: "7:00 PM",
+        duration: "45 min",
+        trainer: "Rishabh Jain",
+        level: "All Levels",
+        spots: 16,
+        spotsLeft: 6,
+        description:
+          "Improve speed, balance, reaction time and court movement.",
+      },
+    ],
+
+    timings: [
+      { day: "Monday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Tuesday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Wednesday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Thursday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Friday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Saturday", open: "06:00", close: "21:00", isOpen: true },
+      { day: "Sunday", open: "07:00", close: "19:00", isOpen: true },
+    ],
+
+    reviews: [
+      {
+        id: "sba_rev_01",
+        user: {
+          name: "Varun Rao",
+          image:
+            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
+          initials: "VR",
+        },
+        rating: 5,
+        date: "2026-07-05",
+        title: "Great badminton coaching",
+        text: "The coaches are very technical and pay attention to footwork and movement rather than just playing games.",
+        verifiedVisit: true,
+        helpfulCount: 23,
+      },
+      {
+        id: "sba_rev_02",
+        user: {
+          name: "Ishita Shah",
+          image:
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
+          initials: "IS",
+        },
+        rating: 5,
+        date: "2026-06-16",
+        title: "Excellent for kids",
+        text: "My daughter absolutely loves the junior sessions. The coaches keep the classes engaging while still teaching proper technique.",
+        verifiedVisit: true,
+        helpfulCount: 19,
+      },
+      {
+        id: "sba_rev_03",
+        user: {
+          name: "Manish Gupta",
+          image: null,
+          initials: "MG",
+        },
+        rating: 4,
+        date: "2026-05-27",
+        title: "Good courts and coaching",
+        text: "Good quality courts and professional coaches. Evening slots are popular, so booking early is recommended.",
+        verifiedVisit: true,
+        helpfulCount: 13,
+      },
+    ],
+
+    ratingBreakdown: [
+      { stars: 5, percentage: 73 },
+      { stars: 4, percentage: 18 },
+      { stars: 3, percentage: 6 },
+      { stars: 2, percentage: 2 },
+      { stars: 1, percentage: 1 },
+    ],
+
+    isActive: true,
+    featured: true,
+  },
+
+  {
+    id: "sports_006",
+    name: "Dragon Martial Arts",
+    slug: "dragon-martial-arts-chennai",
+    verified: true,
+    rating: 4.9,
+    reviewCount: 388,
+    category: "Martial Arts",
+    tags: ["Martial Arts", "Sports Coaching", "Sports Academies"],
+
+    location: {
+      area: "T. Nagar",
+      city: "Chennai",
+      state: "Tamil Nadu",
+      pincode: "600017",
+      address: "South Usman Road, T. Nagar, Chennai",
+      landmark: "Near Panagal Park",
+      parking: "Limited dedicated parking",
+    },
+
+    coordinates: {
+      lat: 13.0418,
+      lng: 80.2341,
+    },
+
+    distance: "2.6 km",
+    openNow: true,
+
+    phone: "+91 98765 31006",
+    email: "info@dragonmartialarts.in",
+    website: "https://dragonmartialarts.in",
+
+    description: `Dragon Martial Arts is a professional martial arts academy offering structured training in traditional and modern martial arts disciplines.
+
+    The academy focuses on discipline, fitness, technique, flexibility, self-defense and controlled combat training. Programs are available for children, teenagers and adults across beginner, intermediate and advanced levels.
+
+    Every session combines technical instruction with physical conditioning and mental discipline, creating a supportive environment for students who want to learn martial arts or develop their overall fitness.`,
+
+    highlights: [
+      "Professional Martial Arts Coaches",
+      "Self-Defense Training",
+      "Kids Martial Arts",
+      "Adult Training Programs",
+      "Combat Conditioning",
+      "Flexibility Training",
+      "Belt Progression",
+      "Competition Preparation",
+      "Personal Training",
+      "Discipline & Fitness Programs",
+    ],
+
+    images: {
+      cover:
+        "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=1200&q=80",
+      gallery: [
+        {
+          id: "dma_img_01",
+          url: "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=800&q=80",
+          alt: "Martial arts training at Dragon Martial Arts",
+          category: "martial-arts",
+        },
+        {
+          id: "dma_img_02",
+          url: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=800&q=80",
+          alt: "Combat training session",
+          category: "training",
+        },
+        {
+          id: "dma_img_03",
+          url: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=800&q=80",
+          alt: "Martial arts conditioning",
+          category: "fitness",
+        },
+        {
+          id: "dma_img_04",
+          url: "https://images.unsplash.com/photo-1546483875-ad9014c88eba?w=800&q=80",
+          alt: "Martial arts class",
+          category: "classes",
+        },
+      ],
+    },
+
+    facilities: [
+      {
+        id: "dma_fac_01",
+        icon: "FaFistRaised",
+        name: "Martial Arts Studio",
+        description: "Dedicated padded training floor",
+        available: true,
+      },
+      {
+        id: "dma_fac_02",
+        icon: "FaBullseye",
+        name: "Strike Training Equipment",
+        description: "Punch bags, pads and striking equipment",
+        available: true,
+      },
+      {
+        id: "dma_fac_03",
+        icon: "FaDumbbell",
+        name: "Conditioning Area",
+        description: "Strength and combat conditioning equipment",
+        available: true,
+      },
+      {
+        id: "dma_fac_04",
+        icon: "FaUsers",
+        name: "Group Training",
+        description: "Structured martial arts classes for all levels",
+        available: true,
+      },
+      {
+        id: "dma_fac_05",
+        icon: "FaChild",
+        name: "Kids Training Zone",
+        description: "Safe dedicated area for junior students",
+        available: true,
+      },
+      {
+        id: "dma_fac_06",
+        icon: "FaShower",
+        name: "Changing Rooms",
+        description: "Clean changing facilities",
+        available: true,
+      },
+      {
+        id: "dma_fac_07",
+        icon: "FaFirstAid",
+        name: "First Aid",
+        description: "First-aid support during training sessions",
+        available: true,
+      },
+    ],
+
+    memberships: [
+      {
+        id: "dma_plan_01",
+        name: "Beginner",
+        duration: "1 Month",
+        price: 1199,
+        originalPrice: null,
+        currency: "₹",
+        billingPeriod: "per month",
+        savings: null,
+        popular: false,
+        color: "default",
+        features: [
+          { text: "8 Martial Arts Sessions", included: true },
+          { text: "Basic Techniques", included: true },
+          { text: "Fitness Conditioning", included: true },
+          { text: "Self-Defense Fundamentals", included: true },
+          { text: "Sparring", included: false },
+        ],
+        cta: "Choose Beginner",
+      },
+      {
+        id: "dma_plan_02",
+        name: "Warrior",
+        duration: "3 Months",
+        price: 3199,
+        originalPrice: 3597,
+        currency: "₹",
+        billingPeriod: "per quarter",
+        savings: "Save ₹398",
+        popular: true,
+        color: "accent",
+        features: [
+          { text: "Unlimited Group Classes", included: true },
+          { text: "Technical Training", included: true },
+          { text: "Self-Defense Training", included: true },
+          { text: "Combat Conditioning", included: true },
+          { text: "Controlled Sparring", included: true },
+          { text: "Belt Assessment", included: true },
+        ],
+        cta: "Choose Warrior",
+      },
+      {
+        id: "dma_plan_03",
+        name: "Master",
+        duration: "12 Months",
+        price: 10999,
+        originalPrice: 14388,
+        currency: "₹",
+        billingPeriod: "per year",
+        savings: "Save ₹3,389",
+        popular: false,
+        color: "premium",
+        features: [
+          { text: "Unlimited Academy Access", included: true },
+          { text: "Personalized Training Plan", included: true },
+          { text: "Advanced Combat Training", included: true },
+          { text: "Competition Preparation", included: true },
+          { text: "Belt Assessments", included: true },
+          { text: "Strength & Conditioning", included: true },
+          { text: "Quarterly Performance Review", included: true },
+        ],
+        cta: "Choose Master",
+      },
+    ],
+
+    trainers: [
+      {
+        id: "dma_trainer_01",
+        name: "Arun Prakash",
+        slug: "arun-prakash-martial-arts",
+        specialization: "Traditional Martial Arts & Self Defense",
+        experience: "15 Years",
+        rating: 4.9,
+        reviewCount: 176,
+        sessionPrice: 1300,
+        currency: "₹",
+        certifications: [
+          "5th Dan Black Belt",
+          "National Coaching Certification",
+        ],
+        image:
+          "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=400&q=80",
+        bio: "Senior martial arts instructor specializing in technique, discipline and practical self-defense.",
+        available: true,
+      },
+      {
+        id: "dma_trainer_02",
+        name: "Kavya Srinivasan",
+        slug: "kavya-srinivasan-martial-arts",
+        specialization: "Kids Martial Arts & Fitness",
+        experience: "9 Years",
+        rating: 4.9,
+        reviewCount: 142,
+        sessionPrice: 1000,
+        currency: "₹",
+        certifications: ["3rd Dan Black Belt", "Youth Coaching"],
+        image:
+          "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400&q=80",
+        bio: "Youth martial arts specialist focused on confidence, discipline, coordination and fitness.",
+        available: true,
+      },
+      {
+        id: "dma_trainer_03",
+        name: "Vishal Kumar",
+        slug: "vishal-kumar-martial-arts",
+        specialization: "Combat Conditioning & Kickboxing",
+        experience: "8 Years",
+        rating: 4.8,
+        reviewCount: 108,
+        sessionPrice: 1100,
+        currency: "₹",
+        certifications: ["Kickboxing Coach", "Strength & Conditioning"],
+        image:
+          "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&q=80",
+        bio: "Combat fitness coach combining kickboxing, conditioning and functional athletic training.",
+        available: true,
+      },
+    ],
+
+    classes: [
+      {
+        id: "dma_class_01",
+        name: "Martial Arts Fundamentals",
+        category: "Martial Arts",
+        image:
+          "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=600&q=80",
+        schedule: "Mon, Wed, Fri",
+        time: "6:00 AM",
+        duration: "60 min",
+        trainer: "Arun Prakash",
+        level: "Beginner",
+        spots: 18,
+        spotsLeft: 6,
+        description:
+          "Learn foundational martial arts techniques, movement, balance and discipline.",
+      },
+      {
+        id: "dma_class_02",
+        name: "Self Defense",
+        category: "Self Defense",
+        image:
+          "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=600&q=80",
+        schedule: "Tue, Thu",
+        time: "7:00 PM",
+        duration: "60 min",
+        trainer: "Arun Prakash",
+        level: "All Levels",
+        spots: 16,
+        spotsLeft: 5,
+        description:
+          "Practical self-defense techniques designed for everyday situations.",
+      },
+      {
+        id: "dma_class_03",
+        name: "Kids Warrior Program",
+        category: "Kids",
+        image:
+          "https://images.unsplash.com/photo-1546483875-ad9014c88eba?w=600&q=80",
+        schedule: "Sat, Sun",
+        time: "9:00 AM",
+        duration: "60 min",
+        trainer: "Kavya Srinivasan",
+        level: "Beginner",
+        spots: 20,
+        spotsLeft: 7,
+        description:
+          "Fun martial arts training designed to build discipline, confidence and coordination in children.",
+      },
+      {
+        id: "dma_class_04",
+        name: "Combat Conditioning",
+        category: "Fitness",
+        image:
+          "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=600&q=80",
+        schedule: "Mon, Wed, Fri",
+        time: "7:30 PM",
+        duration: "45 min",
+        trainer: "Vishal Kumar",
+        level: "Intermediate",
+        spots: 18,
+        spotsLeft: 8,
+        description:
+          "High-intensity combat conditioning using striking drills, circuits and functional movements.",
+      },
+      {
+        id: "dma_class_05",
+        name: "Advanced Combat",
+        category: "Advanced",
+        image:
+          "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=600&q=80",
+        schedule: "Tue, Thu, Sat",
+        time: "8:00 PM",
+        duration: "90 min",
+        trainer: "Arun Prakash",
+        level: "Advanced",
+        spots: 12,
+        spotsLeft: 3,
+        description:
+          "Advanced technical training combining striking, movement, defensive techniques and controlled sparring.",
+      },
+    ],
+
+    timings: [
+      { day: "Monday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Tuesday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Wednesday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Thursday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Friday", open: "05:30", close: "22:00", isOpen: true },
+      { day: "Saturday", open: "06:00", close: "20:00", isOpen: true },
+      { day: "Sunday", open: "07:00", close: "18:00", isOpen: true },
+    ],
+
+    reviews: [
+      {
+        id: "dma_rev_01",
+        user: {
+          name: "Suresh Iyer",
+          image:
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
+          initials: "SI",
+        },
+        rating: 5,
+        date: "2026-07-20",
+        title: "Fantastic martial arts academy",
+        text: "The instructors are extremely knowledgeable and disciplined. The training is challenging without ever feeling intimidating.",
+        verifiedVisit: true,
+        helpfulCount: 34,
+      },
+      {
+        id: "dma_rev_02",
+        user: {
+          name: "Divya Raman",
+          image:
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
+          initials: "DR",
+        },
+        rating: 5,
+        date: "2026-06-13",
+        title: "My child loves the kids program",
+        text: "The kids program has helped my daughter become more confident and disciplined. The coaches are excellent with children.",
+        verifiedVisit: true,
+        helpfulCount: 27,
+      },
+      {
+        id: "dma_rev_03",
+        user: {
+          name: "Pradeep Nair",
+          image: null,
+          initials: "PN",
+        },
+        rating: 5,
+        date: "2026-05-25",
+        title: "Excellent self-defense training",
+        text: "Very practical sessions with lots of technique work. The instructors make sure everyone understands the movements properly.",
+        verifiedVisit: true,
+        helpfulCount: 19,
+      },
+    ],
+
+    ratingBreakdown: [
+      { stars: 5, percentage: 87 },
+      { stars: 4, percentage: 9 },
+      { stars: 3, percentage: 3 },
+      { stars: 2, percentage: 1 },
+      { stars: 1, percentage: 0 },
+    ],
+
+    isActive: true,
+    featured: true,
+  },
 ];
