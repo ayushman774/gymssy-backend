@@ -247,88 +247,131 @@ const subcategories = {
       name: "Swimming",
       slug: "swimming",
       icon: "Waves",
-      description: "Pools, academies and swimming classes",
-      count: 290,
+      description: "Pools, coaching & swim clubs",
+      count: 320,
       image: {
-        url: "",
-        alt: "Swimming pool and training",
+        url: "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&q=80&fit=crop&auto=format",
+        alt: "Swimming pools and coaching",
       },
     },
+
     {
       name: "Martial Arts",
       slug: "martial-arts",
       icon: "Swords",
-      description: "MMA, boxing, BJJ and martial arts training",
-      count: 420,
+      description: "Karate, BJJ, MMA & more",
+      count: 280,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=800&q=80&fit=crop&auto=format",
         alt: "Martial arts training session",
       },
     },
+
     {
       name: "Boxing",
       slug: "boxing",
       icon: "Dumbbell",
-      description: "Boxing training with experienced coaches",
-      count: 280,
+      description: "Train like a champion",
+      count: 190,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=800&q=80&fit=crop&auto=format",
         alt: "Boxing training session",
       },
     },
+
     {
       name: "Sports Coaching",
       slug: "sports-coaching",
       icon: "Trophy",
-      description: "Professional coaching across multiple sports",
-      count: 360,
+      description: "Expert coaching for every sport",
+      count: 440,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80&fit=crop&auto=format",
         alt: "Sports coaching session",
       },
     },
+
+    {
+      name: "Sports Academies",
+      slug: "sports-academies",
+      icon: "Trophy",
+      description: "Elite academies for serious players",
+      count: 160,
+      image: {
+        url: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80&fit=crop&auto=format",
+        alt: "Sports academy and training facility",
+      },
+    },
+
     {
       name: "Running Clubs",
       slug: "running-clubs",
       icon: "PersonStanding",
-      description: "Join a community of passionate runners",
-      count: 180,
+      description: "Run with your community",
+      count: 210,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&q=80&fit=crop&auto=format",
         alt: "Community of runners",
       },
     },
+
     {
       name: "Tennis",
       slug: "tennis",
       icon: "CircleDot",
-      description: "Tennis courts, academies and coaching",
-      count: 220,
+      description: "Courts, coaching & clubs",
+      count: 240,
       image: {
-        url: "",
-        alt: "Tennis training",
+        url: "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=800&q=80&fit=crop&auto=format",
+        alt: "Tennis court and training",
       },
     },
+
     {
       name: "Badminton",
       slug: "badminton",
       icon: "CircleDot",
-      description: "Badminton courts, clubs and coaching",
-      count: 175,
+      description: "Book courts & find coaches",
+      count: 380,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&q=80&fit=crop&auto=format",
         alt: "Badminton training",
       },
     },
+
     {
       name: "Football",
       slug: "football",
       icon: "CircleDot",
-      description: "Football academies, clubs and coaching",
-      count: 145,
+      description: "Training, academies & leagues",
+      count: 290,
       image: {
-        url: "",
+        url: "https://images.unsplash.com/photo-1551958219-acbc608c6377?w=800&q=80&fit=crop&auto=format",
         alt: "Football training",
+      },
+    },
+
+    {
+      name: "Basketball",
+      slug: "basketball",
+      icon: "CircleDot",
+      description: "Courts, drills & team training",
+      count: 180,
+      image: {
+        url: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&q=80&fit=crop&auto=format",
+        alt: "Basketball court and training",
+      },
+    },
+
+    {
+      name: "Cricket",
+      slug: "cricket",
+      icon: "CircleDot",
+      description: "Nets, academies & coaching",
+      count: 350,
+      image: {
+        url: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80&fit=crop&auto=format",
+        alt: "Cricket training and academy",
       },
     },
   ],
