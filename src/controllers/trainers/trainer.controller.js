@@ -2,13 +2,34 @@ import Trainer from "../../models/trainers/Trainer.js";
 
 export const getFeaturedTrainers = async (req, res) => {
   try {
-    const trainers = await Trainer.find({
+    const { category } = req.query;
+
+    const filter = {
       isActive: true,
       featured: true,
-    })
+    };
+
+    // Optional category filter
+    // Example:
+    // /api/trainers/featured?category=sports
+    if (category) {
+      const normalizedCategory = category.toLowerCase().trim();
+
+      if (!["fitness", "wellness", "sports"].includes(normalizedCategory)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid category. Allowed categories: fitness, wellness, sports",
+        });
+      }
+
+      filter.category = normalizedCategory;
+    }
+
+    const trainers = await Trainer.find(filter)
       .sort({
         rating: -1,
-        reviewCount: -1,
+        reviews: -1,
       })
       .limit(10)
       .lean();

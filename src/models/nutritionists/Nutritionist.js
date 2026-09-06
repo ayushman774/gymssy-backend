@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const nutritionistSchema = new mongoose.Schema(
+const trainerSchema = new mongoose.Schema(
   {
     id: {
       type: String,
@@ -23,6 +23,14 @@ const nutritionistSchema = new mongoose.Schema(
       trim: true,
     },
 
+    category: {
+      type: String,
+      enum: ["fitness", "wellness", "sports"],
+      default: "fitness",
+      required: true,
+      index: true,
+    },
+
     role: {
       type: String,
       required: true,
@@ -41,9 +49,9 @@ const nutritionistSchema = new mongoose.Schema(
       trim: true,
     },
 
-    consultations: {
+    sessions: {
       type: String,
-      default: "0",
+      required: true,
       trim: true,
     },
 
@@ -65,34 +73,12 @@ const nutritionistSchema = new mongoose.Schema(
       trim: true,
     },
 
-    consultationFee: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-
-    currency: {
-      type: String,
-      default: "₹",
-      trim: true,
-    },
-
     certifications: {
       type: [String],
       default: [],
     },
 
     specializations: {
-      type: [String],
-      default: [],
-    },
-
-    dietTypes: {
-      type: [String],
-      default: [],
-    },
-
-    languages: {
       type: [String],
       default: [],
     },
@@ -177,6 +163,6 @@ const nutritionistSchema = new mongoose.Schema(
   },
 );
 
-const Nutritionist = mongoose.model("Nutritionist", nutritionistSchema);
+const Trainer = mongoose.model("Trainer", trainerSchema);
 
-export default Nutritionist;
+export default Trainer;

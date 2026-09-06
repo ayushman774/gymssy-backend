@@ -202,16 +202,287 @@ export const TRAINERS = [
   },
 ];
 
+export const SPORTS_TRAINERS = [
+  {
+    id: "sports-trainer-001",
+    name: "Arjun Mehta",
+    slug: "arjun-mehta",
+    category: "sports",
+    role: "Football Performance Coach",
+    specialty: "Football & Athletic Performance",
+    experience: "11 Years",
+    sessions: "2,300+",
+    rating: 4.9,
+    reviews: 174,
+    clients: "320+",
+    certifications: [
+      "UEFA B License",
+      "NSCA-CSCS",
+      "FIFA Training Certificate",
+    ],
+    specializations: [
+      "Football Conditioning",
+      "Speed & Agility",
+      "Match Fitness",
+      "Injury Prevention",
+    ],
+    bio: "Specialist football performance coach focused on developing speed, endurance, strength and match-ready conditioning. Arjun has worked with competitive players from academy level through professional environments.",
+    available: true,
+    featured: true,
+    image: {
+      src: "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&q=85&fit=crop&auto=format",
+      srcSet:
+        "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=300&q=80&fit=crop&auto=format 300w, https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=500&q=85&fit=crop&auto=format 500w, https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&q=85&fit=crop&auto=format 600w",
+      sizes: "(max-width: 300px) 300px, (max-width: 500px) 500px, 600px",
+      alt: "Arjun Mehta — Football Performance Coach at Gymssy",
+    },
+    social: {
+      instagram: "https://instagram.com",
+      twitter: null,
+      linkedin: "https://linkedin.com",
+      youtube: null,
+    },
+    href: "/trainers/arjun-mehta",
+    isVerified: true,
+    isActive: true,
+  },
+
+  {
+    id: "sports-trainer-002",
+    name: "Rohan Kapoor",
+    slug: "rohan-kapoor",
+    category: "sports",
+    role: "Cricket Performance Coach",
+    specialty: "Cricket Training & Conditioning",
+    experience: "13 Years",
+    sessions: "2,700+",
+    rating: 4.9,
+    reviews: 198,
+    clients: "360+",
+    certifications: [
+      "BCCI Level 2",
+      "NSCA-CPT",
+      "Sports Performance Specialist",
+    ],
+    specializations: [
+      "Batting Technique",
+      "Bowling Conditioning",
+      "Cricket Fitness",
+      "Speed & Agility",
+    ],
+    bio: "Experienced cricket coach combining technical skill development with modern sports science. Rohan works with players on performance, conditioning and match preparation across all competitive levels.",
+    available: true,
+    featured: true,
+    image: {
+      src: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&q=85&fit=crop&auto=format",
+      srcSet:
+        "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=300&q=80&fit=crop&auto=format 300w, https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=500&q=85&fit=crop&auto=format 500w, https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&q=85&fit=crop&auto=format 600w",
+      sizes: "(max-width: 300px) 300px, (max-width: 500px) 500px, 600px",
+      alt: "Rohan Kapoor — Cricket Performance Coach at Gymssy",
+    },
+    social: {
+      instagram: "https://instagram.com",
+      twitter: null,
+      linkedin: "https://linkedin.com",
+      youtube: null,
+    },
+    href: "/trainers/rohan-kapoor",
+    isVerified: true,
+    isActive: true,
+  },
+
+  {
+    id: "sports-trainer-003",
+    name: "Maya Fernandez",
+    slug: "maya-fernandez",
+    category: "sports",
+    role: "Tennis Performance Coach",
+    specialty: "Tennis & Court Performance",
+    experience: "10 Years",
+    sessions: "2,100+",
+    rating: 4.8,
+    reviews: 156,
+    clients: "270+",
+    certifications: ["PTR Certified", "USTA Coach", "NSCA Sports Performance"],
+    specializations: [
+      "Tennis Technique",
+      "Footwork",
+      "Match Strategy",
+      "Athletic Conditioning",
+    ],
+    bio: "High-performance tennis coach specialising in technical development, movement efficiency and competitive preparation. Maya helps players build confidence and consistency on the court.",
+    available: true,
+    featured: true,
+    image: {
+      src: "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=600&q=85&fit=crop&auto=format",
+      srcSet:
+        "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=300&q=80&fit=crop&auto=format 300w, https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=500&q=85&fit=crop&auto=format 500w, https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=600&q=85&fit=crop&auto=format 600w",
+      sizes: "(max-width: 300px) 300px, (max-width: 500px) 500px, 600px",
+      alt: "Maya Fernandez — Tennis Performance Coach at Gymssy",
+    },
+    social: {
+      instagram: "https://instagram.com",
+      twitter: "https://twitter.com",
+      linkedin: null,
+      youtube: null,
+    },
+    href: "/trainers/maya-fernandez",
+    isVerified: true,
+    isActive: true,
+  },
+
+  {
+    id: "sports-trainer-004",
+    name: "Kabir Singh",
+    slug: "kabir-singh",
+    category: "sports",
+    role: "Combat Sports Coach",
+    specialty: "Boxing & MMA",
+    experience: "15 Years",
+    sessions: "3,100+",
+    rating: 5.0,
+    reviews: 221,
+    clients: "410+",
+    certifications: [
+      "USA Boxing Certified",
+      "MMA Conditioning Specialist",
+      "NSCA-CPT",
+    ],
+    specializations: [
+      "Boxing",
+      "MMA",
+      "Combat Conditioning",
+      "Fight Preparation",
+    ],
+    bio: "Elite combat sports coach with extensive experience preparing athletes for competition. Kabir combines technical striking, conditioning and disciplined fight preparation into structured training programs.",
+    available: true,
+    featured: true,
+    image: {
+      src: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=600&q=85&fit=crop&auto=format",
+      srcSet:
+        "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=300&q=80&fit=crop&auto=format 300w, https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=500&q=85&fit=crop&auto=format 500w, https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=600&q=85&fit=crop&auto=format 600w",
+      sizes: "(max-width: 300px) 300px, (max-width: 500px) 500px, 600px",
+      alt: "Kabir Singh — Boxing and MMA Coach at Gymssy",
+    },
+    social: {
+      instagram: "https://instagram.com",
+      twitter: null,
+      linkedin: "https://linkedin.com",
+      youtube: "https://youtube.com",
+    },
+    href: "/trainers/kabir-singh",
+    isVerified: true,
+    isActive: true,
+  },
+
+  {
+    id: "sports-trainer-005",
+    name: "Ananya Rao",
+    slug: "ananya-rao",
+    category: "sports",
+    role: "Swimming Performance Coach",
+    specialty: "Swimming & Aquatic Performance",
+    experience: "9 Years",
+    sessions: "1,900+",
+    rating: 4.9,
+    reviews: 143,
+    clients: "250+",
+    certifications: [
+      "ASCA Certified",
+      "Swim England Coach",
+      "Sports Performance Specialist",
+    ],
+    specializations: [
+      "Swimming Technique",
+      "Endurance",
+      "Stroke Development",
+      "Race Preparation",
+    ],
+    bio: "Dedicated swimming coach helping athletes improve technique, endurance and race performance. Ananya works with beginners, competitive swimmers and athletes preparing for aquatic events.",
+    available: true,
+    featured: true,
+    image: {
+      src: "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=600&q=85&fit=crop&auto=format",
+      srcSet:
+        "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=300&q=80&fit=crop&auto=format 300w, https://images.unsplash.com/photo-1530549387789-4c1017266635?w=500&q=85&fit=crop&auto=format 500w, https://images.unsplash.com/photo-1530549387789-4c1017266635?w=600&q=85&fit=crop&auto=format 600w",
+      sizes: "(max-width: 300px) 300px, (max-width: 500px) 500px, 600px",
+      alt: "Ananya Rao — Swimming Performance Coach at Gymssy",
+    },
+    social: {
+      instagram: "https://instagram.com",
+      twitter: null,
+      linkedin: "https://linkedin.com",
+      youtube: null,
+    },
+    href: "/trainers/ananya-rao",
+    isVerified: true,
+    isActive: true,
+  },
+
+  {
+    id: "sports-trainer-006",
+    name: "Vikram Desai",
+    slug: "vikram-desai",
+    category: "sports",
+    role: "Badminton Performance Coach",
+    specialty: "Badminton & Athletic Conditioning",
+    experience: "12 Years",
+    sessions: "2,500+",
+    rating: 4.8,
+    reviews: 167,
+    clients: "300+",
+    certifications: [
+      "BWF Level 2",
+      "NSCA-CPT",
+      "Sports Conditioning Specialist",
+    ],
+    specializations: [
+      "Badminton Technique",
+      "Footwork",
+      "Reaction Training",
+      "Match Conditioning",
+    ],
+    bio: "Performance-focused badminton coach specialising in footwork, reaction speed and match conditioning. Vikram helps recreational and competitive players build efficient movement and stronger game performance.",
+    available: true,
+    featured: true,
+    image: {
+      src: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=600&q=85&fit=crop&auto=format",
+      srcSet:
+        "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=300&q=80&fit=crop&auto=format 300w, https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500&q=85&fit=crop&auto=format 500w, https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=600&q=85&fit=crop&auto=format 600w",
+      sizes: "(max-width: 300px) 300px, (max-width: 500px) 500px, 600px",
+      alt: "Vikram Desai — Badminton Performance Coach at Gymssy",
+    },
+    social: {
+      instagram: "https://instagram.com",
+      twitter: "https://twitter.com",
+      linkedin: null,
+      youtube: null,
+    },
+    href: "/trainers/vikram-desai",
+    isVerified: true,
+    isActive: true,
+  },
+];
+
 const seedTrainers = async () => {
   try {
     await connectDB();
 
     await Trainer.deleteMany({});
 
-    await Trainer.insertMany(TRAINERS);
+    const fitnessTrainers = TRAINERS.map((trainer) => ({
+      ...trainer,
+      category: trainer.category || "fitness",
+    }));
+
+    const allTrainers = [...fitnessTrainers, ...SPORTS_TRAINERS];
+
+    await Trainer.insertMany(allTrainers);
 
     console.log("✅ TRAINERS seeded successfully");
-    console.log(`📦 ${TRAINERS.length} trainers added`);
+    console.log(`📦 ${allTrainers.length} trainers added`);
+    console.log(`💪 Fitness trainers: ${fitnessTrainers.length}`);
+    console.log(`🏅 Sports coaches: ${SPORTS_TRAINERS.length}`);
 
     process.exit(0);
   } catch (error) {
