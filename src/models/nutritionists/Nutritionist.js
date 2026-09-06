@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const trainerSchema = new mongoose.Schema(
+const nutritionistSchema = new mongoose.Schema(
   {
     id: {
       type: String,
@@ -21,14 +21,6 @@ const trainerSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-    },
-
-    category: {
-      type: String,
-      enum: ["fitness", "wellness", "sports"],
-      default: "fitness",
-      required: true,
-      index: true,
     },
 
     role: {
@@ -163,7 +155,8 @@ const trainerSchema = new mongoose.Schema(
   },
 );
 
-const Trainer =
-  mongoose.models.Trainer || mongoose.model("Trainer", trainerSchema);
+const Nutritionist =
+  mongoose.models.Nutritionist ||
+  mongoose.model("Nutritionist", nutritionistSchema);
 
-export default Trainer;
+export default Nutritionist;
