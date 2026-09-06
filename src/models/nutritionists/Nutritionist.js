@@ -163,7 +163,6 @@ const trainerSchema = new mongoose.Schema(
   },
 );
 
-const Trainer =
-  mongoose.models.Trainer || mongoose.model("Trainer", trainerSchema);
+const Trainer = mongoose.model("Trainer", trainerSchema);
 
 export default Trainer;
