@@ -186,7 +186,7 @@ const experiences = [
   },
 
   // ============================================================
-  // SPORTS / OTHER EXPERIENCES
+  // SPORTS EXPERIENCES
   // ============================================================
 
   {
@@ -195,8 +195,8 @@ const experiences = [
     category: "Boxing",
 
     image: {
-      url: "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=700&q=80",
-      alt: "Boxing Fundamentals",
+      url: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=700&q=80",
+      alt: "Boxing Fundamentals training session",
     },
 
     duration: 60,
@@ -204,25 +204,196 @@ const experiences = [
     rating: 4.8,
     priceFrom: 25,
     spots: 10,
-    trending: false,
+    trending: true,
     isActive: true,
   },
 
   {
-    title: "Salsa Dance Class",
-    slug: "salsa-dance-class",
-    category: "Dance",
+    title: "Elite Football Training",
+    slug: "elite-football-training",
+    category: "Football",
 
     image: {
-      url: "https://images.unsplash.com/photo-1547153760-18fc86324498?w=700&q=80",
-      alt: "Salsa Dance Class",
+      url: "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=700&q=80",
+      alt: "Elite Football Training",
+    },
+
+    duration: 90,
+    level: "All Levels",
+    rating: 4.9,
+    priceFrom: 30,
+    spots: 16,
+    trending: true,
+    isActive: true,
+  },
+
+  {
+    title: "Professional Cricket Nets",
+    slug: "professional-cricket-nets",
+    category: "Cricket",
+
+    image: {
+      url: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=700&q=80",
+      alt: "Professional Cricket Nets",
+    },
+
+    duration: 90,
+    level: "Intermediate",
+    rating: 4.9,
+    priceFrom: 28,
+    spots: 12,
+    trending: true,
+    isActive: true,
+  },
+
+  {
+    title: "Badminton Power Session",
+    slug: "badminton-power-session",
+    category: "Badminton",
+
+    image: {
+      url: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=700&q=80",
+      alt: "Badminton training session",
+    },
+
+    duration: 60,
+    level: "All Levels",
+    rating: 4.8,
+    priceFrom: 20,
+    spots: 8,
+    trending: true,
+    isActive: true,
+  },
+
+  {
+    title: "Tennis Performance Clinic",
+    slug: "tennis-performance-clinic",
+    category: "Tennis",
+
+    image: {
+      url: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=700&q=80",
+      alt: "Tennis Performance Clinic",
     },
 
     duration: 75,
-    level: "All Levels",
+    level: "Intermediate",
     rating: 4.9,
+    priceFrom: 35,
+    spots: 6,
+    trending: true,
+    isActive: true,
+  },
+
+  {
+    title: "Swimming Technique Masterclass",
+    slug: "swimming-technique-masterclass",
+    category: "Swimming",
+
+    image: {
+      url: "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=700&q=80",
+      alt: "Swimming Technique Masterclass",
+    },
+
+    duration: 60,
+    level: "Intermediate",
+    rating: 4.8,
     priceFrom: 22,
-    spots: 5,
+    spots: 10,
+    trending: true,
+    isActive: true,
+  },
+
+  {
+    title: "Martial Arts Fundamentals",
+    slug: "martial-arts-fundamentals",
+    category: "Martial Arts",
+
+    image: {
+      url: "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=700&q=80",
+      alt: "Martial Arts Fundamentals",
+    },
+
+    duration: 60,
+    level: "Beginner",
+    rating: 4.9,
+    priceFrom: 24,
+    spots: 14,
+    trending: true,
+    isActive: true,
+  },
+
+  {
+    title: "Basketball Skills Academy",
+    slug: "basketball-skills-academy",
+    category: "Basketball",
+
+    image: {
+      url: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=700&q=80",
+      alt: "Basketball Skills Academy",
+    },
+
+    duration: 90,
+    level: "All Levels",
+    rating: 4.8,
+    priceFrom: 26,
+    spots: 15,
+    trending: true,
+    isActive: true,
+  },
+
+  {
+    title: "5K Running Club Experience",
+    slug: "5k-running-club-experience",
+    category: "Running Clubs",
+
+    image: {
+      url: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=700&q=80",
+      alt: "5K Running Club Experience",
+    },
+
+    duration: 60,
+    level: "All Levels",
+    rating: 4.7,
+    priceFrom: 15,
+    spots: 25,
+    trending: true,
+    isActive: true,
+  },
+
+  {
+    title: "Sports Performance Coaching",
+    slug: "sports-performance-coaching",
+    category: "Sports Coaching",
+
+    image: {
+      url: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=700&q=80",
+      alt: "Sports Performance Coaching",
+    },
+
+    duration: 75,
+    level: "Advanced",
+    rating: 5.0,
+    priceFrom: 40,
+    spots: 8,
+    trending: true,
+    isActive: true,
+  },
+
+  {
+    title: "Multi-Sport Academy Trial",
+    slug: "multi-sport-academy-trial",
+    category: "Sports Academies",
+
+    image: {
+      url: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=700&q=80",
+      alt: "Multi-Sport Academy Trial",
+    },
+
+    duration: 90,
+    level: "All Levels",
+    rating: 4.8,
+    priceFrom: 30,
+    spots: 20,
     trending: true,
     isActive: true,
   },

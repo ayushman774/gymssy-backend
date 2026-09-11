@@ -44,6 +44,7 @@ const authMiddleware = async (req, res, next) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      providerType: user.providerType || null,
     };
 
     next();

@@ -16,6 +16,8 @@ import cityRoutes from "./routes/cities/city.routes.js";
 import partnerSuccessRoutes from "./routes/partnerSuccess/partnerSuccess.routes.js";
 import partnerApplicationRoutes from "./routes/partnerApplications/partnerApplication.routes.js";
 import nutritionistRoutes from "./routes/nutritionists/nutritionist.routes.js";
+import providerRoutes from "./routes/providers/provider.routes.js";
+import adminRoutes from "./routes/admin/admin.routes.js";
 
 const app = express();
 
@@ -95,6 +97,8 @@ app.use(async (req, res, next) => {
 app.use("/api/categories", categoryRoutes);
 app.use("/api/recently-viewed", recentlyViewedRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/providers", providerRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/gyms", gymRoutes);
 app.use("/api/trainers", trainerRoutes);
 app.use("/api/experiences", experienceRoutes);
