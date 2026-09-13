@@ -163,17 +163,15 @@ export const updateMyProviderProfile = async (req, res) => {
     }
 
     // ----------------------------------------------------------
-    // FIND PROFILE
+    // GET CURRENT USER
     // ----------------------------------------------------------
 
-    const providerProfile = await ProviderProfile.findOne({
-      user: req.user.id,
-    });
+    const user = await User.findById(req.user.id);
 
-    if (!providerProfile) {
+    if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Provider profile not found",
+        message: "User not found",
       });
     }
 
@@ -182,9 +180,10 @@ export const updateMyProviderProfile = async (req, res) => {
     // ----------------------------------------------------------
 
     const {
+      name,
+      phone,
       businessName,
       bio,
-      phone,
       email,
       website,
       avatar,
@@ -193,7 +192,48 @@ export const updateMyProviderProfile = async (req, res) => {
     } = req.body;
 
     // ----------------------------------------------------------
-    // UPDATE BASIC INFORMATION
+    // UPDATE ACCOUNT-LEVEL INFORMATION
+    // ----------------------------------------------------------
+    // These fields belong to User, not ProviderProfile.
+    //
+    // IMPORTANT:
+    // role, providerType, isActive, isEmailVerified,
+    // password and email are not changed through this endpoint.
+    // ----------------------------------------------------------
+
+    if (name !== undefined) {
+      const trimmedName = name.trim();
+
+      if (!trimmedName) {
+        return res.status(400).json({
+          success: false,
+          message: "Name cannot be empty",
+        });
+      }
+
+      user.name = trimmedName;
+    }
+
+    if (phone !== undefined) {
+      user.phone = phone.trim();
+    }
+
+    // ----------------------------------------------------------
+    // FIND OR CREATE PROVIDER PROFILE
+    // ----------------------------------------------------------
+
+    let providerProfile = await ProviderProfile.findOne({
+      user: req.user.id,
+    });
+
+    if (!providerProfile) {
+      providerProfile = new ProviderProfile({
+        user: req.user.id,
+      });
+    }
+
+    // ----------------------------------------------------------
+    // UPDATE PROVIDER PROFILE INFORMATION
     // ----------------------------------------------------------
 
     if (businessName !== undefined) {
@@ -202,10 +242,6 @@ export const updateMyProviderProfile = async (req, res) => {
 
     if (bio !== undefined) {
       providerProfile.bio = bio.trim();
-    }
-
-    if (phone !== undefined) {
-      providerProfile.phone = phone.trim();
     }
 
     if (email !== undefined) {
@@ -217,7 +253,7 @@ export const updateMyProviderProfile = async (req, res) => {
     }
 
     // ----------------------------------------------------------
-    // UPDATE AVATAR
+    // UPDATE PROVIDER AVATAR
     // ----------------------------------------------------------
 
     if (avatar !== undefined) {
@@ -228,7 +264,7 @@ export const updateMyProviderProfile = async (req, res) => {
     }
 
     // ----------------------------------------------------------
-    // UPDATE LOCATION
+    // UPDATE PROVIDER LOCATION
     // ----------------------------------------------------------
 
     if (location !== undefined) {
@@ -258,12 +294,30 @@ export const updateMyProviderProfile = async (req, res) => {
     // SAVE
     // ----------------------------------------------------------
 
+    await user.save();
     await providerProfile.save();
+
+    // ----------------------------------------------------------
+    // RESPONSE
+    // ----------------------------------------------------------
 
     return res.status(200).json({
       success: true,
       message: "Provider profile updated successfully",
-      data: providerProfile,
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          providerType: user.providerType,
+          avatar: user.avatar,
+          isActive: user.isActive,
+          isEmailVerified: user.isEmailVerified,
+        },
+        providerProfile,
+      },
     });
   } catch (error) {
     console.error("Update provider profile error:", error);
