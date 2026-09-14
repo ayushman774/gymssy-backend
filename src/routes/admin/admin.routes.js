@@ -3,13 +3,16 @@ import express from "express";
 import authMiddleware from "../../middleware/auth.middleware.js";
 import adminMiddleware from "../../middleware/auth/adminMiddleware.js";
 
-import { getAdminDashboard } from "../../controllers/admin/admin.controller.js";
+import {
+  getAdminDashboard,
+  getAdminProviders,
+} from "../../controllers/admin/admin.controller.js";
 
 const router = express.Router();
 
-/* ================================
-   ADMIN AUTH TEST
-================================ */
+// ============================================================
+// ADMIN TEST
+// ============================================================
 
 router.get("/test", authMiddleware, adminMiddleware, (req, res) => {
   return res.status(200).json({
@@ -21,10 +24,16 @@ router.get("/test", authMiddleware, adminMiddleware, (req, res) => {
   });
 });
 
-/* ================================
-   ADMIN DASHBOARD
-================================ */
+// ============================================================
+// ADMIN DASHBOARD
+// ============================================================
 
 router.get("/dashboard", authMiddleware, adminMiddleware, getAdminDashboard);
+
+// ============================================================
+// ADMIN PROVIDERS
+// ============================================================
+
+router.get("/providers", authMiddleware, adminMiddleware, getAdminProviders);
 
 export default router;

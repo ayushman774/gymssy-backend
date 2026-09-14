@@ -476,3 +476,233 @@ export const getAdminDashboard = async (req, res) => {
     });
   }
 };
+
+// ============================================================
+// GET ALL PROVIDERS - ADMIN
+// ============================================================
+//
+// Read-only provider management endpoint.
+//
+// Provider accounts are User documents where:
+// role === "business"
+//
+// ProviderProfile is optional, so the response also includes:
+// profileExists
+//
+// This endpoint does not modify provider data.
+// ============================================================
+
+export const getAdminProviders = async (req, res) => {
+  try {
+    // ----------------------------------------------------------
+    // QUERY PARAMETERS
+    // ----------------------------------------------------------
+
+    const {
+      search = "",
+      providerType = "",
+      status = "",
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    // ----------------------------------------------------------
+    // PAGINATION
+    // ----------------------------------------------------------
+
+    const currentPage = Math.max(Number.parseInt(page, 10) || 1, 1);
+
+    const perPage = Math.min(
+      Math.max(Number.parseInt(limit, 10) || 10, 1),
+      100,
+    );
+
+    const skip = (currentPage - 1) * perPage;
+
+    // ----------------------------------------------------------
+    // BASE FILTER
+    // ----------------------------------------------------------
+
+    const filter = {
+      role: "business",
+    };
+
+    // ----------------------------------------------------------
+    // SEARCH
+    // ----------------------------------------------------------
+
+    const trimmedSearch = search.trim();
+
+    if (trimmedSearch) {
+      const escapedSearch = trimmedSearch.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&",
+      );
+
+      const searchRegex = new RegExp(escapedSearch, "i");
+
+      filter.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phone: searchRegex },
+      ];
+    }
+
+    // ----------------------------------------------------------
+    // PROVIDER TYPE FILTER
+    // ----------------------------------------------------------
+
+    if (providerType.trim()) {
+      filter.providerType = providerType.trim();
+    }
+
+    // ----------------------------------------------------------
+    // ACTIVE / INACTIVE FILTER
+    // ----------------------------------------------------------
+
+    if (status === "active") {
+      filter.isActive = true;
+    }
+
+    if (status === "inactive") {
+      filter.isActive = false;
+    }
+
+    // ----------------------------------------------------------
+    // FETCH PROVIDERS AND COUNT
+    // ----------------------------------------------------------
+
+    const [providers, totalProviders] = await Promise.all([
+      User.find(filter)
+        .select(
+          "name email phone role providerType isActive isEmailVerified avatar createdAt updatedAt",
+        )
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(perPage)
+        .lean(),
+
+      User.countDocuments(filter),
+    ]);
+
+    // ----------------------------------------------------------
+    // FETCH RELATED PROVIDER PROFILES
+    // ----------------------------------------------------------
+
+    const providerUserIds = providers.map((provider) => provider._id);
+
+    const providerProfiles = await ProviderProfile.find({
+      user: { $in: providerUserIds },
+    })
+      .select(
+        "user businessName phone email website location isVerified isActive createdAt updatedAt avatar",
+      )
+      .lean();
+
+    // ----------------------------------------------------------
+    // CREATE PROFILE LOOKUP
+    // ----------------------------------------------------------
+
+    const profileMap = new Map(
+      providerProfiles.map((profile) => [profile.user.toString(), profile]),
+    );
+
+    // ----------------------------------------------------------
+    // FORMAT RESPONSE
+    // ----------------------------------------------------------
+
+    const formattedProviders = providers.map((provider) => {
+      const profile = profileMap.get(provider._id.toString()) || null;
+
+      return {
+        id: provider._id,
+
+        name: provider.name,
+        email: provider.email,
+        phone: provider.phone || "",
+
+        role: provider.role,
+        providerType: provider.providerType || "other",
+
+        isActive: provider.isActive,
+        isEmailVerified: provider.isEmailVerified,
+
+        avatar: provider.avatar || {
+          url: "",
+          alt: "",
+        },
+
+        profileExists: Boolean(profile),
+
+        profile: profile
+          ? {
+              id: profile._id,
+              businessName: profile.businessName || "",
+              phone: profile.phone || "",
+              email: profile.email || "",
+              website: profile.website || "",
+
+              location: profile.location || {
+                address: "",
+                area: "",
+                city: "",
+                state: "",
+                pincode: "",
+              },
+
+              isVerified: profile.isVerified,
+              isActive: profile.isActive,
+
+              avatar: profile.avatar || {
+                url: "",
+                alt: "",
+              },
+
+              createdAt: profile.createdAt,
+              updatedAt: profile.updatedAt,
+            }
+          : null,
+
+        createdAt: provider.createdAt,
+        updatedAt: provider.updatedAt,
+      };
+    });
+
+    // ----------------------------------------------------------
+    // PAGINATION METADATA
+    // ----------------------------------------------------------
+
+    const totalPages = Math.ceil(totalProviders / perPage);
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin providers fetched successfully",
+
+      data: {
+        providers: formattedProviders,
+
+        pagination: {
+          totalProviders,
+          totalPages,
+          currentPage,
+          perPage,
+          hasNextPage: currentPage < totalPages,
+          hasPreviousPage: currentPage > 1,
+        },
+
+        filters: {
+          search: trimmedSearch,
+          providerType: providerType.trim(),
+          status,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get admin providers error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch admin providers",
+    });
+  }
+};
