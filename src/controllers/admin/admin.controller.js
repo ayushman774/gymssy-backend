@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import User from "../../models/users/User.js";
 import ProviderProfile from "../../models/providers/ProviderProfile.js";
 import Gym from "../../models/gyms/Gym.js";
@@ -703,6 +704,148 @@ export const getAdminProviders = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch admin providers",
+    });
+  }
+};
+
+// ============================================================
+// GET SINGLE PROVIDER DETAILS - ADMIN
+// ============================================================
+//
+// Read-only provider details endpoint.
+//
+// Provider account comes from User where role === "business".
+// ProviderProfile is optional.
+//
+// No edit, delete, approval, or ownership logic is included.
+// ============================================================
+
+export const getAdminProviderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ----------------------------------------------------------
+    // VALIDATE MONGODB ID
+    // ----------------------------------------------------------
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid provider ID",
+      });
+    }
+
+    // ----------------------------------------------------------
+    // FETCH PROVIDER ACCOUNT
+    // ----------------------------------------------------------
+
+    const provider = await User.findOne({
+      _id: id,
+      role: "business",
+    })
+      .select(
+        "name email phone role providerType isActive isEmailVerified avatar createdAt updatedAt",
+      )
+      .lean();
+
+    if (!provider) {
+      return res.status(404).json({
+        success: false,
+        message: "Provider not found",
+      });
+    }
+
+    // ----------------------------------------------------------
+    // FETCH PROVIDER PROFILE
+    // ----------------------------------------------------------
+
+    const providerProfile = await ProviderProfile.findOne({
+      user: provider._id,
+    })
+      .select(
+        "businessName bio phone email website avatar location socialLinks isVerified isActive createdAt updatedAt",
+      )
+      .lean();
+
+    // ----------------------------------------------------------
+    // RESPONSE
+    // ----------------------------------------------------------
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin provider details fetched successfully",
+
+      data: {
+        provider: {
+          id: provider._id,
+
+          name: provider.name,
+          email: provider.email,
+          phone: provider.phone || "",
+
+          role: provider.role,
+          providerType: provider.providerType || "other",
+
+          isActive: provider.isActive,
+          isEmailVerified: provider.isEmailVerified,
+
+          avatar: provider.avatar || {
+            url: "",
+            alt: "",
+          },
+
+          createdAt: provider.createdAt,
+          updatedAt: provider.updatedAt,
+        },
+
+        profileExists: Boolean(providerProfile),
+
+        profile: providerProfile
+          ? {
+              id: providerProfile._id,
+
+              businessName: providerProfile.businessName || "",
+              bio: providerProfile.bio || "",
+
+              phone: providerProfile.phone || "",
+              email: providerProfile.email || "",
+              website: providerProfile.website || "",
+
+              avatar: providerProfile.avatar || {
+                url: "",
+                alt: "",
+              },
+
+              location: providerProfile.location || {
+                address: "",
+                area: "",
+                city: "",
+                state: "",
+                pincode: "",
+              },
+
+              socialLinks: providerProfile.socialLinks || {
+                instagram: "",
+                facebook: "",
+                youtube: "",
+                linkedin: "",
+              },
+
+              isVerified: providerProfile.isVerified,
+              isActive: providerProfile.isActive,
+
+              createdAt: providerProfile.createdAt,
+              updatedAt: providerProfile.updatedAt,
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error("Get admin provider details error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch admin provider details",
     });
   }
 };

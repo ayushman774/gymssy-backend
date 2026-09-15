@@ -6,6 +6,7 @@ import adminMiddleware from "../../middleware/auth/adminMiddleware.js";
 import {
   getAdminDashboard,
   getAdminProviders,
+  getAdminProviderById,
 } from "../../controllers/admin/admin.controller.js";
 
 const router = express.Router();
@@ -35,5 +36,16 @@ router.get("/dashboard", authMiddleware, adminMiddleware, getAdminDashboard);
 // ============================================================
 
 router.get("/providers", authMiddleware, adminMiddleware, getAdminProviders);
+
+// ============================================================
+// SINGLE PROVIDER DETAILS
+// ============================================================
+
+router.get(
+  "/providers/:id",
+  authMiddleware,
+  adminMiddleware,
+  getAdminProviderById,
+);
 
 export default router;
