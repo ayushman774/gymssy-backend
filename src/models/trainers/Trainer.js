@@ -157,6 +157,13 @@ const trainerSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,

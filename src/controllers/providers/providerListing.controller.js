@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Gym from "../../models/gyms/Gym.js";
 import Trainer from "../../models/trainers/Trainer.js";
 import Nutritionist from "../../models/nutritionists/Nutritionist.js";
@@ -70,12 +71,14 @@ const GYM_ALLOWED_FIELDS = [
   "classes",
   "timings",
   "city",
+  "isActive",
 ];
 
 const TRAINER_ALLOWED_FIELDS = [
   "id",
   "name",
   "slug",
+  "category",
   "role",
   "specialty",
   "experience",
@@ -88,6 +91,7 @@ const TRAINER_ALLOWED_FIELDS = [
   "image",
   "social",
   "href",
+  "isActive",
 ];
 
 const NUTRITIONIST_ALLOWED_FIELDS = [
@@ -106,6 +110,7 @@ const NUTRITIONIST_ALLOWED_FIELDS = [
   "image",
   "social",
   "href",
+  "isActive",
 ];
 
 /*
@@ -199,6 +204,18 @@ export const createProviderListing = async (req, res) => {
 
       listingData.slug = String(listingData.slug).trim().toLowerCase();
 
+      // Check if slug already exists
+      const existingSlug = await config.model.findOne({
+        slug: listingData.slug,
+      });
+
+      if (existingSlug) {
+        return res.status(400).json({
+          success: false,
+          message: "A listing with this slug already exists",
+        });
+      }
+
       if (!listingData.category || !String(listingData.category).trim()) {
         return res.status(400).json({
           success: false,
@@ -257,6 +274,18 @@ export const createProviderListing = async (req, res) => {
       listingData.slug
     ) {
       listingData.slug = String(listingData.slug).trim().toLowerCase();
+
+      // Check if slug already exists
+      const existingSlug = await config.model.findOne({
+        slug: listingData.slug,
+      });
+
+      if (existingSlug) {
+        return res.status(400).json({
+          success: false,
+          message: "A listing with this slug already exists",
+        });
+      }
     }
 
     /*
@@ -411,6 +440,13 @@ export const getMyProviderListings = async (req, res) => {
 
 export const getMyProviderListingById = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing ID format",
+      });
+    }
+
     const config = getListingConfig(req.user.providerType);
 
     if (!config) {
@@ -465,6 +501,13 @@ export const getMyProviderListingById = async (req, res) => {
 
 export const updateMyProviderListing = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing ID format",
+      });
+    }
+
     const config = getListingConfig(req.user.providerType);
 
     if (!config) {
@@ -555,6 +598,67 @@ export const updateMyProviderListing = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update listing",
+    });
+  }
+};
+
+/*
+|--------------------------------------------------------------------------
+| DELETE MY LISTING
+|--------------------------------------------------------------------------
+|
+| DELETE /api/providers/listings/:id
+|
+| Provider can delete/deactivate their own listing.
+| We use soft deletion (isActive: false) to preserve history/references,
+| matching the platform's existing convention for deactivated entities.
+|--------------------------------------------------------------------------
+*/
+
+export const deleteMyProviderListing = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing ID format",
+      });
+    }
+
+    const config = getListingConfig(req.user.providerType);
+
+    if (!config) {
+      return res.status(400).json({
+        success: false,
+        message: "This provider type does not have a supported listing type",
+      });
+    }
+
+    const listing = await config.model.findOne({
+      _id: req.params.id,
+      owner: req.user.id,
+    });
+
+    if (!listing) {
+      return res.status(404).json({
+        success: false,
+        message: "Listing not found or you do not have access to it",
+      });
+    }
+
+    // Soft delete by setting isActive to false
+    listing.isActive = false;
+    await listing.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Listing deactivated successfully",
+    });
+  } catch (error) {
+    console.error("Delete provider listing error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to deactivate listing",
     });
   }
 };

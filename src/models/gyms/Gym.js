@@ -486,6 +486,13 @@ const gymSchema = new mongoose.Schema(
       default: false,
     },
 
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
+
     city: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "City",

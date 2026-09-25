@@ -849,3 +849,164 @@ export const getAdminProviderById = async (req, res) => {
     });
   }
 };
+
+// ============================================================
+// GET ALL LISTINGS - ADMIN
+// ============================================================
+//
+// Fetches marketplace listings across Gyms, Trainers, and Nutritionists.
+// Supports filtering by type, status, search, and city.
+// ============================================================
+
+export const getAdminListings = async (req, res) => {
+  try {
+    const {
+      search = "",
+      type = "", // gym, trainer, nutritionist
+      status = "", // active, inactive
+      city = "", // cityId
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const currentPage = Math.max(Number.parseInt(page, 10) || 1, 1);
+    const perPage = Math.min(Math.max(Number.parseInt(limit, 10) || 10, 1), 100);
+    const skip = (currentPage - 1) * perPage;
+
+    // Filters for different models
+    const commonFilter = {};
+    if (status === "active") commonFilter.isActive = true;
+    if (status === "inactive") commonFilter.isActive = false;
+
+    const trimmedSearch = search.trim();
+    if (trimmedSearch) {
+      const escapedSearch = trimmedSearch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const searchRegex = new RegExp(escapedSearch, "i");
+      commonFilter.name = searchRegex;
+    }
+
+    // Determine which models to query
+    const modelsToQuery = [];
+    if (!type || type === "gym") modelsToQuery.push({ model: Gym, type: "gym" });
+    if (!type || type === "trainer")
+      modelsToQuery.push({ model: Trainer, type: "trainer" });
+    if (!type || type === "nutritionist")
+      modelsToQuery.push({ model: Nutritionist, type: "nutritionist" });
+
+    // Since we need to merge results from different collections and paginate,
+    // and they have different fields, we'll fetch them all (within reason)
+    // or if a specific type is requested, it's easier.
+
+    if (type) {
+      // Single model query - efficient pagination
+      const target = modelsToQuery[0];
+      const filter = { ...commonFilter };
+
+      // City filter only for gyms
+      if (target.type === "gym" && city) {
+        filter.city = city;
+      }
+
+      const [docs, total] = await Promise.all([
+        target.model
+          .find(filter)
+          .populate("owner", "name email")
+          .populate(target.type === "gym" ? "city" : "") // populate city for gyms
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(perPage)
+          .lean(),
+        target.model.countDocuments(filter),
+      ]);
+
+      const listings = docs.map((doc) => ({
+        id: doc._id,
+        type: target.type,
+        name: doc.name,
+        slug: doc.slug,
+        owner: doc.owner,
+        category: doc.category,
+        city: doc.city ? (typeof doc.city === "object" ? doc.city.name : doc.city) : null,
+        isActive: doc.isActive,
+        isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
+        featured: doc.featured,
+        createdAt: doc.createdAt,
+      }));
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          listings,
+          pagination: {
+            totalListings: total,
+            totalPages: Math.ceil(total / perPage),
+            currentPage,
+            perPage,
+            hasNextPage: currentPage * perPage < total,
+            hasPreviousPage: currentPage > 1,
+          },
+        },
+      });
+    } else {
+      // Multi-model query - harder to paginate perfectly in-memory
+      // For now, we'll fetch from all and merge (simplified approach for MVP)
+      const results = await Promise.all(
+        modelsToQuery.map(async (t) => {
+          const filter = { ...commonFilter };
+          // For gyms, apply city filter if exists
+          if (t.type === "gym" && city) {
+            filter.city = city;
+          }
+          const docs = await t.model
+            .find(filter)
+            .populate("owner", "name email")
+            .populate(t.type === "gym" ? "city" : "")
+            .sort({ createdAt: -1 })
+            .limit(skip + perPage) // Fetch enough to cover the current page
+            .lean();
+          return docs.map((doc) => ({
+            id: doc._id,
+            type: t.type,
+            name: doc.name,
+            slug: doc.slug,
+            owner: doc.owner,
+            category: doc.category,
+            city: doc.city ? (typeof doc.city === "object" ? doc.city.name : doc.city) : null,
+            isActive: doc.isActive,
+            isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
+            featured: doc.featured,
+            createdAt: doc.createdAt,
+          }));
+        }),
+      );
+
+      const allListings = results
+        .flat()
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      const totalListings = allListings.length; // This is a limitation of this approach
+      const paginatedListings = allListings.slice(skip, skip + perPage);
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          listings: paginatedListings,
+          pagination: {
+            totalListings,
+            totalPages: Math.ceil(totalListings / perPage),
+            currentPage,
+            perPage,
+            hasNextPage: skip + perPage < totalListings,
+            hasPreviousPage: currentPage > 1,
+          },
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Get admin listings error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch marketplace listings",
+    });
+  }
+};

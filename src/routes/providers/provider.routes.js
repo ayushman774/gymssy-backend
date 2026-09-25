@@ -13,6 +13,7 @@ import {
   getMyProviderListingById,
   createProviderListing,
   updateMyProviderListing,
+  deleteMyProviderListing,
 } from "../../controllers/providers/providerListing.controller.js";
 
 const router = express.Router();
@@ -86,6 +87,16 @@ router.put(
   authMiddleware,
   authorizeRoles("business"),
   updateMyProviderListing,
+);
+
+/*
+ * Delete one listing owned by logged-in provider
+ */
+router.delete(
+  "/listings/:id",
+  authMiddleware,
+  authorizeRoles("business"),
+  deleteMyProviderListing,
 );
 
 export default router;

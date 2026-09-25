@@ -7,6 +7,7 @@ import {
   getAdminDashboard,
   getAdminProviders,
   getAdminProviderById,
+  getAdminListings,
 } from "../../controllers/admin/admin.controller.js";
 
 const router = express.Router();
@@ -36,6 +37,12 @@ router.get("/dashboard", authMiddleware, adminMiddleware, getAdminDashboard);
 // ============================================================
 
 router.get("/providers", authMiddleware, adminMiddleware, getAdminProviders);
+
+// ============================================================
+// ADMIN LISTINGS
+// ============================================================
+
+router.get("/listings", authMiddleware, adminMiddleware, getAdminListings);
 
 // ============================================================
 // SINGLE PROVIDER DETAILS
