@@ -767,6 +767,9 @@ export const getAdminProviderById = async (req, res) => {
       )
       .lean();
 
+    const { listings, listingSummary } =
+      await findNormalizedProviderListings(provider._id);
+
     // ----------------------------------------------------------
     // RESPONSE
     // ----------------------------------------------------------
@@ -838,6 +841,8 @@ export const getAdminProviderById = async (req, res) => {
               updatedAt: providerProfile.updatedAt,
             }
           : null,
+        listings,
+        listingSummary,
       },
     });
   } catch (error) {
@@ -858,7 +863,7 @@ export const getAdminProviderById = async (req, res) => {
  * Normalizes a listing document from any of the three models
  * into a consistent admin-facing structure.
  */
-const normalizeAdminListing = (doc, type) => {
+export const normalizeAdminListing = (doc, type) => {
   return {
     id: doc._id,
     type,
@@ -870,6 +875,7 @@ const normalizeAdminListing = (doc, type) => {
     isActive: doc.isActive,
     isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
     featured: doc.featured,
+    moderationStatus: doc.moderationStatus,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
@@ -1269,6 +1275,31 @@ const getUnsupportedAdminProviderFields = (body = {}) => {
   return [...new Set(unsupportedFields)];
 };
 
+const findNormalizedProviderListings = async (ownerId) => {
+  const [gyms, trainers, nutritionists] = await Promise.all([
+    Gym.find({ owner: ownerId }).lean(),
+    Trainer.find({ owner: ownerId }).lean(),
+    Nutritionist.find({ owner: ownerId }).lean(),
+  ]);
+
+  const listings = [
+    ...gyms.map((listing) => normalizeAdminListing(listing, "gym")),
+    ...trainers.map((listing) => normalizeAdminListing(listing, "trainer")),
+    ...nutritionists.map((listing) =>
+      normalizeAdminListing(listing, "nutritionist"),
+    ),
+  ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  return {
+    listings,
+    listingSummary: {
+      total: listings.length,
+      active: listings.filter((listing) => listing.isActive).length,
+      inactive: listings.filter((listing) => !listing.isActive).length,
+    },
+  };
+};
+
 const buildAdminProviderProfileUpdates = (body) => {
   const updates = {};
 
@@ -1549,29 +1580,14 @@ export const getAdminProviderListings = async (req, res) => {
       });
     }
 
-    const [gyms, trainers, nutritionists] = await Promise.all([
-      Gym.find({ owner: id }).lean(),
-      Trainer.find({ owner: id }).lean(),
-      Nutritionist.find({ owner: id }).lean(),
-    ]);
-
-    const normalizedListings = [
-      ...gyms.map(l => normalizeAdminListing(l, "gym")),
-      ...trainers.map(l => normalizeAdminListing(l, "trainer")),
-      ...nutritionists.map(l => normalizeAdminListing(l, "nutritionist")),
-    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    const counts = {
-      total: normalizedListings.length,
-      active: normalizedListings.filter(l => l.isActive).length,
-      inactive: normalizedListings.filter(l => !l.isActive).length,
-    };
+    const { listings, listingSummary } =
+      await findNormalizedProviderListings(id);
 
     return res.status(200).json({
       success: true,
       data: {
-        listings: normalizedListings,
-        counts,
+        listings,
+        counts: listingSummary,
       },
     });
   } catch (error) {

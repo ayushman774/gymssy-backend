@@ -241,6 +241,83 @@ const getMongooseValidationErrors = (error) =>
     message: validationError.message,
   }));
 
+export class ListingContractError extends Error {
+  constructor(statusCode, payload) {
+    super(payload.message);
+    this.statusCode = statusCode;
+    this.payload = payload;
+  }
+}
+
+export const prepareProviderOwnedListing = async ({
+  providerType,
+  ownerId,
+  body,
+}) => {
+  const config = getListingConfig(providerType);
+  if (!config) {
+    throw new ListingContractError(400, {
+      success: false,
+      message: "This provider type does not have a supported marketplace listing",
+    });
+  }
+
+  const allowedFields = FIELD_CONTRACTS[config.type].create;
+  const unsupportedFields = getUnsupportedFields(body, allowedFields);
+  if (unsupportedFields.length > 0) {
+    throw new ListingContractError(400, {
+      success: false,
+      message: "Unsupported listing fields were submitted",
+      unsupportedFields,
+    });
+  }
+
+  const listingData = pickAllowedFields(body, allowedFields);
+  const requiredFields = REQUIRED_FIELDS[config.type];
+  normalizeRequiredStrings(listingData, requiredFields);
+  const validationErrors = getRequiredFieldErrors(listingData, requiredFields);
+  if (validationErrors.length > 0) {
+    throw new ListingContractError(400, {
+      success: false,
+      message: "Listing validation failed",
+      errors: validationErrors,
+    });
+  }
+
+  if (config.type === "gym") {
+    const cityError = await validateGymCity(listingData.city);
+    if (cityError) {
+      throw new ListingContractError(400, {
+        success: false,
+        message: "Listing validation failed",
+        errors: [cityError],
+      });
+    }
+  }
+
+  if (await slugExists(config.model, listingData.slug)) {
+    throw new ListingContractError(409, {
+      success: false,
+      message: "A listing with this slug already exists",
+      field: "slug",
+    });
+  }
+
+  if (config.type === "trainer" || config.type === "nutritionist") {
+    listingData.id = `${config.type}-${randomUUID()}`;
+  }
+
+  listingData.owner = ownerId;
+  listingData.featured = false;
+  listingData.isActive = true;
+  listingData.moderationStatus = "pending";
+
+  if (config.type === "gym") listingData.verified = false;
+  else listingData.isVerified = false;
+
+  return { config, listingData };
+};
+
 /*
 |--------------------------------------------------------------------------
 | CREATE PROVIDER LISTING
@@ -257,97 +334,11 @@ const getMongooseValidationErrors = (error) =>
 
 export const createProviderListing = async (req, res) => {
   try {
-    const config = getListingConfig(req.user.providerType);
-
-    if (!config) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "This provider type does not have a supported marketplace listing",
-      });
-    }
-
-    const allowedFields = FIELD_CONTRACTS[config.type].create;
-    const unsupportedFields = getUnsupportedFields(req.body, allowedFields);
-
-    if (unsupportedFields.length > 0) {
-      return sendUnsupportedFieldsError(res, unsupportedFields);
-    }
-
-    const listingData = pickAllowedFields(req.body, allowedFields);
-    const requiredFields = REQUIRED_FIELDS[config.type];
-    normalizeRequiredStrings(listingData, requiredFields);
-    const validationErrors = getRequiredFieldErrors(
-      listingData,
-      requiredFields,
-    );
-
-    if (validationErrors.length > 0) {
-      return sendValidationError(res, validationErrors);
-    }
-
-    if (config.type === "gym") {
-      const cityError = await validateGymCity(listingData.city);
-      if (cityError) return sendValidationError(res, [cityError]);
-    }
-
-    if (await slugExists(config.model, listingData.slug)) {
-      return res.status(409).json({
-        success: false,
-        message: "A listing with this slug already exists",
-        field: "slug",
-      });
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Trainer / Nutritionist ID
-    |--------------------------------------------------------------------------
-    |
-    | These models require their own `id` field.
-| Provider input cannot set it; generate a stable public identifier here.
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-      (config.type === "trainer" || config.type === "nutritionist") &&
-      !listingData.id
-    ) {
-      listingData.id = `${config.type}-${randomUUID()}`;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | OWNERSHIP
-    |--------------------------------------------------------------------------
-    |
-    | Never accept owner from req.body.
-    |
-    | The authenticated user's ID becomes the owner.
-    |--------------------------------------------------------------------------
-    */
-
-    listingData.owner = req.user.id;
-
-    /*
-    |--------------------------------------------------------------------------
-    | Provider-created listings are not verified automatically.
-    |--------------------------------------------------------------------------
-    */
-
-    if (config.type === "gym") {
-      listingData.verified = false;
-      listingData.featured = false;
-      listingData.isActive = true;
-      listingData.moderationStatus = "pending";
-    }
-
-    if (config.type === "trainer" || config.type === "nutritionist") {
-      listingData.isVerified = false;
-      listingData.featured = false;
-      listingData.isActive = true;
-      listingData.moderationStatus = "pending";
-    }
+    const { config, listingData } = await prepareProviderOwnedListing({
+      providerType: req.user.providerType,
+      ownerId: req.user.id,
+      body: req.body,
+    });
 
     /*
     |--------------------------------------------------------------------------
@@ -367,6 +358,10 @@ export const createProviderListing = async (req, res) => {
       },
     });
   } catch (error) {
+    if (error instanceof ListingContractError) {
+      return res.status(error.statusCode).json(error.payload);
+    }
+
     console.error("Create provider listing error:", error);
 
     /*

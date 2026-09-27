@@ -12,6 +12,9 @@ import {
 } from "../src/middleware/uploads/providerAvatarUpload.js";
 import User from "../src/models/users/User.js";
 import ProviderProfile from "../src/models/providers/ProviderProfile.js";
+import Gym from "../src/models/gyms/Gym.js";
+import Trainer from "../src/models/trainers/Trainer.js";
+import Nutritionist from "../src/models/nutritionists/Nutritionist.js";
 
 const originals = [];
 function mock(target, property, value) {
@@ -193,6 +196,9 @@ test("admin provider detail returns an existing ProviderProfile avatar URL", { c
   const profile = { avatar: { url: "https://example.com/existing.jpg", alt: "Existing" } };
   mock(User, "findOne", () => ({ select: () => ({ lean: async () => user }) }));
   mock(ProviderProfile, "findOne", () => ({ select: () => ({ lean: async () => profile }) }));
+  for (const model of [Gym, Trainer, Nutritionist]) {
+    mock(model, "find", () => ({ lean: async () => [] }));
+  }
   const res = response();
 
   await getAdminProviderById(request(id), res);

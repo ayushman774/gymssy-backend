@@ -7,6 +7,7 @@ import {
   uploadProviderAvatar,
   removeProviderAvatar,
 } from "../../controllers/admin/adminProviderAvatar.controller.js";
+import { createAdminProviderListing } from "../../controllers/admin/adminProviderListing.controller.js";
 
 import {
   getAdminDashboard,
@@ -92,6 +93,13 @@ router.get(
   authMiddleware,
   adminMiddleware,
   getAdminProviderListings,
+);
+
+router.post(
+  "/providers/:providerId/listings",
+  authMiddleware,
+  adminMiddleware,
+  createAdminProviderListing,
 );
 
 // ============================================================
