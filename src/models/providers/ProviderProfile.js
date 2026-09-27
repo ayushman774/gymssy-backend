@@ -65,6 +65,11 @@ const providerProfileSchema = new mongoose.Schema(
         type: String,
         default: "",
       },
+
+      publicId: {
+        type: String,
+        default: "",
+      },
     },
 
     // ----------------------------------------------------------

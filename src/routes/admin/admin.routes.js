@@ -2,6 +2,11 @@ import express from "express";
 
 import authMiddleware from "../../middleware/auth.middleware.js";
 import adminMiddleware from "../../middleware/auth/adminMiddleware.js";
+import { uploadProviderAvatarFile } from "../../middleware/uploads/providerAvatarUpload.js";
+import {
+  uploadProviderAvatar,
+  removeProviderAvatar,
+} from "../../controllers/admin/adminProviderAvatar.controller.js";
 
 import {
   getAdminDashboard,
@@ -65,6 +70,21 @@ router.patch(
   authMiddleware,
   adminMiddleware,
   updateProviderVerification,
+);
+
+router.post(
+  "/providers/:id/avatar",
+  authMiddleware,
+  adminMiddleware,
+  uploadProviderAvatarFile,
+  uploadProviderAvatar,
+);
+
+router.delete(
+  "/providers/:id/avatar",
+  authMiddleware,
+  adminMiddleware,
+  removeProviderAvatar,
 );
 
 router.get(
