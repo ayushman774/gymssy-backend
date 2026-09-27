@@ -1378,7 +1378,12 @@ export const normalizeAdminListingDetail = (doc, requestedType) => {
     city,
     isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
   };
-  if (type === "gym") normalized.images = toAdminGymImages(doc);
+  if (type === "gym") {
+    normalized.images = toAdminGymImages(doc);
+    for (const field of ["tags", "highlights", "facilities", "memberships", "trainers", "classes", "timings", "reviews", "ratingBreakdown"]) {
+      normalized[field] = Array.isArray(doc[field]) ? doc[field] : [];
+    }
+  }
   return normalized;
 };
 

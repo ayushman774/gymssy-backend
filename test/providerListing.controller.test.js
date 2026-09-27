@@ -11,6 +11,7 @@ import Gym from "../src/models/gyms/Gym.js";
 import Trainer from "../src/models/trainers/Trainer.js";
 import Nutritionist from "../src/models/nutritionists/Nutritionist.js";
 import City from "../src/models/cities/City.js";
+import Category from "../src/models/categories/Category.js";
 
 const originals = [];
 
@@ -56,6 +57,8 @@ function request(providerType, body = {}, params = {}) {
 function stubSuccessfulCreate(model, extra = {}) {
   mock(model, "exists", async () => false);
   mock(model, "create", async (data) => ({ _id: new mongoose.Types.ObjectId(), ...data }));
+  mock(Category, "findOne", () => ({ lean: async () => ({ _id: new mongoose.Types.ObjectId(), name: "Fitness", slug: "fitness" }) }));
+  mock(Category, "find", () => ({ lean: async () => [{ name: "Strength Coach" }] }));
   for (const [target, property, value] of extra.mocks || []) {
     mock(target, property, value);
   }
@@ -77,7 +80,7 @@ test("creates a Gym with validated city and forced system defaults", { concurren
   const req = request("gym_owner", {
     name: "  Elite Gym  ",
     slug: "  Elite-Gym  ",
-    category: "  premium  ",
+    category: "  Fitness  ",
     city,
   });
   const res = response();
@@ -87,7 +90,7 @@ test("creates a Gym with validated city and forced system defaults", { concurren
   assert.equal(res.statusCode, 201);
   assert.equal(res.body.data.listing.name, "Elite Gym");
   assert.equal(res.body.data.listing.slug, "elite-gym");
-  assert.equal(res.body.data.listing.category, "premium");
+  assert.equal(res.body.data.listing.category, "Fitness");
   assert.equal(res.body.data.listing.owner, req.user.id);
   assert.equal(res.body.data.listing.verified, false);
   assert.equal(res.body.data.listing.featured, false);
@@ -207,6 +210,8 @@ test("rejects moderation fields during provider creation", { concurrency: false 
 
 test("rejects an invalid Gym city id", { concurrency: false }, async () => {
   mock(Gym, "exists", async () => false);
+  mock(Category, "findOne", () => ({ lean: async () => ({ _id: new mongoose.Types.ObjectId(), name: "Fitness", slug: "fitness" }) }));
+  mock(Category, "find", () => ({ lean: async () => [] }));
   const req = request("gym_owner", {
     name: "Gym",
     slug: "gym",
@@ -223,6 +228,8 @@ test("rejects an invalid Gym city id", { concurrency: false }, async () => {
 
 test("rejects a nonexistent Gym city", { concurrency: false }, async () => {
   mock(City, "exists", async () => null);
+  mock(Category, "findOne", () => ({ lean: async () => ({ _id: new mongoose.Types.ObjectId(), name: "Fitness", slug: "fitness" }) }));
+  mock(Category, "find", () => ({ lean: async () => [] }));
   const req = request("gym_owner", {
     name: "Gym",
     slug: "gym",
@@ -239,6 +246,8 @@ test("rejects a nonexistent Gym city", { concurrency: false }, async () => {
 
 test("returns 409 for a duplicate slug", { concurrency: false }, async () => {
   mock(Trainer, "exists", async () => true);
+  mock(Category, "findOne", () => ({ lean: async () => ({ _id: new mongoose.Types.ObjectId(), name: "Fitness", slug: "fitness" }) }));
+  mock(Category, "find", () => ({ lean: async () => [{ name: "Strength Coach" }] }));
   const req = request("trainer", { ...professionalBody });
   const res = response();
 

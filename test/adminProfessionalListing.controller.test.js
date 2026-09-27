@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { getAdminListingById, updateAdminListingContent } from "../src/controllers/admin/admin.controller.js";
 import Trainer from "../src/models/trainers/Trainer.js";
 import Nutritionist from "../src/models/nutritionists/Nutritionist.js";
+import Category from "../src/models/categories/Category.js";
 
 const originals = [];
 function mock(target, property, value) { originals.push([target, property, target[property]]); target[property] = value; }
@@ -54,6 +55,8 @@ test("admin edits professional content while preserving protected state and nest
     return queryResult(listing);
   });
   mock(Trainer, "exists", async () => false);
+  mock(Category, "findOne", () => ({ lean: async () => ({ _id: new mongoose.Types.ObjectId(), name: "Sports", slug: "sports" }) }));
+  mock(Category, "find", () => ({ lean: async () => [{ name: "Coach" }] }));
   const res = response();
   await updateAdminListingContent({ params: { type: "coach", id: listing._id.toString() }, body: {
     name: " Updated Dex ", slug: " UPDATED-DEX ", category: "sports", role: "Coach", specialty: "Speed",

@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { updateAdminListingContent } from "../src/controllers/admin/admin.controller.js";
 import Gym from "../src/models/gyms/Gym.js";
 import City from "../src/models/cities/City.js";
+import Category from "../src/models/categories/Category.js";
 
 const originals = [];
 function mock(target, property, value) { originals.push([target, property, target[property]]); target[property] = value; }
@@ -34,6 +35,8 @@ function stubUpdate(listing, populatedOverrides = {}) {
   });
   mock(Gym, "exists", async () => false);
   mock(City, "exists", async () => true);
+  mock(Category, "findOne", () => ({ lean: async () => ({ _id: new mongoose.Types.ObjectId(), name: "Fitness", slug: "fitness" }) }));
+  mock(Category, "find", () => ({ lean: async () => ["strength", "cardio", "24/7"].map((name) => ({ name })) }));
 }
 async function update(listing, body) {
   stubUpdate(listing);
@@ -47,7 +50,7 @@ test("Admin Gym Phase A edits every allowed field and preserves system, customer
   const preserved = Object.fromEntries(["owner", "rating", "reviewCount", "reviews", "ratingBreakdown", "verified", "featured", "isActive", "moderationStatus", "openNow", "images", "facilities", "memberships", "trainers", "classes"].map((field) => [field, listing[field]]));
   const nextCity = new mongoose.Types.ObjectId();
   const res = await update(listing, {
-    name: " New Gym ", slug: " NEW-GYM ", category: "Premium", tags: [" strength ", "cardio"],
+    name: " New Gym ", slug: " NEW-GYM ", category: "Fitness", tags: [" strength ", "cardio"],
     phone: "2", email: "new@example.com", website: "https://new.example.com", description: "New", highlights: [" 24/7 "],
     city: nextCity.toString(), location: { address: "B", area: "New Area", city: "New Display", state: "New State", pincode: "2", landmark: "New", parking: "Free" },
     coordinates: { lat: -90, lng: 180 }, priceFrom: 0,

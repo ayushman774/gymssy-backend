@@ -10,6 +10,7 @@ import Gym from "../src/models/gyms/Gym.js";
 import Trainer from "../src/models/trainers/Trainer.js";
 import Nutritionist from "../src/models/nutritionists/Nutritionist.js";
 import City from "../src/models/cities/City.js";
+import Category from "../src/models/categories/Category.js";
 
 const originals = [];
 function mock(target, property, value) {
@@ -41,6 +42,8 @@ const professionalBody = {
 async function runCreate(providerType, body, { isActive = true } = {}) {
   const providerId = new mongoose.Types.ObjectId();
   mock(User, "findById", async () => ({ _id: providerId, role: "business", providerType, isActive }));
+  mock(Category, "findOne", () => ({ lean: async () => ({ _id: new mongoose.Types.ObjectId(), name: "Fitness", slug: "fitness" }) }));
+  mock(Category, "find", () => ({ lean: async () => [{ name: "Strength Coach" }] }));
   const res = response();
   await createAdminProviderListing({ params: { providerId: providerId.toString() }, body }, res);
   return { res, providerId };

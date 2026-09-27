@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 
 import { prepareListingContentUpdate } from "../src/controllers/providers/providerListing.controller.js";
 import Gym from "../src/models/gyms/Gym.js";
+import Category from "../src/models/categories/Category.js";
 
 const baseListing = (overrides = {}) => ({
   _id: new mongoose.Types.ObjectId(),
@@ -74,10 +75,13 @@ test("Gym nested partial updates support intentional empty-string and empty-arra
   assert.deepEqual(updates.images.gallery, []);
 });
 
-test("Gym omitted nested objects remain untouched and supplied top-level arrays replace", async () => {
+test("Gym omitted nested objects remain untouched and supplied top-level arrays replace", async (t) => {
+  const categoryId = new mongoose.Types.ObjectId();
+  t.mock.method(Category, "findOne", () => ({ lean: async () => ({ _id: categoryId, name: "Fitness", slug: "fitness" }) }));
+  t.mock.method(Category, "find", () => ({ lean: async () => [{ name: "New Tag" }] }));
   const listing = baseListing();
   const replacements = {
-    tags: ["new-tag"],
+    tags: ["New Tag"],
     highlights: [],
     facilities: [{ name: "New facility" }],
     memberships: [{ name: "New plan", price: 2000 }],

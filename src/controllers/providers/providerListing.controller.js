@@ -5,6 +5,7 @@ import Trainer from "../../models/trainers/Trainer.js";
 import Nutritionist from "../../models/nutritionists/Nutritionist.js";
 import City from "../../models/cities/City.js";
 import { sanitizeProviderGymImages } from "../../utils/gymMedia.js";
+import { isTaxonomyChange, validateAndNormalizeListingTaxonomy } from "../../utils/listingTaxonomy.js";
 
 /*
 |--------------------------------------------------------------------------
@@ -280,6 +281,11 @@ export const prepareListingContentUpdate = async ({ model, type, listing, body }
   if (validationErrors.length) {
     throw new ListingContractError(400, { success: false, message: "Listing validation failed", errors: validationErrors });
   }
+  if (isTaxonomyChange(type, body)) {
+    const taxonomy = await validateAndNormalizeListingTaxonomy({ type, candidate: { ...(listing.toObject?.() || listing), ...updates }, model });
+    if (taxonomy.errors.length) throw new ListingContractError(400, { success: false, message: "Listing taxonomy validation failed", errors: taxonomy.errors });
+    for (const field of Object.keys(taxonomy.normalized)) if (updates[field] !== undefined || field === "category") updates[field] = taxonomy.normalized[field];
+  }
   if (type === "gym" && updates.city !== undefined) {
     const cityError = await validateGymCity(updates.city);
     if (cityError) throw new ListingContractError(400, { success: false, message: "Listing validation failed", errors: [cityError] });
@@ -345,6 +351,12 @@ export const prepareProviderOwnedListing = async ({
       message: "Listing validation failed",
       errors: validationErrors,
     });
+  }
+
+  if (config.type === "gym" || config.type === "trainer") {
+    const taxonomy = await validateAndNormalizeListingTaxonomy({ type: config.type, candidate: listingData, model: config.model });
+    if (taxonomy.errors.length) throw new ListingContractError(400, { success: false, message: "Listing taxonomy validation failed", errors: taxonomy.errors });
+    Object.assign(listingData, taxonomy.normalized);
   }
 
   if (config.type === "gym") {
