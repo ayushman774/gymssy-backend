@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
+import { randomUUID } from "node:crypto";
 import Gym from "../../models/gyms/Gym.js";
 import Trainer from "../../models/trainers/Trainer.js";
 import Nutritionist from "../../models/nutritionists/Nutritionist.js";
+import City from "../../models/cities/City.js";
 
 /*
 |--------------------------------------------------------------------------
@@ -50,7 +52,7 @@ const getListingConfig = (providerType) => {
 |--------------------------------------------------------------------------
 */
 
-const GYM_ALLOWED_FIELDS = [
+const GYM_CREATE_FIELDS = [
   "name",
   "slug",
   "category",
@@ -71,11 +73,11 @@ const GYM_ALLOWED_FIELDS = [
   "classes",
   "timings",
   "city",
-  "isActive",
 ];
 
-const TRAINER_ALLOWED_FIELDS = [
-  "id",
+const GYM_UPDATE_FIELDS = [...GYM_CREATE_FIELDS];
+
+const TRAINER_CREATE_FIELDS = [
   "name",
   "slug",
   "category",
@@ -91,11 +93,11 @@ const TRAINER_ALLOWED_FIELDS = [
   "image",
   "social",
   "href",
-  "isActive",
 ];
 
-const NUTRITIONIST_ALLOWED_FIELDS = [
-  "id",
+const TRAINER_UPDATE_FIELDS = [...TRAINER_CREATE_FIELDS];
+
+const NUTRITIONIST_CREATE_FIELDS = [
   "name",
   "slug",
   "role",
@@ -110,8 +112,46 @@ const NUTRITIONIST_ALLOWED_FIELDS = [
   "image",
   "social",
   "href",
-  "isActive",
 ];
+
+const NUTRITIONIST_UPDATE_FIELDS = [...NUTRITIONIST_CREATE_FIELDS];
+
+const REQUIRED_FIELDS = {
+  gym: ["name", "slug", "category", "city"],
+  trainer: [
+    "name",
+    "slug",
+    "role",
+    "specialty",
+    "experience",
+    "sessions",
+    "clients",
+  ],
+  nutritionist: [
+    "name",
+    "slug",
+    "role",
+    "specialty",
+    "experience",
+    "sessions",
+    "clients",
+  ],
+};
+
+const FIELD_CONTRACTS = {
+  gym: {
+    create: GYM_CREATE_FIELDS,
+    update: GYM_UPDATE_FIELDS,
+  },
+  trainer: {
+    create: TRAINER_CREATE_FIELDS,
+    update: TRAINER_UPDATE_FIELDS,
+  },
+  nutritionist: {
+    create: NUTRITIONIST_CREATE_FIELDS,
+    update: NUTRITIONIST_UPDATE_FIELDS,
+  },
+};
 
 /*
 |--------------------------------------------------------------------------
@@ -130,6 +170,76 @@ const pickAllowedFields = (body, allowedFields) => {
 
   return data;
 };
+
+const getUnsupportedFields = (body, allowedFields) => {
+  const allowed = new Set(allowedFields);
+  return Object.keys(body || {}).filter((field) => !allowed.has(field));
+};
+
+const normalizeRequiredStrings = (data, requiredFields) => {
+  for (const field of requiredFields) {
+    if (field === "city" || data[field] === undefined) continue;
+
+    if (typeof data[field] === "string") {
+      data[field] = data[field].trim();
+      if (field === "slug") data[field] = data[field].toLowerCase();
+    }
+  }
+
+  return data;
+};
+
+const getRequiredFieldErrors = (data, requiredFields) =>
+  requiredFields.flatMap((field) => {
+    const value = data[field];
+    const missing =
+      value === undefined ||
+      value === null ||
+      (typeof value === "string" && value.trim() === "");
+
+    return missing
+      ? [{ field, message: `${field} is required` }]
+      : [];
+  });
+
+const sendValidationError = (res, errors) =>
+  res.status(400).json({
+    success: false,
+    message: "Listing validation failed",
+    errors,
+  });
+
+const sendUnsupportedFieldsError = (res, unsupportedFields) =>
+  res.status(400).json({
+    success: false,
+    message: "Unsupported listing fields were submitted",
+    unsupportedFields,
+  });
+
+const validateGymCity = async (city) => {
+  if (!mongoose.Types.ObjectId.isValid(city)) {
+    return { field: "city", message: "city must be a valid MongoDB ObjectId" };
+  }
+
+  const cityExists = await City.exists({ _id: city });
+  if (!cityExists) {
+    return { field: "city", message: "Referenced city does not exist" };
+  }
+
+  return null;
+};
+
+const slugExists = async (model, slug, excludeId = null) => {
+  const query = { slug };
+  if (excludeId) query._id = { $ne: excludeId };
+  return Boolean(await model.exists(query));
+};
+
+const getMongooseValidationErrors = (error) =>
+  Object.values(error.errors).map((validationError) => ({
+    field: validationError.path,
+    message: validationError.message,
+  }));
 
 /*
 |--------------------------------------------------------------------------
@@ -157,78 +267,36 @@ export const createProviderListing = async (req, res) => {
       });
     }
 
-    let allowedFields = [];
+    const allowedFields = FIELD_CONTRACTS[config.type].create;
+    const unsupportedFields = getUnsupportedFields(req.body, allowedFields);
 
-    if (config.type === "gym") {
-      allowedFields = GYM_ALLOWED_FIELDS;
-    }
-
-    if (config.type === "trainer") {
-      allowedFields = TRAINER_ALLOWED_FIELDS;
-    }
-
-    if (config.type === "nutritionist") {
-      allowedFields = NUTRITIONIST_ALLOWED_FIELDS;
+    if (unsupportedFields.length > 0) {
+      return sendUnsupportedFieldsError(res, unsupportedFields);
     }
 
     const listingData = pickAllowedFields(req.body, allowedFields);
+    const requiredFields = REQUIRED_FIELDS[config.type];
+    normalizeRequiredStrings(listingData, requiredFields);
+    const validationErrors = getRequiredFieldErrors(
+      listingData,
+      requiredFields,
+    );
 
-    /*
-    |--------------------------------------------------------------------------
-    | Basic validation
-    |--------------------------------------------------------------------------
-    */
-
-    if (!listingData.name || !String(listingData.name).trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Listing name is required",
-      });
+    if (validationErrors.length > 0) {
+      return sendValidationError(res, validationErrors);
     }
 
-    listingData.name = String(listingData.name).trim();
-
-    /*
-    |--------------------------------------------------------------------------
-    | Gym validation
-    |--------------------------------------------------------------------------
-    */
-
     if (config.type === "gym") {
-      if (!listingData.slug || !String(listingData.slug).trim()) {
-        return res.status(400).json({
-          success: false,
-          message: "Listing slug is required",
-        });
-      }
+      const cityError = await validateGymCity(listingData.city);
+      if (cityError) return sendValidationError(res, [cityError]);
+    }
 
-      listingData.slug = String(listingData.slug).trim().toLowerCase();
-
-      // Check if slug already exists
-      const existingSlug = await config.model.findOne({
-        slug: listingData.slug,
+    if (await slugExists(config.model, listingData.slug)) {
+      return res.status(409).json({
+        success: false,
+        message: "A listing with this slug already exists",
+        field: "slug",
       });
-
-      if (existingSlug) {
-        return res.status(400).json({
-          success: false,
-          message: "A listing with this slug already exists",
-        });
-      }
-
-      if (!listingData.category || !String(listingData.category).trim()) {
-        return res.status(400).json({
-          success: false,
-          message: "Gym category is required",
-        });
-      }
-
-      if (!listingData.city) {
-        return res.status(400).json({
-          success: false,
-          message: "City is required",
-        });
-      }
     }
 
     /*
@@ -237,55 +305,15 @@ export const createProviderListing = async (req, res) => {
     |--------------------------------------------------------------------------
     |
     | These models require their own `id` field.
-    | Generate one if frontend doesn't provide it.
+| Provider input cannot set it; generate a stable public identifier here.
     |--------------------------------------------------------------------------
     */
 
     if (
       (config.type === "trainer" || config.type === "nutritionist") &&
-      (!listingData.id || !String(listingData.id).trim())
+      !listingData.id
     ) {
-      listingData.id = `${config.type}-${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2, 8)}`;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Trainer / Nutritionist slug
-    |--------------------------------------------------------------------------
-    |
-    | Their schemas require slug.
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-      (config.type === "trainer" || config.type === "nutritionist") &&
-      (!listingData.slug || !String(listingData.slug).trim())
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Listing slug is required",
-      });
-    }
-
-    if (
-      (config.type === "trainer" || config.type === "nutritionist") &&
-      listingData.slug
-    ) {
-      listingData.slug = String(listingData.slug).trim().toLowerCase();
-
-      // Check if slug already exists
-      const existingSlug = await config.model.findOne({
-        slug: listingData.slug,
-      });
-
-      if (existingSlug) {
-        return res.status(400).json({
-          success: false,
-          message: "A listing with this slug already exists",
-        });
-      }
+      listingData.id = `${config.type}-${randomUUID()}`;
     }
 
     /*
@@ -360,16 +388,7 @@ export const createProviderListing = async (req, res) => {
     */
 
     if (error.name === "ValidationError") {
-      const validationErrors = Object.values(error.errors).map((err) => ({
-        field: err.path,
-        message: err.message,
-      }));
-
-      return res.status(400).json({
-        success: false,
-        message: "Listing validation failed",
-        errors: validationErrors,
-      });
+      return sendValidationError(res, getMongooseValidationErrors(error));
     }
 
     return res.status(500).json({
@@ -517,18 +536,11 @@ export const updateMyProviderListing = async (req, res) => {
       });
     }
 
-    let allowedFields = [];
+    const allowedFields = FIELD_CONTRACTS[config.type].update;
+    const unsupportedFields = getUnsupportedFields(req.body, allowedFields);
 
-    if (config.type === "gym") {
-      allowedFields = GYM_ALLOWED_FIELDS;
-    }
-
-    if (config.type === "trainer") {
-      allowedFields = TRAINER_ALLOWED_FIELDS;
-    }
-
-    if (config.type === "nutritionist") {
-      allowedFields = NUTRITIONIST_ALLOWED_FIELDS;
+    if (unsupportedFields.length > 0) {
+      return sendUnsupportedFieldsError(res, unsupportedFields);
     }
 
     const updates = pickAllowedFields(req.body, allowedFields);
@@ -558,6 +570,37 @@ export const updateMyProviderListing = async (req, res) => {
       });
     }
 
+    const requiredFields = REQUIRED_FIELDS[config.type];
+    normalizeRequiredStrings(updates, requiredFields);
+
+    const candidate = {};
+    for (const field of requiredFields) {
+      candidate[field] =
+        updates[field] !== undefined ? updates[field] : listing[field];
+    }
+
+    const validationErrors = getRequiredFieldErrors(candidate, requiredFields);
+    if (validationErrors.length > 0) {
+      return sendValidationError(res, validationErrors);
+    }
+
+    if (config.type === "gym" && updates.city !== undefined) {
+      const cityError = await validateGymCity(updates.city);
+      if (cityError) return sendValidationError(res, [cityError]);
+    }
+
+    if (
+      updates.slug !== undefined &&
+      updates.slug !== listing.slug &&
+      (await slugExists(config.model, updates.slug, listing._id))
+    ) {
+      return res.status(409).json({
+        success: false,
+        message: "A listing with this slug already exists",
+        field: "slug",
+      });
+    }
+
     Object.assign(listing, updates);
 
     await listing.save();
@@ -583,16 +626,7 @@ export const updateMyProviderListing = async (req, res) => {
     }
 
     if (error.name === "ValidationError") {
-      const validationErrors = Object.values(error.errors).map((err) => ({
-        field: err.path,
-        message: err.message,
-      }));
-
-      return res.status(400).json({
-        success: false,
-        message: "Listing validation failed",
-        errors: validationErrors,
-      });
+      return sendValidationError(res, getMongooseValidationErrors(error));
     }
 
     return res.status(500).json({

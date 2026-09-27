@@ -12,6 +12,8 @@ import {
   updateListingVerification,
   updateListingFeatured,
   updateProviderStatus,
+  updateProviderProfile,
+  getAdminProviderListings,
   getAdminListingById,
 } from "../../controllers/admin/admin.controller.js";
 
@@ -48,6 +50,20 @@ router.patch(
   authMiddleware,
   adminMiddleware,
   updateProviderStatus,
+);
+
+router.put(
+  "/providers/:id",
+  authMiddleware,
+  adminMiddleware,
+  updateProviderProfile,
+);
+
+router.get(
+  "/providers/:id/listings",
+  authMiddleware,
+  adminMiddleware,
+  getAdminProviderListings,
 );
 
 // ============================================================

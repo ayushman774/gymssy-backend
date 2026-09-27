@@ -1206,6 +1206,60 @@ export const updateListingFeatured = async (req, res) => {
 };
 
 // ============================================================
+// UPDATE PROVIDER PROFILE - ADMIN
+// ============================================================
+
+export const updateProviderProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, providerType, isActive } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid provider ID",
+      });
+    }
+
+    // Explicit allowlist of editable fields
+    // Email and Phone/Mobile are intentionally excluded per requirements
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (providerType !== undefined) updates.providerType = providerType;
+
+    // If isActive is being updated, we use the dedicated status logic
+    // to handle cascading if deactivating.
+    // However, if it's passed here, we can handle it or ignore it.
+    // Let's focus on profile fields here.
+
+    const provider = await User.findOneAndUpdate(
+      { _id: id, role: "business" },
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!provider) {
+      return res.status(404).json({
+        success: false,
+        message: "Provider not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Provider profile updated successfully",
+      data: provider,
+    });
+  } catch (error) {
+    console.error("Update provider profile error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update provider profile",
+    });
+  }
+};
+
+// ============================================================
 // UPDATE PROVIDER STATUS - ADMIN
 // ============================================================
 
@@ -1241,16 +1295,83 @@ export const updateProviderStatus = async (req, res) => {
       });
     }
 
+    let affectedListings = 0;
+
+    // CASCADE DEACTIVATION: If provider is deactivated, deactivate all owned listings
+    if (isActive === false) {
+      const [gyms, trainers, nutritionists] = await Promise.all([
+        Gym.updateMany({ owner: id }, { isActive: false }),
+        Trainer.updateMany({ owner: id }, { isActive: false }),
+        Nutritionist.updateMany({ owner: id }, { isActive: false }),
+      ]);
+      affectedListings = gyms.modifiedCount + trainers.modifiedCount + nutritionists.modifiedCount;
+    }
+    // REACTIVATION: Provider becomes active, listings remain unchanged (Rule in Phase 9)
+
     return res.status(200).json({
       success: true,
-      message: `Provider status updated to ${isActive ? "active" : "inactive"}`,
-      data: provider,
+      message: `Provider status updated to ${isActive ? "active" : "inactive"}.${
+        isActive === false ? ` ${affectedListings} listings deactivated.` : ""
+      }`,
+      data: {
+        provider,
+        affectedListings
+      },
     });
   } catch (error) {
     console.error("Update provider status error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to update provider status",
+    });
+  }
+};
+
+// ============================================================
+// GET PROVIDER LISTINGS - ADMIN
+// ============================================================
+
+export const getAdminProviderListings = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid provider ID",
+      });
+    }
+
+    const [gyms, trainers, nutritionists] = await Promise.all([
+      Gym.find({ owner: id }).lean(),
+      Trainer.find({ owner: id }).lean(),
+      Nutritionist.find({ owner: id }).lean(),
+    ]);
+
+    const normalizedListings = [
+      ...gyms.map(l => normalizeAdminListing(l, "gym")),
+      ...trainers.map(l => normalizeAdminListing(l, "trainer")),
+      ...nutritionists.map(l => normalizeAdminListing(l, "nutritionist")),
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const counts = {
+      total: normalizedListings.length,
+      active: normalizedListings.filter(l => l.isActive).length,
+      inactive: normalizedListings.filter(l => !l.isActive).length,
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        listings: normalizedListings,
+        counts,
+      },
+    });
+  } catch (error) {
+    console.error("Get admin provider listings error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch provider listings",
     });
   }
 };

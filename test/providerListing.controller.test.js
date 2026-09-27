@@ -1,0 +1,296 @@
+import test, { afterEach } from "node:test";
+import assert from "node:assert/strict";
+import mongoose from "mongoose";
+
+import {
+  createProviderListing,
+  updateMyProviderListing,
+  deleteMyProviderListing,
+} from "../src/controllers/providers/providerListing.controller.js";
+import Gym from "../src/models/gyms/Gym.js";
+import Trainer from "../src/models/trainers/Trainer.js";
+import Nutritionist from "../src/models/nutritionists/Nutritionist.js";
+import City from "../src/models/cities/City.js";
+
+const originals = [];
+
+function mock(target, property, value) {
+  originals.push([target, property, target[property]]);
+  target[property] = value;
+}
+
+afterEach(() => {
+  while (originals.length > 0) {
+    const [target, property, value] = originals.pop();
+    target[property] = value;
+  }
+});
+
+function response() {
+  return {
+    statusCode: 200,
+    body: null,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(body) {
+      this.body = body;
+      return this;
+    },
+  };
+}
+
+function request(providerType, body = {}, params = {}) {
+  return {
+    body,
+    params,
+    user: {
+      id: new mongoose.Types.ObjectId(),
+      role: "business",
+      providerType,
+    },
+  };
+}
+
+function stubSuccessfulCreate(model, extra = {}) {
+  mock(model, "exists", async () => false);
+  mock(model, "create", async (data) => ({ _id: new mongoose.Types.ObjectId(), ...data }));
+  for (const [target, property, value] of extra.mocks || []) {
+    mock(target, property, value);
+  }
+}
+
+const professionalBody = {
+  name: "  Alex Example  ",
+  slug: "  Alex-Example  ",
+  role: "  Strength Coach  ",
+  specialty: "  Strength  ",
+  experience: "  8 years  ",
+  sessions: "  500+  ",
+  clients: "  120  ",
+};
+
+test("creates a Gym with validated city and forced system defaults", { concurrency: false }, async () => {
+  stubSuccessfulCreate(Gym, { mocks: [[City, "exists", async () => true]] });
+  const city = new mongoose.Types.ObjectId().toString();
+  const req = request("gym_owner", {
+    name: "  Elite Gym  ",
+    slug: "  Elite-Gym  ",
+    category: "  premium  ",
+    city,
+  });
+  const res = response();
+
+  await createProviderListing(req, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.data.listing.name, "Elite Gym");
+  assert.equal(res.body.data.listing.slug, "elite-gym");
+  assert.equal(res.body.data.listing.category, "premium");
+  assert.equal(res.body.data.listing.owner, req.user.id);
+  assert.equal(res.body.data.listing.verified, false);
+  assert.equal(res.body.data.listing.featured, false);
+  assert.equal(res.body.data.listing.isActive, true);
+});
+
+for (const providerType of ["trainer", "coach"]) {
+  test(`creates a ${providerType} Trainer listing`, { concurrency: false }, async () => {
+    stubSuccessfulCreate(Trainer);
+    const req = request(providerType, { ...professionalBody });
+    const res = response();
+
+    await createProviderListing(req, res);
+
+    assert.equal(res.statusCode, 201);
+    assert.equal(res.body.data.type, "trainer");
+    assert.equal(res.body.data.providerType, providerType);
+    assert.match(res.body.data.listing.id, /^trainer-[0-9a-f-]{36}$/);
+    assert.equal(res.body.data.listing.slug, "alex-example");
+    assert.equal(res.body.data.listing.role, "Strength Coach");
+    assert.equal(res.body.data.listing.isVerified, false);
+    assert.equal(res.body.data.listing.featured, false);
+    assert.equal(res.body.data.listing.isActive, true);
+  });
+}
+
+test("creates a Nutritionist listing", { concurrency: false }, async () => {
+  stubSuccessfulCreate(Nutritionist);
+  const req = request("nutritionist", { ...professionalBody });
+  const res = response();
+
+  await createProviderListing(req, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.data.type, "nutritionist");
+  assert.match(res.body.data.listing.id, /^nutritionist-[0-9a-f-]{36}$/);
+});
+
+test("returns field-level errors for missing professional fields", { concurrency: false }, async () => {
+  const req = request("trainer", { name: "Alex", slug: "alex" });
+  const res = response();
+
+  await createProviderListing(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(
+    res.body.errors.map(({ field }) => field),
+    ["role", "specialty", "experience", "sessions", "clients"],
+  );
+});
+
+test("rejects unsupported fields instead of silently discarding them", { concurrency: false }, async () => {
+  const req = request("nutritionist", { ...professionalBody, description: "Not bio" });
+  const res = response();
+
+  await createProviderListing(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.body.unsupportedFields, ["description"]);
+});
+
+test("rejects provider writes to system-controlled fields", { concurrency: false }, async () => {
+  const req = request("trainer", {
+    ...professionalBody,
+    owner: new mongoose.Types.ObjectId(),
+    isVerified: true,
+    featured: true,
+    rating: 5,
+    reviews: 10,
+    isActive: false,
+    createdAt: new Date().toISOString(),
+  });
+  const res = response();
+
+  await createProviderListing(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.body.unsupportedFields, [
+    "owner",
+    "isVerified",
+    "featured",
+    "rating",
+    "reviews",
+    "isActive",
+    "createdAt",
+  ]);
+});
+
+test("rejects an invalid Gym city id", { concurrency: false }, async () => {
+  mock(Gym, "exists", async () => false);
+  const req = request("gym_owner", {
+    name: "Gym",
+    slug: "gym",
+    category: "fitness",
+    city: "not-an-object-id",
+  });
+  const res = response();
+
+  await createProviderListing(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.errors[0].field, "city");
+});
+
+test("rejects a nonexistent Gym city", { concurrency: false }, async () => {
+  mock(City, "exists", async () => null);
+  const req = request("gym_owner", {
+    name: "Gym",
+    slug: "gym",
+    category: "fitness",
+    city: new mongoose.Types.ObjectId().toString(),
+  });
+  const res = response();
+
+  await createProviderListing(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.errors[0].message, "Referenced city does not exist");
+});
+
+test("returns 409 for a duplicate slug", { concurrency: false }, async () => {
+  mock(Trainer, "exists", async () => true);
+  const req = request("trainer", { ...professionalBody });
+  const res = response();
+
+  await createProviderListing(req, res);
+
+  assert.equal(res.statusCode, 409);
+  assert.equal(res.body.field, "slug");
+});
+
+test("prevents updating a listing not owned by the provider", { concurrency: false }, async () => {
+  mock(Trainer, "findOne", async () => null);
+  const req = request("trainer", { bio: "Updated" }, { id: new mongoose.Types.ObjectId().toString() });
+  const res = response();
+
+  await updateMyProviderListing(req, res);
+
+  assert.equal(res.statusCode, 404);
+});
+
+test("rejects professional id changes", { concurrency: false }, async () => {
+  const req = request("trainer", { id: "replacement-id" }, { id: new mongoose.Types.ObjectId().toString() });
+  const res = response();
+
+  await updateMyProviderListing(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.body.unsupportedFields, ["id"]);
+});
+
+test("performs a successful partial update", { concurrency: false }, async () => {
+  const listing = {
+    _id: new mongoose.Types.ObjectId(),
+    ...professionalBody,
+    name: "Alex Example",
+    slug: "alex-example",
+    async save() {},
+  };
+  mock(Trainer, "findOne", async () => listing);
+  const req = request("trainer", { bio: "  Updated biography  " }, { id: listing._id.toString() });
+  const res = response();
+
+  await updateMyProviderListing(req, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.data.listing.bio, "  Updated biography  ");
+});
+
+test("rejects blanking a required field during update", { concurrency: false }, async () => {
+  const listing = {
+    _id: new mongoose.Types.ObjectId(),
+    ...professionalBody,
+    name: "Alex Example",
+    slug: "alex-example",
+    async save() {},
+  };
+  mock(Trainer, "findOne", async () => listing);
+  const req = request("trainer", { specialty: "   " }, { id: listing._id.toString() });
+  const res = response();
+
+  await updateMyProviderListing(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.errors[0].field, "specialty");
+});
+
+test("deactivates an owned provider listing", { concurrency: false }, async () => {
+  let saved = false;
+  const listing = {
+    _id: new mongoose.Types.ObjectId(),
+    isActive: true,
+    async save() {
+      saved = true;
+    },
+  };
+  mock(Gym, "findOne", async () => listing);
+  const req = request("gym_owner", {}, { id: listing._id.toString() });
+  const res = response();
+
+  await deleteMyProviderListing(req, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(listing.isActive, false);
+  assert.equal(saved, true);
+});
