@@ -67,9 +67,15 @@ app.use(cookieParser());
 ================================ */
 
 app.get("/api/health", (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
   res.status(200).json({
     success: true,
     message: "Gymssy API is running 🚀",
+    status: {
+      server: "up",
+      database: dbStatus,
+    },
+    timestamp: new Date().toISOString(),
   });
 });
 

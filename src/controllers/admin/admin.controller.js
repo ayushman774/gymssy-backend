@@ -851,6 +851,47 @@ export const getAdminProviderById = async (req, res) => {
 };
 
 // ============================================================
+// ADMIN LISTING HELPERS
+// ============================================================
+
+/**
+ * Normalizes a listing document from any of the three models
+ * into a consistent admin-facing structure.
+ */
+const normalizeAdminListing = (doc, type) => {
+  return {
+    id: doc._id,
+    type,
+    name: doc.name,
+    slug: doc.slug,
+    owner: doc.owner,
+    category: doc.category,
+    city: doc.city ? (typeof doc.city === "object" ? doc.city.name : doc.city) : null,
+    isActive: doc.isActive,
+    isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
+    featured: doc.featured,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  };
+};
+
+/**
+ * Resolves the appropriate model based on listing type string.
+ */
+const getModelByType = (type) => {
+  switch (type) {
+    case "gym":
+      return Gym;
+    case "trainer":
+      return Trainer;
+    case "nutritionist":
+      return Nutritionist;
+    default:
+      return null;
+  }
+};
+
+// ============================================================
 // GET ALL LISTINGS - ADMIN
 // ============================================================
 //
@@ -919,19 +960,7 @@ export const getAdminListings = async (req, res) => {
         target.model.countDocuments(filter),
       ]);
 
-      const listings = docs.map((doc) => ({
-        id: doc._id,
-        type: target.type,
-        name: doc.name,
-        slug: doc.slug,
-        owner: doc.owner,
-        category: doc.category,
-        city: doc.city ? (typeof doc.city === "object" ? doc.city.name : doc.city) : null,
-        isActive: doc.isActive,
-        isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
-        featured: doc.featured,
-        createdAt: doc.createdAt,
-      }));
+      const listings = docs.map((doc) => normalizeAdminListing(doc, target.type));
 
       return res.status(200).json({
         success: true,
@@ -964,19 +993,7 @@ export const getAdminListings = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(skip + perPage) // Fetch enough to cover the current page
             .lean();
-          return docs.map((doc) => ({
-            id: doc._id,
-            type: t.type,
-            name: doc.name,
-            slug: doc.slug,
-            owner: doc.owner,
-            category: doc.category,
-            city: doc.city ? (typeof doc.city === "object" ? doc.city.name : doc.city) : null,
-            isActive: doc.isActive,
-            isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
-            featured: doc.featured,
-            createdAt: doc.createdAt,
-          }));
+          return docs.map((doc) => normalizeAdminListing(doc, t.type));
         }),
       );
 
@@ -1007,6 +1024,281 @@ export const getAdminListings = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch marketplace listings",
+    });
+  }
+};
+
+// ============================================================
+// UPDATE LISTING STATUS - ADMIN
+// ============================================================
+
+export const updateListingStatus = async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const { isActive } = req.body;
+
+    if (isActive === undefined || typeof isActive !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isActive (boolean) is required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing ID format",
+      });
+    }
+
+    const Model = getModelByType(type);
+    if (!Model) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing type",
+      });
+    }
+
+    const listing = await Model.findById(id);
+
+    if (!listing) {
+      return res.status(404).json({
+        success: false,
+        message: "Listing not found",
+      });
+    }
+
+    listing.isActive = isActive;
+    await listing.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Listing status updated to ${isActive ? "active" : "inactive"}`,
+      data: normalizeAdminListing(listing, type),
+    });
+  } catch (error) {
+    console.error("Update listing status error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update listing status",
+    });
+  }
+};
+
+// ============================================================
+// UPDATE LISTING VERIFICATION - ADMIN
+// ============================================================
+
+export const updateListingVerification = async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const { isVerified } = req.body;
+
+    if (isVerified === undefined || typeof isVerified !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isVerified (boolean) is required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing ID format",
+      });
+    }
+
+    const Model = getModelByType(type);
+    if (!Model) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing type",
+      });
+    }
+
+    const listing = await Model.findById(id);
+
+    if (!listing) {
+      return res.status(404).json({
+        success: false,
+        message: "Listing not found",
+      });
+    }
+
+    // Handle inconsistent field naming across models
+    if (type === "gym") {
+      listing.verified = isVerified;
+    } else {
+      listing.isVerified = isVerified;
+    }
+
+    await listing.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Listing verification updated to ${isVerified ? "verified" : "unverified"}`,
+      data: normalizeAdminListing(listing, type),
+    });
+  } catch (error) {
+    console.error("Update listing verification error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update listing verification",
+    });
+  }
+};
+
+// ============================================================
+// UPDATE LISTING FEATURED STATE - ADMIN
+// ============================================================
+
+export const updateListingFeatured = async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const { featured } = req.body;
+
+    if (featured === undefined || typeof featured !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "featured (boolean) is required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing ID format",
+      });
+    }
+
+    const Model = getModelByType(type);
+    if (!Model) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing type",
+      });
+    }
+
+    const listing = await Model.findById(id);
+
+    if (!listing) {
+      return res.status(404).json({
+        success: false,
+        message: "Listing not found",
+      });
+    }
+
+    listing.featured = featured;
+    await listing.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Listing featured state updated to ${featured ? "featured" : "standard"}`,
+      data: normalizeAdminListing(listing, type),
+    });
+  } catch (error) {
+    console.error("Update listing featured error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update listing featured state",
+    });
+  }
+};
+
+// ============================================================
+// UPDATE PROVIDER STATUS - ADMIN
+// ============================================================
+
+export const updateProviderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    if (isActive === undefined || typeof isActive !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isActive (boolean) is required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid provider ID",
+      });
+    }
+
+    const provider = await User.findOneAndUpdate(
+      { _id: id, role: "business" },
+      { isActive },
+      { new: true }
+    ).select("-password");
+
+    if (!provider) {
+      return res.status(404).json({
+        success: false,
+        message: "Provider not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Provider status updated to ${isActive ? "active" : "inactive"}`,
+      data: provider,
+    });
+  } catch (error) {
+    console.error("Update provider status error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update provider status",
+    });
+  }
+};
+
+// ============================================================
+// GET LISTING DETAIL - ADMIN
+// ============================================================
+
+export const getAdminListingById = async (req, res) => {
+  try {
+    const { type, id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing ID format",
+      });
+    }
+
+    const Model = getModelByType(type);
+    if (!Model) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing type",
+      });
+    }
+
+    const listing = await Model.findById(id)
+      .populate("owner", "name email providerType")
+      .populate(type === "gym" ? "city" : "")
+      .lean();
+
+    if (!listing) {
+      return res.status(404).json({
+        success: false,
+        message: "Listing not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: normalizeAdminListing(listing, type),
+    });
+  } catch (error) {
+    console.error("Get admin listing detail error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch listing details",
     });
   }
 };

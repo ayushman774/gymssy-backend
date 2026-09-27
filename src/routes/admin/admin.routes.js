@@ -8,6 +8,11 @@ import {
   getAdminProviders,
   getAdminProviderById,
   getAdminListings,
+  updateListingStatus,
+  updateListingVerification,
+  updateListingFeatured,
+  updateProviderStatus,
+  getAdminListingById,
 } from "../../controllers/admin/admin.controller.js";
 
 const router = express.Router();
@@ -38,11 +43,46 @@ router.get("/dashboard", authMiddleware, adminMiddleware, getAdminDashboard);
 
 router.get("/providers", authMiddleware, adminMiddleware, getAdminProviders);
 
+router.patch(
+  "/providers/:id/status",
+  authMiddleware,
+  adminMiddleware,
+  updateProviderStatus,
+);
+
 // ============================================================
 // ADMIN LISTINGS
 // ============================================================
 
 router.get("/listings", authMiddleware, adminMiddleware, getAdminListings);
+
+router.get(
+  "/listings/:type/:id",
+  authMiddleware,
+  adminMiddleware,
+  getAdminListingById,
+);
+
+router.patch(
+  "/listings/:type/:id/status",
+  authMiddleware,
+  adminMiddleware,
+  updateListingStatus,
+);
+
+router.patch(
+  "/listings/:type/:id/verification",
+  authMiddleware,
+  adminMiddleware,
+  updateListingVerification,
+);
+
+router.patch(
+  "/listings/:type/:id/featured",
+  authMiddleware,
+  adminMiddleware,
+  updateListingFeatured,
+);
 
 // ============================================================
 // SINGLE PROVIDER DETAILS
