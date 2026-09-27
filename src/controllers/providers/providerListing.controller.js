@@ -287,6 +287,14 @@ export const prepareListingContentUpdate = async ({ model, type, listing, body }
   }
   if (updates.image) updates.image = { ...(listing.image?.toObject?.() || listing.image || {}), ...updates.image };
   if (updates.social) updates.social = { ...(listing.social?.toObject?.() || listing.social || {}), ...updates.social };
+  if (type === "gym") {
+    for (const field of ["location", "coordinates", "images"]) {
+      if (updates[field] !== undefined) {
+        const existing = listing[field]?.toObject?.() || listing[field] || {};
+        updates[field] = { ...existing, ...updates[field] };
+      }
+    }
+  }
   return updates;
 };
 

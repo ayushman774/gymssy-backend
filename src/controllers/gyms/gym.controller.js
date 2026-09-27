@@ -1,6 +1,8 @@
 import Gym from "../../models/gyms/Gym.js";
 import City from "../../models/cities/City.js";
 import Category from "../../models/categories/Category.js";
+import { toPublicGym, toPublicGyms } from "../../utils/publicGym.js";
+import { escapeRegex } from "../../utils/regex.js";
 
 export const getFeaturedGyms = async (req, res) => {
   try {
@@ -110,7 +112,7 @@ export const getFeaturedGyms = async (req, res) => {
       success: true,
       count: gyms.length,
       type: type ? type.trim().toLowerCase() : null,
-      data: gyms,
+      data: toPublicGyms(gyms),
     });
   } catch (error) {
     console.error("Get featured gyms error:", error);
@@ -140,7 +142,7 @@ export const getGymBySlug = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: gym,
+      data: toPublicGym(gym),
     });
   } catch (error) {
     console.error("Get gym by slug error:", error);
@@ -164,19 +166,20 @@ export const getGymsByCategory = async (req, res) => {
     }
 
     const normalizedCategory = category.trim().replace(/-/g, " ");
+    const escapedCategory = escapeRegex(normalizedCategory);
 
     const gyms = await Gym.find({
       isActive: true,
       $or: [
         {
           category: {
-            $regex: `^${normalizedCategory}$`,
+            $regex: `^${escapedCategory}$`,
             $options: "i",
           },
         },
         {
           tags: {
-            $regex: normalizedCategory,
+            $regex: escapedCategory,
             $options: "i",
           },
         },
@@ -193,7 +196,7 @@ export const getGymsByCategory = async (req, res) => {
       success: true,
       count: gyms.length,
       category: normalizedCategory,
-      data: gyms,
+      data: toPublicGyms(gyms),
     });
   } catch (error) {
     console.error("Get gyms by category error:", error);
@@ -244,17 +247,18 @@ export const getGyms = async (req, res) => {
 
     if (category) {
       const normalizedCategory = category.trim().replace(/-/g, " ");
+      const escapedCategory = escapeRegex(normalizedCategory);
 
       filter.$or = [
         {
           category: {
-            $regex: `^${normalizedCategory}$`,
+            $regex: `^${escapedCategory}$`,
             $options: "i",
           },
         },
         {
           tags: {
-            $regex: normalizedCategory,
+            $regex: escapedCategory,
             $options: "i",
           },
         },
@@ -278,7 +282,7 @@ export const getGyms = async (req, res) => {
       count: gyms.length,
       city: city || null,
       category: category || null,
-      data: gyms,
+      data: toPublicGyms(gyms),
     });
   } catch (error) {
     console.error("Get gyms error:", error);

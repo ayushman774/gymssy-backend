@@ -1280,6 +1280,77 @@ const getUnsupportedAdminProviderFields = (body = {}) => {
   return [...new Set(unsupportedFields)];
 };
 
+const ADMIN_GYM_PHASE_A_FIELDS = new Set([
+  "name", "slug", "category", "tags", "phone", "email", "website",
+  "description", "highlights", "location", "coordinates", "priceFrom",
+  "timings", "city",
+]);
+const ADMIN_GYM_LOCATION_FIELDS = new Set([
+  "address", "area", "city", "state", "pincode", "landmark", "parking",
+]);
+const ADMIN_GYM_COORDINATE_FIELDS = new Set(["lat", "lng"]);
+const ADMIN_GYM_TIMING_FIELDS = new Set(["day", "open", "close", "isOpen"]);
+const TIME_24_HOUR_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+const getAdminGymPhaseAUnsupportedFields = (body = {}) => {
+  const unsupported = Object.keys(body).filter((field) => !ADMIN_GYM_PHASE_A_FIELDS.has(field));
+  for (const [group, allowed] of [["location", ADMIN_GYM_LOCATION_FIELDS], ["coordinates", ADMIN_GYM_COORDINATE_FIELDS]]) {
+    const value = body[group];
+    if (value !== undefined && (value === null || typeof value !== "object" || Array.isArray(value))) unsupported.push(group);
+    else if (value) unsupported.push(...Object.keys(value).filter((field) => !allowed.has(field)).map((field) => `${group}.${field}`));
+  }
+  if (Array.isArray(body.timings)) body.timings.forEach((row, index) => {
+    if (row && typeof row === "object" && !Array.isArray(row)) unsupported.push(...Object.keys(row).filter((field) => !ADMIN_GYM_TIMING_FIELDS.has(field)).map((field) => `timings.${index}.${field}`));
+  });
+  return [...new Set(unsupported)];
+};
+
+const validateAdminGymPhaseA = (body) => {
+  const errors = [];
+  if (body.coordinates && typeof body.coordinates === "object" && !Array.isArray(body.coordinates)) {
+    for (const [field, min, max] of [["lat", -90, 90], ["lng", -180, 180]]) {
+      const value = body.coordinates[field];
+      if (value !== undefined && value !== null && (typeof value !== "number" || !Number.isFinite(value) || value < min || value > max)) errors.push({ field: `coordinates.${field}`, message: `coordinates.${field} must be null or a number from ${min} to ${max}` });
+    }
+  }
+  for (const field of ["tags", "highlights"]) if (body[field] !== undefined && (!Array.isArray(body[field]) || body[field].some((item) => typeof item !== "string"))) errors.push({ field, message: `${field} must be an array of strings` });
+  if (body.priceFrom !== undefined && body.priceFrom !== null && (typeof body.priceFrom !== "number" || !Number.isFinite(body.priceFrom))) errors.push({ field: "priceFrom", message: "priceFrom must be null or a finite number" });
+  if (body.timings !== undefined) {
+    if (!Array.isArray(body.timings)) errors.push({ field: "timings", message: "timings must be an array" });
+    else {
+      const days = new Set();
+      body.timings.forEach((row, index) => {
+        const prefix = `timings.${index}`;
+        if (!row || typeof row !== "object" || Array.isArray(row)) { errors.push({ field: prefix, message: "each timing must be an object" }); return; }
+        const day = typeof row.day === "string" ? row.day.trim() : "";
+        if (!day) errors.push({ field: `${prefix}.day`, message: "day is required" });
+        else if (days.has(day.toLowerCase())) errors.push({ field: `${prefix}.day`, message: "duplicate timing days are not allowed" });
+        else days.add(day.toLowerCase());
+        if (typeof row.isOpen !== "boolean") errors.push({ field: `${prefix}.isOpen`, message: "isOpen must be a boolean" });
+        for (const field of ["open", "close"]) {
+          const value = row[field];
+          if (value !== undefined && typeof value !== "string") errors.push({ field: `${prefix}.${field}`, message: `${field} must be a string` });
+          if (row.isOpen === true && (typeof value !== "string" || !TIME_24_HOUR_PATTERN.test(value.trim()))) errors.push({ field: `${prefix}.${field}`, message: `${field} must use HH:mm 24-hour format when the gym is open` });
+          else if (row.isOpen === false && typeof value === "string" && value.trim() && !TIME_24_HOUR_PATTERN.test(value.trim())) errors.push({ field: `${prefix}.${field}`, message: `${field} must be blank or use HH:mm 24-hour format` });
+        }
+      });
+    }
+  }
+  return errors;
+};
+
+const normalizeAdminGymPhaseABody = (body) => {
+  const normalized = { ...body };
+  for (const field of ["tags", "highlights"]) if (Array.isArray(body[field])) normalized[field] = body[field].map((item) => item.trim()).filter(Boolean);
+  if (Array.isArray(body.timings)) normalized.timings = body.timings.map((row) => ({
+    ...row,
+    day: typeof row?.day === "string" ? row.day.trim() : row?.day,
+    open: typeof row?.open === "string" ? row.open.trim() : row?.open,
+    close: typeof row?.close === "string" ? row.close.trim() : row?.close,
+  }));
+  return normalized;
+};
+
 const normalizeAdminListingDetail = (doc, requestedType) => {
   const type = requestedType === "coach" ? "trainer" : requestedType;
   const owner = doc.owner && typeof doc.owner === "object" ? {
@@ -1289,11 +1360,21 @@ const normalizeAdminListingDetail = (doc, requestedType) => {
     providerType: doc.owner.providerType,
     isActive: doc.owner.isActive,
   } : null;
+  const city = type === "gym" && doc.city && typeof doc.city === "object"
+    ? {
+        id: doc.city._id,
+        name: doc.city.name,
+        slug: doc.city.slug,
+        state: doc.city.state,
+        country: doc.city.country,
+      }
+    : doc.city ?? null;
   return {
     ...doc,
     _id: doc._id,
     type,
     owner,
+    city,
     isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
   };
 };
@@ -1685,21 +1766,28 @@ export const updateAdminListingContent = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ success: false, message: "Invalid listing ID format" });
     }
-    if (!["trainer", "nutritionist"].includes(type)) {
-      return res.status(400).json({ success: false, message: "Professional listing content editing supports Trainer, Coach, and Nutritionist listings only" });
+    if (!["gym", "trainer", "nutritionist"].includes(type)) {
+      return res.status(400).json({ success: false, message: "Listing content editing is not supported for this listing type" });
     }
-    const unsupportedFields = getListingUpdateUnsupportedFields(type, req.body);
+    const unsupportedFields = type === "gym" ? getAdminGymPhaseAUnsupportedFields(req.body) : getListingUpdateUnsupportedFields(type, req.body);
     if (unsupportedFields.length) {
       return res.status(400).json({ success: false, message: "Unsupported listing fields were submitted", unsupportedFields });
+    }
+    let body = req.body;
+    if (type === "gym") {
+      const errors = validateAdminGymPhaseA(body);
+      if (errors.length) return res.status(400).json({ success: false, message: "Listing validation failed", errors });
+      body = normalizeAdminGymPhaseABody(body);
     }
     const Model = getModelByType(type);
     const listing = await Model.findById(req.params.id);
     if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
-    const updates = await prepareListingContentUpdate({ model: Model, type, listing, body: req.body });
+    const updates = await prepareListingContentUpdate({ model: Model, type, listing, body });
     Object.assign(listing, updates);
     await listing.save();
     const populated = await Model.findById(listing._id)
       .populate("owner", "name email providerType isActive")
+      .populate(type === "gym" ? "city" : "")
       .lean();
     return res.status(200).json({
       success: true,
