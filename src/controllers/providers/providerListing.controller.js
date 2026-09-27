@@ -4,6 +4,7 @@ import Gym from "../../models/gyms/Gym.js";
 import Trainer from "../../models/trainers/Trainer.js";
 import Nutritionist from "../../models/nutritionists/Nutritionist.js";
 import City from "../../models/cities/City.js";
+import { sanitizeProviderGymImages } from "../../utils/gymMedia.js";
 
 /*
 |--------------------------------------------------------------------------
@@ -266,6 +267,7 @@ export const prepareListingContentUpdate = async ({ model, type, listing, body }
     });
   }
   const updates = pickAllowedFields(body, allowedFields);
+  if (type === "gym" && updates.images !== undefined) updates.images = sanitizeProviderGymImages(updates.images);
   if (!Object.keys(updates).length) {
     throw new ListingContractError(400, { success: false, message: "No valid listing fields provided for update" });
   }
@@ -291,7 +293,18 @@ export const prepareListingContentUpdate = async ({ model, type, listing, body }
     for (const field of ["location", "coordinates", "images"]) {
       if (updates[field] !== undefined) {
         const existing = listing[field]?.toObject?.() || listing[field] || {};
+        if (field === "images") {
+          if (existing.coverMeta?.publicId && updates[field].cover !== undefined && updates[field].cover !== existing.cover) {
+            throw new ListingContractError(400, { success: false, message: "Managed Gym cover media must be changed through the media upload API", field: "images.cover" });
+          }
+          if (updates[field].gallery !== undefined && (existing.gallery || []).some((item) => item.publicId)) {
+            throw new ListingContractError(400, { success: false, message: "Managed Gym gallery media must be changed through the media upload API", field: "images.gallery" });
+          }
+        }
         updates[field] = { ...existing, ...updates[field] };
+        if (field === "images" && updates[field].cover !== existing.cover) {
+          updates[field].coverMeta = { publicId: "", width: null, height: null, format: "" };
+        }
       }
     }
   }
@@ -322,6 +335,7 @@ export const prepareProviderOwnedListing = async ({
   }
 
   const listingData = pickAllowedFields(body, allowedFields);
+  if (config.type === "gym" && listingData.images !== undefined) listingData.images = sanitizeProviderGymImages(listingData.images);
   const requiredFields = REQUIRED_FIELDS[config.type];
   normalizeRequiredStrings(listingData, requiredFields);
   const validationErrors = getRequiredFieldErrors(listingData, requiredFields);

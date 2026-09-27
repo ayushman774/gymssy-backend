@@ -5,6 +5,7 @@ import Gym from "../../models/gyms/Gym.js";
 import Trainer from "../../models/trainers/Trainer.js";
 import Nutritionist from "../../models/nutritionists/Nutritionist.js";
 import { getListingUpdateUnsupportedFields, ListingContractError, prepareListingContentUpdate } from "../providers/providerListing.controller.js";
+import { toAdminGymImages } from "../../utils/gymMedia.js";
 
 // ============================================================
 // ADMIN DASHBOARD
@@ -1351,7 +1352,7 @@ const normalizeAdminGymPhaseABody = (body) => {
   return normalized;
 };
 
-const normalizeAdminListingDetail = (doc, requestedType) => {
+export const normalizeAdminListingDetail = (doc, requestedType) => {
   const type = requestedType === "coach" ? "trainer" : requestedType;
   const owner = doc.owner && typeof doc.owner === "object" ? {
     id: doc.owner._id,
@@ -1369,7 +1370,7 @@ const normalizeAdminListingDetail = (doc, requestedType) => {
         country: doc.city.country,
       }
     : doc.city ?? null;
-  return {
+  const normalized = {
     ...doc,
     _id: doc._id,
     type,
@@ -1377,6 +1378,8 @@ const normalizeAdminListingDetail = (doc, requestedType) => {
     city,
     isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
   };
+  if (type === "gym") normalized.images = toAdminGymImages(doc);
+  return normalized;
 };
 
 const findNormalizedProviderListings = async (ownerId) => {

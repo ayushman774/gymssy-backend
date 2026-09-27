@@ -42,7 +42,9 @@ test("Gym nested partial updates preserve omitted sibling fields", async () => {
 
   assert.deepEqual(updates.location, { ...listing.location, area: "Sector 2" });
   assert.deepEqual(updates.coordinates, { lat: 28.5, lng: 77.0266 });
-  assert.deepEqual(updates.images, { ...listing.images, cover: "cover-new.jpg" });
+  assert.equal(updates.images.cover, "cover-new.jpg");
+  assert.deepEqual(updates.images.gallery, listing.images.gallery);
+  assert.deepEqual(updates.images.coverMeta, { publicId: "", width: null, height: null, format: "" });
 });
 
 test("Gym coordinate longitude-only updates preserve latitude", async () => {

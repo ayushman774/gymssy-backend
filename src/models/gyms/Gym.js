@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
+import { randomUUID } from "node:crypto";
 
 const galleryImageSchema = new mongoose.Schema(
   {
+    id: { type: String, default: () => randomUUID() },
     url: {
       type: String,
       default: "",
@@ -14,6 +16,10 @@ const galleryImageSchema = new mongoose.Schema(
       type: String,
       default: "gym",
     },
+    publicId: { type: String, default: "" },
+    width: { type: Number, default: null },
+    height: { type: Number, default: null },
+    format: { type: String, default: "" },
   },
   { _id: false },
 );
@@ -434,6 +440,12 @@ const gymSchema = new mongoose.Schema(
       cover: {
         type: String,
         default: "",
+      },
+      coverMeta: {
+        publicId: { type: String, default: "" },
+        width: { type: Number, default: null },
+        height: { type: Number, default: null },
+        format: { type: String, default: "" },
       },
       gallery: {
         type: [galleryImageSchema],

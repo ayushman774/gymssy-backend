@@ -9,13 +9,16 @@ const PUBLIC_GYM_FIELDS = [
 export function toPublicGym(value) {
   if (!value) return value;
   const gym = value.toObject?.() || value;
-  return Object.fromEntries(
+  const result = Object.fromEntries(
     PUBLIC_GYM_FIELDS
       .filter((field) => gym[field] !== undefined)
       .map((field) => [field, gym[field]]),
   );
+  if (gym.images !== undefined) result.images = toPublicGymImages(gym.images);
+  return result;
 }
 
 export function toPublicGyms(values = []) {
   return values.map(toPublicGym);
 }
+import { toPublicGymImages } from "./gymMedia.js";

@@ -3,6 +3,8 @@ import express from "express";
 import authMiddleware from "../../middleware/auth.middleware.js";
 import adminMiddleware from "../../middleware/auth/adminMiddleware.js";
 import { uploadProviderAvatarFile } from "../../middleware/uploads/providerAvatarUpload.js";
+import { uploadGymCoverFile, uploadGymGalleryFile } from "../../middleware/uploads/gymMediaUpload.js";
+import { uploadCover, removeCover, uploadGallery, updateGalleryMetadata, removeGallery, reorderGallery } from "../../controllers/admin/adminGymMedia.controller.js";
 import {
   uploadProviderAvatar,
   removeProviderAvatar,
@@ -66,6 +68,13 @@ router.put(
   adminMiddleware,
   updateProviderProfile,
 );
+
+router.post("/listings/gym/:id/media/cover", authMiddleware, adminMiddleware, uploadGymCoverFile, uploadCover);
+router.delete("/listings/gym/:id/media/cover", authMiddleware, adminMiddleware, removeCover);
+router.post("/listings/gym/:id/media/gallery", authMiddleware, adminMiddleware, uploadGymGalleryFile, uploadGallery);
+router.patch("/listings/gym/:id/media/gallery/order", authMiddleware, adminMiddleware, reorderGallery);
+router.patch("/listings/gym/:id/media/gallery/:galleryId", authMiddleware, adminMiddleware, updateGalleryMetadata);
+router.delete("/listings/gym/:id/media/gallery/:galleryId", authMiddleware, adminMiddleware, removeGallery);
 
 router.patch(
   "/providers/:id/verification",

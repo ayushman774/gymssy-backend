@@ -16,14 +16,15 @@ const fixture = {
   category: "Fitness", tags: ["strength"], location: { area: "Central" }, coordinates: { lat: 1, lng: 2 },
   phone: "123", email: "gym@example.com", website: "https://example.com", description: "Description",
   highlights: ["24/7"], rating: 4.8, reviewCount: 42, priceFrom: 999, openNow: true,
-  images: { cover: "cover.jpg", gallery: [] }, facilities: [], memberships: [], trainers: [], classes: [], timings: [],
+  images: { cover: "cover.jpg", coverMeta: { publicId: "private-cover", width: 1600 }, gallery: [{ id: "private-id", url: "gallery.jpg", alt: "Gallery", category: "gym", publicId: "private-gallery", width: 1200 }] }, facilities: [], memberships: [], trainers: [], classes: [], timings: [],
   reviews: [], ratingBreakdown: [], isActive: true, featured: true, city: new mongoose.Types.ObjectId(),
   owner: new mongoose.Types.ObjectId(), moderationStatus: "approved", rejectionReason: "private",
   moderationNote: "private", reviewedAt: new Date(), reviewedBy: new mongoose.Types.ObjectId(), __v: 7,
 };
 
 function assertPublicShape(gym) {
-  for (const field of ["name", "slug", "verified", "category", "location", "coordinates", "images", "facilities", "memberships", "trainers", "classes", "timings", "featured", "city"]) assert.deepEqual(gym[field], fixture[field]);
+  for (const field of ["name", "slug", "verified", "category", "location", "coordinates", "facilities", "memberships", "trainers", "classes", "timings", "featured", "city"]) assert.deepEqual(gym[field], fixture[field]);
+  assert.deepEqual(gym.images, { cover: "cover.jpg", gallery: [{ url: "gallery.jpg", alt: "Gallery", category: "gym" }] });
   for (const field of ["owner", "moderationStatus", "rejectionReason", "moderationNote", "reviewedAt", "reviewedBy", "isActive", "__v"]) assert.equal(field in gym, false);
 }
 

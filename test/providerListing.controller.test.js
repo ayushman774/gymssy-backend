@@ -312,6 +312,29 @@ test("performs a successful partial update", { concurrency: false }, async () =>
   assert.equal(res.body.data.listing.bio, "  Updated biography  ");
 });
 
+test("provider Gym JSON media updates cannot forge managed metadata", { concurrency: false }, async () => {
+  const listing = {
+    _id: new mongoose.Types.ObjectId(), name: "Gym", slug: "gym", category: "Fitness", city: new mongoose.Types.ObjectId(),
+    images: { cover: "legacy-old.jpg", coverMeta: { publicId: "", width: null }, gallery: [] }, async save() {},
+  };
+  mock(Gym, "findOne", async () => listing);
+  const req = request("gym_owner", { images: {
+    cover: "legacy-new.jpg", coverMeta: { publicId: "forged-cover" },
+    gallery: [{ id: "forged-id", url: "legacy-gallery.jpg", alt: "A", category: "gym", publicId: "forged-gallery", width: 999 }],
+  } }, { id: listing._id.toString() });
+  const res = response(); await updateMyProviderListing(req, res);
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(listing.images.coverMeta, { publicId: "", width: null, height: null, format: "" });
+  assert.deepEqual(listing.images.gallery, [{ url: "legacy-gallery.jpg", alt: "A", category: "gym" }]);
+});
+
+test("provider Gym JSON updates cannot replace existing managed media", { concurrency: false }, async () => {
+  const listing = { _id: new mongoose.Types.ObjectId(), name: "Gym", slug: "gym", category: "Fitness", city: new mongoose.Types.ObjectId(), images: { cover: "managed.jpg", coverMeta: { publicId: "managed-cover" }, gallery: [{ url: "gallery.jpg", publicId: "managed-gallery" }] }, async save() {} };
+  mock(Gym, "findOne", async () => listing);
+  let req = request("gym_owner", { images: { cover: "replacement.jpg" } }, { id: listing._id.toString() }); let res = response(); await updateMyProviderListing(req, res); assert.equal(res.statusCode, 400); assert.equal(res.body.field, "images.cover");
+  req = request("gym_owner", { images: { gallery: [] } }, { id: listing._id.toString() }); res = response(); await updateMyProviderListing(req, res); assert.equal(res.statusCode, 400); assert.equal(res.body.field, "images.gallery");
+});
+
 test("rejects blanking a required field during update", { concurrency: false }, async () => {
   const listing = {
     _id: new mongoose.Types.ObjectId(),
