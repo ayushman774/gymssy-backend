@@ -249,6 +249,47 @@ export class ListingContractError extends Error {
   }
 }
 
+export const getListingUpdateUnsupportedFields = (type, body) =>
+  getUnsupportedFields(body, FIELD_CONTRACTS[type]?.update || []);
+
+export const prepareListingContentUpdate = async ({ model, type, listing, body }) => {
+  const allowedFields = FIELD_CONTRACTS[type]?.update;
+  if (!allowedFields) {
+    throw new ListingContractError(400, { success: false, message: "Unsupported listing type" });
+  }
+  const unsupportedFields = getListingUpdateUnsupportedFields(type, body);
+  if (unsupportedFields.length) {
+    throw new ListingContractError(400, {
+      success: false,
+      message: "Unsupported listing fields were submitted",
+      unsupportedFields,
+    });
+  }
+  const updates = pickAllowedFields(body, allowedFields);
+  if (!Object.keys(updates).length) {
+    throw new ListingContractError(400, { success: false, message: "No valid listing fields provided for update" });
+  }
+  const requiredFields = REQUIRED_FIELDS[type];
+  normalizeRequiredStrings(updates, requiredFields);
+  const candidate = Object.fromEntries(requiredFields.map((field) => [
+    field, updates[field] !== undefined ? updates[field] : listing[field],
+  ]));
+  const validationErrors = getRequiredFieldErrors(candidate, requiredFields);
+  if (validationErrors.length) {
+    throw new ListingContractError(400, { success: false, message: "Listing validation failed", errors: validationErrors });
+  }
+  if (type === "gym" && updates.city !== undefined) {
+    const cityError = await validateGymCity(updates.city);
+    if (cityError) throw new ListingContractError(400, { success: false, message: "Listing validation failed", errors: [cityError] });
+  }
+  if (updates.slug !== undefined && updates.slug !== listing.slug && await slugExists(model, updates.slug, listing._id)) {
+    throw new ListingContractError(409, { success: false, message: "A listing with this slug already exists", field: "slug" });
+  }
+  if (updates.image) updates.image = { ...(listing.image?.toObject?.() || listing.image || {}), ...updates.image };
+  if (updates.social) updates.social = { ...(listing.social?.toObject?.() || listing.social || {}), ...updates.social };
+  return updates;
+};
+
 export const prepareProviderOwnedListing = async ({
   providerType,
   ownerId,
@@ -533,21 +574,8 @@ export const updateMyProviderListing = async (req, res) => {
       });
     }
 
-    const allowedFields = FIELD_CONTRACTS[config.type].update;
-    const unsupportedFields = getUnsupportedFields(req.body, allowedFields);
-
-    if (unsupportedFields.length > 0) {
-      return sendUnsupportedFieldsError(res, unsupportedFields);
-    }
-
-    const updates = pickAllowedFields(req.body, allowedFields);
-
-    if (Object.keys(updates).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No valid listing fields provided for update",
-      });
-    }
+    const unsupportedFields = getListingUpdateUnsupportedFields(config.type, req.body);
+    if (unsupportedFields.length) return sendUnsupportedFieldsError(res, unsupportedFields);
 
     /*
     |--------------------------------------------------------------------------
@@ -567,36 +595,7 @@ export const updateMyProviderListing = async (req, res) => {
       });
     }
 
-    const requiredFields = REQUIRED_FIELDS[config.type];
-    normalizeRequiredStrings(updates, requiredFields);
-
-    const candidate = {};
-    for (const field of requiredFields) {
-      candidate[field] =
-        updates[field] !== undefined ? updates[field] : listing[field];
-    }
-
-    const validationErrors = getRequiredFieldErrors(candidate, requiredFields);
-    if (validationErrors.length > 0) {
-      return sendValidationError(res, validationErrors);
-    }
-
-    if (config.type === "gym" && updates.city !== undefined) {
-      const cityError = await validateGymCity(updates.city);
-      if (cityError) return sendValidationError(res, [cityError]);
-    }
-
-    if (
-      updates.slug !== undefined &&
-      updates.slug !== listing.slug &&
-      (await slugExists(config.model, updates.slug, listing._id))
-    ) {
-      return res.status(409).json({
-        success: false,
-        message: "A listing with this slug already exists",
-        field: "slug",
-      });
-    }
+    const updates = await prepareListingContentUpdate({ model: config.model, type: config.type, listing, body: req.body });
 
     Object.assign(listing, updates);
 
@@ -612,6 +611,7 @@ export const updateMyProviderListing = async (req, res) => {
       },
     });
   } catch (error) {
+    if (error instanceof ListingContractError) return res.status(error.statusCode).json(error.payload);
     console.error("Update provider listing error:", error);
 
     if (error.code === 11000) {

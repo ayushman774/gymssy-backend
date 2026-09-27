@@ -22,6 +22,7 @@ import {
   updateProviderVerification,
   getAdminProviderListings,
   getAdminListingById,
+  updateAdminListingContent,
 } from "../../controllers/admin/admin.controller.js";
 
 const router = express.Router();
@@ -93,6 +94,13 @@ router.get(
   authMiddleware,
   adminMiddleware,
   getAdminProviderListings,
+);
+
+router.put(
+  "/listings/:type/:id",
+  authMiddleware,
+  adminMiddleware,
+  updateAdminListingContent,
 );
 
 router.post(

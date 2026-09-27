@@ -4,6 +4,7 @@ import ProviderProfile from "../../models/providers/ProviderProfile.js";
 import Gym from "../../models/gyms/Gym.js";
 import Trainer from "../../models/trainers/Trainer.js";
 import Nutritionist from "../../models/nutritionists/Nutritionist.js";
+import { getListingUpdateUnsupportedFields, ListingContractError, prepareListingContentUpdate } from "../providers/providerListing.controller.js";
 
 // ============================================================
 // ADMIN DASHBOARD
@@ -889,6 +890,7 @@ const getModelByType = (type) => {
     case "gym":
       return Gym;
     case "trainer":
+    case "coach":
       return Trainer;
     case "nutritionist":
       return Nutritionist;
@@ -1278,6 +1280,24 @@ const getUnsupportedAdminProviderFields = (body = {}) => {
   return [...new Set(unsupportedFields)];
 };
 
+const normalizeAdminListingDetail = (doc, requestedType) => {
+  const type = requestedType === "coach" ? "trainer" : requestedType;
+  const owner = doc.owner && typeof doc.owner === "object" ? {
+    id: doc.owner._id,
+    name: doc.owner.name,
+    email: doc.owner.email,
+    providerType: doc.owner.providerType,
+    isActive: doc.owner.isActive,
+  } : null;
+  return {
+    ...doc,
+    _id: doc._id,
+    type,
+    owner,
+    isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
+  };
+};
+
 const findNormalizedProviderListings = async (ownerId) => {
   const [gyms, trainers, nutritionists] = await Promise.all([
     Gym.find({ owner: ownerId }).lean(),
@@ -1634,7 +1654,7 @@ export const getAdminListingById = async (req, res) => {
     }
 
     const listing = await Model.findById(id)
-      .populate("owner", "name email providerType")
+      .populate("owner", "name email providerType isActive")
       .populate(type === "gym" ? "city" : "")
       .lean();
 
@@ -1647,7 +1667,7 @@ export const getAdminListingById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: normalizeAdminListing(listing, type),
+      data: normalizeAdminListingDetail(listing, type),
     });
   } catch (error) {
     console.error("Get admin listing detail error:", error);
@@ -1655,5 +1675,42 @@ export const getAdminListingById = async (req, res) => {
       success: false,
       message: "Failed to fetch listing details",
     });
+  }
+};
+
+export const updateAdminListingContent = async (req, res) => {
+  try {
+    const requestedType = req.params.type;
+    const type = requestedType === "coach" ? "trainer" : requestedType;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid listing ID format" });
+    }
+    if (!["trainer", "nutritionist"].includes(type)) {
+      return res.status(400).json({ success: false, message: "Professional listing content editing supports Trainer, Coach, and Nutritionist listings only" });
+    }
+    const unsupportedFields = getListingUpdateUnsupportedFields(type, req.body);
+    if (unsupportedFields.length) {
+      return res.status(400).json({ success: false, message: "Unsupported listing fields were submitted", unsupportedFields });
+    }
+    const Model = getModelByType(type);
+    const listing = await Model.findById(req.params.id);
+    if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
+    const updates = await prepareListingContentUpdate({ model: Model, type, listing, body: req.body });
+    Object.assign(listing, updates);
+    await listing.save();
+    const populated = await Model.findById(listing._id)
+      .populate("owner", "name email providerType isActive")
+      .lean();
+    return res.status(200).json({
+      success: true,
+      message: "Listing content updated successfully",
+      data: normalizeAdminListingDetail(populated, type),
+    });
+  } catch (error) {
+    if (error instanceof ListingContractError) return res.status(error.statusCode).json(error.payload);
+    if (error.code === 11000) return res.status(409).json({ success: false, message: "A listing with the same unique identifier already exists", error: error.keyValue || null });
+    if (error.name === "ValidationError") return res.status(400).json({ success: false, message: "Listing validation failed", errors: Object.values(error.errors).map((item) => ({ field: item.path, message: item.message })) });
+    console.error("Update admin listing content error:", error);
+    return res.status(500).json({ success: false, message: "Failed to update listing content" });
   }
 };
