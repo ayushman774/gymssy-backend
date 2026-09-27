@@ -1218,6 +1218,8 @@ export const updateListingFeatured = async (req, res) => {
 const ADMIN_PROVIDER_PROFILE_FIELDS = new Set([
   "businessName",
   "bio",
+  "phone",
+  "email",
   "website",
   "location",
   "socialLinks",
@@ -1232,6 +1234,7 @@ const ADMIN_PROVIDER_LOCATION_FIELDS = new Set([
 ]);
 
 const ADMIN_PROVIDER_SOCIAL_FIELDS = new Set([
+  "instagram",
   "facebook",
   "youtube",
   "linkedin",
@@ -1303,7 +1306,7 @@ const findNormalizedProviderListings = async (ownerId) => {
 const buildAdminProviderProfileUpdates = (body) => {
   const updates = {};
 
-  for (const field of ["businessName", "bio", "website"]) {
+  for (const field of ["businessName", "bio", "phone", "email", "website"]) {
     if (body[field] !== undefined) updates[field] = body[field].trim();
   }
 
@@ -1325,10 +1328,18 @@ const buildAdminProviderProfileUpdates = (body) => {
 const getAdminProviderProfileTypeErrors = (body) => {
   const errors = [];
 
-  for (const field of ["businessName", "bio", "website"]) {
+  for (const field of ["businessName", "bio", "phone", "email", "website"]) {
     if (body[field] !== undefined && typeof body[field] !== "string") {
       errors.push({ field, message: `${field} must be a string` });
     }
+  }
+
+  if (
+    typeof body.email === "string" &&
+    body.email.trim() &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())
+  ) {
+    errors.push({ field: "email", message: "email must be a valid email address" });
   }
 
   for (const field of ADMIN_PROVIDER_LOCATION_FIELDS) {

@@ -97,7 +97,7 @@ test("admin updates only allowed ProviderProfile fields and preserves nested val
   assert.equal(res.body.data.profileExists, true);
 });
 
-for (const field of ["email", "phone", "role", "providerType"]) {
+for (const field of ["role", "providerType", "name", "password", "isActive"]) {
   test(`admin profile update rejects ${field}`, { concurrency: false }, async () => {
     const providerId = new mongoose.Types.ObjectId();
     const res = response();
@@ -109,7 +109,7 @@ for (const field of ["email", "phone", "role", "providerType"]) {
   });
 }
 
-test("admin profile update rejects Instagram and avatar rather than erasing them", { concurrency: false }, async () => {
+test("admin profile update rejects avatar while allowing Instagram", { concurrency: false }, async () => {
   const providerId = new mongoose.Types.ObjectId();
   const res = response();
 
@@ -122,27 +122,107 @@ test("admin profile update rejects Instagram and avatar rather than erasing them
   );
 
   assert.equal(res.statusCode, 400);
-  assert.deepEqual(res.body.unsupportedFields, ["avatar", "socialLinks.instagram"]);
+  assert.deepEqual(res.body.unsupportedFields, ["avatar"]);
+});
+
+test("admin updates profile contact fields without changing User contact fields", { concurrency: false }, async () => {
+  const providerId = new mongoose.Types.ObjectId();
+  const provider = mockBusinessProvider(providerId);
+  let update;
+  mock(ProviderProfile, "findOneAndUpdate", async (_filter, receivedUpdate) => {
+    update = receivedUpdate;
+    return {
+      user: providerId,
+      phone: "9876500000",
+      email: "contact@example.com",
+      socialLinks: {
+        instagram: "https://instagram.com/new",
+        facebook: "https://facebook.com/existing",
+        youtube: "https://youtube.com/existing",
+        linkedin: "https://linkedin.com/in/existing",
+      },
+    };
+  });
+  const res = response();
+  await updateProviderProfile(request(providerId, {
+    phone: " 9876500000 ",
+    email: " CONTACT@example.com ",
+    socialLinks: { instagram: " https://instagram.com/new " },
+  }), res);
+
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(update.$set, {
+    phone: "9876500000",
+    email: "CONTACT@example.com",
+    "socialLinks.instagram": "https://instagram.com/new",
+  });
+  assert.equal(update.$set["socialLinks.facebook"], undefined);
+  assert.equal(provider.phone, "1111111111");
+  assert.equal(provider.email, "provider@example.com");
+});
+
+test("social link partial updates preserve every unsubmitted social field", { concurrency: false }, async () => {
+  const providerId = new mongoose.Types.ObjectId();
+  mockBusinessProvider(providerId);
+  let update;
+  mock(ProviderProfile, "findOneAndUpdate", async (_filter, receivedUpdate) => {
+    update = receivedUpdate;
+    return { user: providerId };
+  });
+  const res = response();
+  await updateProviderProfile(request(providerId, {
+    socialLinks: { facebook: "https://facebook.com/new" },
+  }), res);
+  assert.deepEqual(update.$set, { "socialLinks.facebook": "https://facebook.com/new" });
+  assert.equal(update.$set["socialLinks.instagram"], undefined);
+});
+
+test("profile phone, email, and Instagram can be intentionally cleared", { concurrency: false }, async () => {
+  const providerId = new mongoose.Types.ObjectId();
+  mockBusinessProvider(providerId);
+  let update;
+  mock(ProviderProfile, "findOneAndUpdate", async (_filter, receivedUpdate) => {
+    update = receivedUpdate;
+    return { user: providerId, phone: "", email: "", socialLinks: { instagram: "" } };
+  });
+  const res = response();
+  await updateProviderProfile(request(providerId, {
+    phone: "", email: "", socialLinks: { instagram: "" },
+  }), res);
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(update.$set, { phone: "", email: "", "socialLinks.instagram": "" });
+});
+
+test("admin profile update rejects a malformed non-empty public email", { concurrency: false }, async () => {
+  const res = response();
+  await updateProviderProfile(request(new mongoose.Types.ObjectId(), { email: "not-an-email" }), res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.errors[0].field, "email");
 });
 
 test("admin update safely creates a missing ProviderProfile", { concurrency: false }, async () => {
   const providerId = new mongoose.Types.ObjectId();
   mockBusinessProvider(providerId);
   let options;
-  mock(ProviderProfile, "findOneAndUpdate", async (_filter, _update, receivedOptions) => {
+  let update;
+  mock(ProviderProfile, "findOneAndUpdate", async (_filter, receivedUpdate, receivedOptions) => {
+    update = receivedUpdate;
     options = receivedOptions;
     return { user: providerId, businessName: "Created by admin" };
   });
   const res = response();
 
   await updateProviderProfile(
-    request(providerId, { businessName: "Created by admin" }),
+    request(providerId, { businessName: "Created by admin", phone: "123", email: "new@example.com", socialLinks: { instagram: "https://instagram.com/new" } }),
     res,
   );
 
   assert.equal(res.statusCode, 200);
   assert.equal(options.upsert, true);
   assert.equal(options.setDefaultsOnInsert, true);
+  assert.equal(update.$set.phone, "123");
+  assert.equal(update.$set.email, "new@example.com");
+  assert.equal(update.$set["socialLinks.instagram"], "https://instagram.com/new");
   assert.equal(res.body.data.profile.businessName, "Created by admin");
 });
 
