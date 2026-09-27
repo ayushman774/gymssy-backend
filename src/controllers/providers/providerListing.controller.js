@@ -339,12 +339,14 @@ export const createProviderListing = async (req, res) => {
       listingData.verified = false;
       listingData.featured = false;
       listingData.isActive = true;
+      listingData.moderationStatus = "pending";
     }
 
     if (config.type === "trainer" || config.type === "nutritionist") {
       listingData.isVerified = false;
       listingData.featured = false;
       listingData.isActive = true;
+      listingData.moderationStatus = "pending";
     }
 
     /*

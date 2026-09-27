@@ -92,6 +92,7 @@ test("creates a Gym with validated city and forced system defaults", { concurren
   assert.equal(res.body.data.listing.verified, false);
   assert.equal(res.body.data.listing.featured, false);
   assert.equal(res.body.data.listing.isActive, true);
+  assert.equal(res.body.data.listing.moderationStatus, "pending");
 });
 
 for (const providerType of ["trainer", "coach"]) {
@@ -111,6 +112,7 @@ for (const providerType of ["trainer", "coach"]) {
     assert.equal(res.body.data.listing.isVerified, false);
     assert.equal(res.body.data.listing.featured, false);
     assert.equal(res.body.data.listing.isActive, true);
+    assert.equal(res.body.data.listing.moderationStatus, "pending");
   });
 }
 
@@ -124,6 +126,10 @@ test("creates a Nutritionist listing", { concurrency: false }, async () => {
   assert.equal(res.statusCode, 201);
   assert.equal(res.body.data.type, "nutritionist");
   assert.match(res.body.data.listing.id, /^nutritionist-[0-9a-f-]{36}$/);
+  assert.equal(res.body.data.listing.moderationStatus, "pending");
+  assert.equal(res.body.data.listing.isVerified, false);
+  assert.equal(res.body.data.listing.featured, false);
+  assert.equal(res.body.data.listing.isActive, true);
 });
 
 test("returns field-level errors for missing professional fields", { concurrency: false }, async () => {
@@ -173,6 +179,29 @@ test("rejects provider writes to system-controlled fields", { concurrency: false
     "reviews",
     "isActive",
     "createdAt",
+  ]);
+});
+
+test("rejects moderation fields during provider creation", { concurrency: false }, async () => {
+  const req = request("trainer", {
+    ...professionalBody,
+    moderationStatus: "approved",
+    rejectionReason: "Provider supplied",
+    moderationNote: "Provider supplied",
+    reviewedAt: new Date().toISOString(),
+    reviewedBy: new mongoose.Types.ObjectId().toString(),
+  });
+  const res = response();
+
+  await createProviderListing(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.body.unsupportedFields, [
+    "moderationStatus",
+    "rejectionReason",
+    "moderationNote",
+    "reviewedAt",
+    "reviewedBy",
   ]);
 });
 
@@ -237,6 +266,32 @@ test("rejects professional id changes", { concurrency: false }, async () => {
 
   assert.equal(res.statusCode, 400);
   assert.deepEqual(res.body.unsupportedFields, ["id"]);
+});
+
+test("rejects moderation fields during provider update", { concurrency: false }, async () => {
+  const req = request(
+    "nutritionist",
+    {
+      moderationStatus: "approved",
+      rejectionReason: "Provider supplied",
+      moderationNote: "Provider supplied",
+      reviewedAt: new Date().toISOString(),
+      reviewedBy: new mongoose.Types.ObjectId().toString(),
+    },
+    { id: new mongoose.Types.ObjectId().toString() },
+  );
+  const res = response();
+
+  await updateMyProviderListing(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.body.unsupportedFields, [
+    "moderationStatus",
+    "rejectionReason",
+    "moderationNote",
+    "reviewedAt",
+    "reviewedBy",
+  ]);
 });
 
 test("performs a successful partial update", { concurrency: false }, async () => {

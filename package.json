@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node --test",
+    "backfill:listing-moderation-status": "node src/scripts/backfillListingModerationStatus.js",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
   },

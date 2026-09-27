@@ -1209,10 +1209,127 @@ export const updateListingFeatured = async (req, res) => {
 // UPDATE PROVIDER PROFILE - ADMIN
 // ============================================================
 
+const ADMIN_PROVIDER_PROFILE_FIELDS = new Set([
+  "businessName",
+  "bio",
+  "website",
+  "location",
+  "socialLinks",
+]);
+
+const ADMIN_PROVIDER_LOCATION_FIELDS = new Set([
+  "address",
+  "area",
+  "city",
+  "state",
+  "pincode",
+]);
+
+const ADMIN_PROVIDER_SOCIAL_FIELDS = new Set([
+  "facebook",
+  "youtube",
+  "linkedin",
+]);
+
+const getUnsupportedAdminProviderFields = (body = {}) => {
+  const unsupportedFields = Object.keys(body).filter(
+    (field) => !ADMIN_PROVIDER_PROFILE_FIELDS.has(field),
+  );
+
+  if (
+    body.location !== undefined &&
+    (body.location === null ||
+      typeof body.location !== "object" ||
+      Array.isArray(body.location))
+  ) {
+    unsupportedFields.push("location");
+  } else if (body.location) {
+    unsupportedFields.push(
+      ...Object.keys(body.location)
+        .filter((field) => !ADMIN_PROVIDER_LOCATION_FIELDS.has(field))
+        .map((field) => `location.${field}`),
+    );
+  }
+
+  if (
+    body.socialLinks !== undefined &&
+    (body.socialLinks === null ||
+      typeof body.socialLinks !== "object" ||
+      Array.isArray(body.socialLinks))
+  ) {
+    unsupportedFields.push("socialLinks");
+  } else if (body.socialLinks) {
+    unsupportedFields.push(
+      ...Object.keys(body.socialLinks)
+        .filter((field) => !ADMIN_PROVIDER_SOCIAL_FIELDS.has(field))
+        .map((field) => `socialLinks.${field}`),
+    );
+  }
+
+  return [...new Set(unsupportedFields)];
+};
+
+const buildAdminProviderProfileUpdates = (body) => {
+  const updates = {};
+
+  for (const field of ["businessName", "bio", "website"]) {
+    if (body[field] !== undefined) updates[field] = body[field].trim();
+  }
+
+  for (const field of ADMIN_PROVIDER_LOCATION_FIELDS) {
+    if (body.location?.[field] !== undefined) {
+      updates[`location.${field}`] = body.location[field].trim();
+    }
+  }
+
+  for (const field of ADMIN_PROVIDER_SOCIAL_FIELDS) {
+    if (body.socialLinks?.[field] !== undefined) {
+      updates[`socialLinks.${field}`] = body.socialLinks[field].trim();
+    }
+  }
+
+  return updates;
+};
+
+const getAdminProviderProfileTypeErrors = (body) => {
+  const errors = [];
+
+  for (const field of ["businessName", "bio", "website"]) {
+    if (body[field] !== undefined && typeof body[field] !== "string") {
+      errors.push({ field, message: `${field} must be a string` });
+    }
+  }
+
+  for (const field of ADMIN_PROVIDER_LOCATION_FIELDS) {
+    if (
+      body.location?.[field] !== undefined &&
+      typeof body.location[field] !== "string"
+    ) {
+      errors.push({
+        field: `location.${field}`,
+        message: `location.${field} must be a string`,
+      });
+    }
+  }
+
+  for (const field of ADMIN_PROVIDER_SOCIAL_FIELDS) {
+    if (
+      body.socialLinks?.[field] !== undefined &&
+      typeof body.socialLinks[field] !== "string"
+    ) {
+      errors.push({
+        field: `socialLinks.${field}`,
+        message: `socialLinks.${field} must be a string`,
+      });
+    }
+  }
+
+  return errors;
+};
+
 export const updateProviderProfile = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, providerType, isActive } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
@@ -1221,22 +1338,33 @@ export const updateProviderProfile = async (req, res) => {
       });
     }
 
-    // Explicit allowlist of editable fields
-    // Email and Phone/Mobile are intentionally excluded per requirements
-    const updates = {};
-    if (name !== undefined) updates.name = name;
-    if (providerType !== undefined) updates.providerType = providerType;
+    const unsupportedFields = getUnsupportedAdminProviderFields(req.body);
+    if (unsupportedFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Unsupported provider profile fields were submitted",
+        unsupportedFields,
+      });
+    }
 
-    // If isActive is being updated, we use the dedicated status logic
-    // to handle cascading if deactivating.
-    // However, if it's passed here, we can handle it or ignore it.
-    // Let's focus on profile fields here.
+    const typeErrors = getAdminProviderProfileTypeErrors(req.body);
+    if (typeErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Provider profile validation failed",
+        errors: typeErrors,
+      });
+    }
 
-    const provider = await User.findOneAndUpdate(
-      { _id: id, role: "business" },
-      { $set: updates },
-      { new: true, runValidators: true }
-    ).select("-password");
+    const updates = buildAdminProviderProfileUpdates(req.body);
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No editable provider profile fields were submitted",
+      });
+    }
+
+    const provider = await User.findOne({ _id: id, role: "business" });
 
     if (!provider) {
       return res.status(404).json({
@@ -1245,16 +1373,95 @@ export const updateProviderProfile = async (req, res) => {
       });
     }
 
+    const profile = await ProviderProfile.findOneAndUpdate(
+      { user: provider._id },
+      {
+        $set: updates,
+        $setOnInsert: { user: provider._id },
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      },
+    );
+
     return res.status(200).json({
       success: true,
       message: "Provider profile updated successfully",
-      data: provider,
+      data: {
+        profileExists: true,
+        profile,
+      },
     });
   } catch (error) {
     console.error("Update provider profile error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to update provider profile",
+    });
+  }
+};
+
+// ============================================================
+// UPDATE PROVIDER VERIFICATION - ADMIN
+// ============================================================
+
+export const updateProviderVerification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isVerified } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid provider ID",
+      });
+    }
+
+    if (typeof isVerified !== "boolean" || Object.keys(req.body).length !== 1) {
+      return res.status(400).json({
+        success: false,
+        message: "isVerified (boolean) is required",
+      });
+    }
+
+    const provider = await User.findOne({ _id: id, role: "business" });
+    if (!provider) {
+      return res.status(404).json({
+        success: false,
+        message: "Provider not found",
+      });
+    }
+
+    const profile = await ProviderProfile.findOneAndUpdate(
+      { user: provider._id },
+      {
+        $set: { isVerified },
+        $setOnInsert: { user: provider._id },
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `Provider is now ${isVerified ? "verified" : "unverified"}`,
+      data: {
+        profileExists: true,
+        profile,
+      },
+    });
+  } catch (error) {
+    console.error("Update provider verification error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update provider verification",
     });
   }
 };

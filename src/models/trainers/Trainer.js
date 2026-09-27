@@ -158,6 +158,36 @@ const trainerSchema = new mongoose.Schema(
       default: true,
     },
 
+    moderationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "approved",
+      index: true,
+    },
+
+    rejectionReason: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    moderationNote: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    reviewedAt: {
+      type: Date,
+      default: null,
+    },
+
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -182,6 +182,7 @@ export const updateMyProviderProfile = async (req, res) => {
     const {
       name,
       phone,
+      profilePhone,
       businessName,
       bio,
       email,
@@ -238,6 +239,10 @@ export const updateMyProviderProfile = async (req, res) => {
 
     if (businessName !== undefined) {
       providerProfile.businessName = businessName.trim();
+    }
+
+    if (profilePhone !== undefined) {
+      providerProfile.phone = profilePhone.trim();
     }
 
     if (bio !== undefined) {
