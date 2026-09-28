@@ -34,8 +34,7 @@ const allowedOrigins = [
   "https://admin.gymssy.com",
 ];
 
-app.use(
-  cors({
+const protectedApiCors = cors({
     origin: (origin, callback) => {
       // Allow requests with no Origin header
       // (Postman, server-to-server requests, etc.)
@@ -53,8 +52,23 @@ app.use(
     },
 
     credentials: true,
-  }),
-);
+  });
+
+// Categories are public, read-only taxonomy. A wildcard response avoids a
+// cached origin-specific header being served to a different Admin dev origin.
+const publicCategoryCors = cors({
+  origin: "*",
+  methods: ["GET", "OPTIONS"],
+  credentials: false,
+});
+
+app.use((req, res, next) => {
+  if (req.path === "/api/categories" || req.path.startsWith("/api/categories/")) {
+    res.setHeader("Cache-Control", "no-store");
+    return publicCategoryCors(req, res, next);
+  }
+  return protectedApiCors(req, res, next);
+});
 
 app.use(helmet());
 app.use(morgan("dev"));
