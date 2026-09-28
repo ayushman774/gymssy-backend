@@ -9,14 +9,16 @@ async function withServer(run) {
   finally { await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
 }
 
-test("public Category preflight is origin-independent and non-credentialed", async () => {
+test("public Category and City preflights are origin-independent and non-credentialed", async () => {
   await withServer(async (baseUrl) => {
-    for (const origin of ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173"]) {
-      const response = await fetch(`${baseUrl}/api/categories`, { method: "OPTIONS", headers: { Origin: origin, "Access-Control-Request-Method": "GET" } });
-      assert.equal(response.status, 204);
-      assert.equal(response.headers.get("access-control-allow-origin"), "*");
-      assert.equal(response.headers.get("access-control-allow-credentials"), null);
-      assert.equal(response.headers.get("cache-control"), "no-store");
+    for (const path of ["/api/categories", "/api/cities/popular"]) {
+      for (const origin of ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173"]) {
+        const response = await fetch(`${baseUrl}${path}`, { method: "OPTIONS", headers: { Origin: origin, "Access-Control-Request-Method": "GET" } });
+        assert.equal(response.status, 204);
+        assert.equal(response.headers.get("access-control-allow-origin"), "*");
+        assert.equal(response.headers.get("access-control-allow-credentials"), null);
+        assert.equal(response.headers.get("cache-control"), "no-store");
+      }
     }
   });
 });

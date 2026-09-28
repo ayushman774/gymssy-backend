@@ -54,18 +54,20 @@ const protectedApiCors = cors({
     credentials: true,
   });
 
-// Categories are public, read-only taxonomy. A wildcard response avoids a
-// cached origin-specific header being served to a different Admin dev origin.
-const publicCategoryCors = cors({
+// Categories and Cities are public, read-only reference data. A wildcard
+// response avoids a cached origin-specific header being served to a different
+// marketplace or Admin origin.
+const publicReferenceDataCors = cors({
   origin: "*",
   methods: ["GET", "OPTIONS"],
   credentials: false,
 });
 
 app.use((req, res, next) => {
-  if (req.path === "/api/categories" || req.path.startsWith("/api/categories/")) {
+  const publicReferenceData = req.path === "/api/categories" || req.path.startsWith("/api/categories/") || req.path === "/api/cities" || req.path.startsWith("/api/cities/");
+  if (publicReferenceData) {
     res.setHeader("Cache-Control", "no-store");
-    return publicCategoryCors(req, res, next);
+    return publicReferenceDataCors(req, res, next);
   }
   return protectedApiCors(req, res, next);
 });
