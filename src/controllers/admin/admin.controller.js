@@ -4,6 +4,7 @@ import ProviderProfile from "../../models/providers/ProviderProfile.js";
 import Gym from "../../models/gyms/Gym.js";
 import Trainer from "../../models/trainers/Trainer.js";
 import Nutritionist from "../../models/nutritionists/Nutritionist.js";
+import Category from "../../models/categories/Category.js";
 import { getListingUpdateUnsupportedFields, ListingContractError, prepareListingContentUpdate } from "../providers/providerListing.controller.js";
 import { toAdminGymImages } from "../../utils/gymMedia.js";
 
@@ -866,18 +867,32 @@ export const getAdminProviderById = async (req, res) => {
  * into a consistent admin-facing structure.
  */
 export const normalizeAdminListing = (doc, type) => {
+  const providerType = doc.owner?.providerType;
+  const listingType = type === "nutritionist" ? "nutritionist" : type === "trainer" ? (providerType === "coach" ? "coach" : "trainer") : ({ gym_owner: "gym", fitness_centre_owner: "fitness_centre", wellness_centre_owner: "wellness_centre", sports_academy_owner: "sports_academy", studio_owner: "studio" })[providerType] || "gym";
   return {
     id: doc._id,
     type,
+    modelType: type,
+    listingType,
     name: doc.name,
     slug: doc.slug,
     owner: doc.owner,
     category: doc.category,
+    subcategoryValues:
+      type === "gym"
+        ? Array.isArray(doc.tags)
+          ? doc.tags
+          : []
+        : doc.role
+          ? [doc.role]
+          : [],
     city: doc.city ? (typeof doc.city === "object" ? doc.city.name : doc.city) : null,
     isActive: doc.isActive,
     isVerified: doc.verified !== undefined ? doc.verified : doc.isVerified,
     featured: doc.featured,
     moderationStatus: doc.moderationStatus,
+    rating: doc.rating ?? 0,
+    reviewCount: doc.reviews ?? 0,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
@@ -915,6 +930,10 @@ export const getAdminListings = async (req, res) => {
       type = "", // gym, trainer, nutritionist
       status = "", // active, inactive
       city = "", // cityId
+      category = "", // active main-category slug, or "unclassified"
+      subcategory = "", // active subcategory slug
+      moderationStatus = "",
+      verification = "",
       page = 1,
       limit = 10,
     } = req.query;
@@ -923,10 +942,76 @@ export const getAdminListings = async (req, res) => {
     const perPage = Math.min(Math.max(Number.parseInt(limit, 10) || 10, 1), 100);
     const skip = (currentPage - 1) * perPage;
 
-    // Filters for different models
+    if (type && !ADMIN_LISTING_TYPES[type]) {
+      return res.status(400).json({ success: false, message: "Invalid listing type" });
+    }
+
+    const providerTypes = [...new Set(Object.values(ADMIN_LISTING_TYPES).flatMap((config) => config.providerTypes))];
+    const listingOwners = await User.find({ role: "business", providerType: { $in: providerTypes } }).select("_id providerType").lean();
+    const ownerIdsByProviderType = Object.fromEntries(providerTypes.map((providerType) => [providerType, []]));
+    for (const owner of listingOwners) ownerIdsByProviderType[owner.providerType].push(owner._id);
+    const recognizedOwnerIdsByModel = {
+      gym: Object.values(ADMIN_LISTING_TYPES).filter((config) => config.modelType === "gym").flatMap((config) => config.providerTypes.flatMap((providerType) => ownerIdsByProviderType[providerType])),
+      trainer: Object.values(ADMIN_LISTING_TYPES).filter((config) => config.modelType === "trainer").flatMap((config) => config.providerTypes.flatMap((providerType) => ownerIdsByProviderType[providerType])),
+    };
+
+    const normalizedCategory = String(category).trim().toLowerCase();
+    const normalizedSubcategory = String(subcategory).trim().toLowerCase();
+    let mainCategory = null;
+    let selectedSubcategory = null;
+    let activeMainCategories = [];
+
+    if (normalizedCategory === "unclassified") {
+      activeMainCategories = await Category.find({
+        type: "main",
+        parentCategory: null,
+        isActive: true,
+      }).lean();
+      if (normalizedSubcategory) {
+        return res.status(400).json({
+          success: false,
+          message: "Subcategory is not available for unclassified listings",
+        });
+      }
+    } else if (normalizedCategory) {
+      mainCategory = await Category.findOne({
+        slug: normalizedCategory,
+        type: "main",
+        parentCategory: null,
+        isActive: true,
+      }).lean();
+      if (!mainCategory) {
+        return res.status(404).json({ success: false, message: "Listing category not found" });
+      }
+      if (normalizedSubcategory) {
+        selectedSubcategory = await Category.findOne({
+          slug: normalizedSubcategory,
+          type: "subcategory",
+          parentCategory: mainCategory._id,
+          isActive: true,
+        }).lean();
+        if (!selectedSubcategory) {
+          return res.status(400).json({
+            success: false,
+            message: `Subcategory does not belong to ${mainCategory.name}`,
+          });
+        }
+      }
+    } else if (normalizedSubcategory) {
+      return res.status(400).json({
+        success: false,
+        message: "A main category is required when filtering by subcategory",
+      });
+    }
+    if (normalizedCategory && normalizedCategory !== "unclassified" && type === "nutritionist") {
+      return res.status(400).json({ success: false, message: "Nutritionist listings are not classified under marketplace categories" });
+    }
+
+    // Filters shared by all listing models.
     const commonFilter = {};
     if (status === "active") commonFilter.isActive = true;
     if (status === "inactive") commonFilter.isActive = false;
+    if (moderationStatus) commonFilter.moderationStatus = moderationStatus;
 
     const trimmedSearch = search.trim();
     if (trimmedSearch) {
@@ -935,99 +1020,124 @@ export const getAdminListings = async (req, res) => {
       commonFilter.name = searchRegex;
     }
 
-    // Determine which models to query
+    const taxonomyFilterFor = (listingType) => buildAdminListingTaxonomyFilter({
+      listingType,
+      categorySlug: normalizedCategory,
+      mainCategory,
+      selectedSubcategory,
+      activeMainCategories,
+    });
+    const filterFor = (listingType, options = {}) => {
+      const taxonomyFilter = taxonomyFilterFor(listingType);
+      if (taxonomyFilter === null) return null;
+      const listingTypeFilter = buildAdminListingTypeFilter({ listingType: type, modelType: listingType, ownerIdsByProviderType, recognizedOwnerIdsByModel });
+      if (listingTypeFilter === null) return null;
+      const filter = { ...commonFilter, ...taxonomyFilter, ...listingTypeFilter };
+      if (listingType === "gym" && city) filter.city = city;
+      if (verification === "verified") {
+        filter[listingType === "gym" ? "verified" : "isVerified"] = true;
+      }
+      if (verification === "unverified") {
+        filter[listingType === "gym" ? "verified" : "isVerified"] = false;
+      }
+      if (options.summary) {
+        delete filter.isActive;
+        delete filter.moderationStatus;
+        delete filter.verified;
+        delete filter.isVerified;
+      }
+      return filter;
+    };
+
+    // Determine which models to query.
     const modelsToQuery = [];
-    if (!type || type === "gym") modelsToQuery.push({ model: Gym, type: "gym" });
-    if (!type || type === "trainer")
+    const selectedModelType = type ? ADMIN_LISTING_TYPES[type].modelType : "";
+    if (!selectedModelType || selectedModelType === "gym") modelsToQuery.push({ model: Gym, type: "gym" });
+    if (!selectedModelType || selectedModelType === "trainer")
       modelsToQuery.push({ model: Trainer, type: "trainer" });
-    if (!type || type === "nutritionist")
+    if (!selectedModelType || selectedModelType === "nutritionist")
       modelsToQuery.push({ model: Nutritionist, type: "nutritionist" });
 
-    // Since we need to merge results from different collections and paginate,
-    // and they have different fields, we'll fetch them all (within reason)
-    // or if a specific type is requested, it's easier.
-
-    if (type) {
-      // Single model query - efficient pagination
-      const target = modelsToQuery[0];
-      const filter = { ...commonFilter };
-
-      // City filter only for gyms
-      if (target.type === "gym" && city) {
-        filter.city = city;
-      }
-
-      const [docs, total] = await Promise.all([
-        target.model
-          .find(filter)
-          .populate("owner", "name email")
-          .populate(target.type === "gym" ? "city" : "") // populate city for gyms
-          .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(perPage)
-          .lean(),
-        target.model.countDocuments(filter),
-      ]);
-
-      const listings = docs.map((doc) => normalizeAdminListing(doc, target.type));
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          listings,
-          pagination: {
-            totalListings: total,
-            totalPages: Math.ceil(total / perPage),
-            currentPage,
-            perPage,
-            hasNextPage: currentPage * perPage < total,
-            hasPreviousPage: currentPage > 1,
-          },
-        },
-      });
-    } else {
-      // Multi-model query - harder to paginate perfectly in-memory
-      // For now, we'll fetch from all and merge (simplified approach for MVP)
-      const results = await Promise.all(
-        modelsToQuery.map(async (t) => {
-          const filter = { ...commonFilter };
-          // For gyms, apply city filter if exists
-          if (t.type === "gym" && city) {
-            filter.city = city;
-          }
-          const docs = await t.model
+    const targets = modelsToQuery.filter((target) => filterFor(target.type) !== null);
+    const results = await Promise.all(
+      targets.map(async (target) => {
+        const filter = filterFor(target.type);
+        const [docs, total] = await Promise.all([
+          target.model
             .find(filter)
-            .populate("owner", "name email")
-            .populate(t.type === "gym" ? "city" : "")
+            .populate("owner", "name email providerType")
+            .populate(target.type === "gym" ? "city" : "")
             .sort({ createdAt: -1 })
-            .limit(skip + perPage) // Fetch enough to cover the current page
-            .lean();
-          return docs.map((doc) => normalizeAdminListing(doc, t.type));
-        }),
-      );
+            .limit(skip + perPage)
+            .lean(),
+          target.model.countDocuments(filter),
+        ]);
+        return {
+          total,
+          listings: docs.map((doc) => normalizeAdminListing(doc, target.type)),
+        };
+      }),
+    );
 
-      const allListings = results
-        .flat()
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const allListings = results
+      .flatMap((result) => result.listings)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const totalListings = results.reduce((sum, result) => sum + result.total, 0);
+    const paginatedListings = allListings.slice(skip, skip + perPage);
 
-      const totalListings = allListings.length; // This is a limitation of this approach
-      const paginatedListings = allListings.slice(skip, skip + perPage);
+    const summaryParts = await Promise.all(
+      targets.map(async (target) => {
+        const base = filterFor(target.type, { summary: true });
+        const verifiedField = target.type === "gym" ? "verified" : "isVerified";
+        const [total, active, pending, verified] = await Promise.all([
+          target.model.countDocuments(base),
+          target.model.countDocuments({ ...base, isActive: true }),
+          target.model.countDocuments({ ...base, moderationStatus: "pending" }),
+          target.model.countDocuments({ ...base, [verifiedField]: true }),
+        ]);
+        return { total, active, pending, verified };
+      }),
+    );
+    const summary = summaryParts.reduce(
+      (totals, part) => ({
+        total: totals.total + part.total,
+        active: totals.active + part.active,
+        pending: totals.pending + part.pending,
+        verified: totals.verified + part.verified,
+      }),
+      { total: 0, active: 0, pending: 0, verified: 0 },
+    );
 
-      return res.status(200).json({
-        success: true,
-        data: {
-          listings: paginatedListings,
-          pagination: {
-            totalListings,
-            totalPages: Math.ceil(totalListings / perPage),
-            currentPage,
-            perPage,
-            hasNextPage: skip + perPage < totalListings,
-            hasPreviousPage: currentPage > 1,
-          },
+    return res.status(200).json({
+      success: true,
+      data: {
+        listings: paginatedListings,
+        summary,
+        listingTypeOptions: Object.entries(ADMIN_LISTING_TYPES)
+          .filter(([, config]) => normalizedCategory === "unclassified" || config.modelType !== "nutritionist")
+          .map(([value, config]) => ({ value, label: config.label })),
+        classification:
+          normalizedCategory === "unclassified"
+            ? { slug: "unclassified", name: "Unclassified", subcategories: [] }
+            : mainCategory
+              ? {
+                  slug: mainCategory.slug,
+                  name: mainCategory.name,
+                  subcategory: selectedSubcategory
+                    ? { slug: selectedSubcategory.slug, name: selectedSubcategory.name }
+                    : null,
+                }
+              : null,
+        pagination: {
+          totalListings,
+          totalPages: Math.max(Math.ceil(totalListings / perPage), 1),
+          currentPage,
+          perPage,
+          hasNextPage: skip + perPage < totalListings,
+          hasPreviousPage: currentPage > 1,
         },
-      });
-    }
+      },
+    });
   } catch (error) {
     console.error("Get admin listings error:", error);
     return res.status(500).json({
@@ -1279,6 +1389,39 @@ const getUnsupportedAdminProviderFields = (body = {}) => {
   }
 
   return [...new Set(unsupportedFields)];
+};
+
+export const ADMIN_LISTING_TYPES = Object.freeze({
+  gym: { label: "Gym", modelType: "gym", providerTypes: ["gym_owner"], includesLegacy: true },
+  fitness_centre: { label: "Fitness Centre", modelType: "gym", providerTypes: ["fitness_centre_owner"] },
+  wellness_centre: { label: "Wellness Centre", modelType: "gym", providerTypes: ["wellness_centre_owner"] },
+  sports_academy: { label: "Sports Academy", modelType: "gym", providerTypes: ["sports_academy_owner"] },
+  studio: { label: "Studio", modelType: "gym", providerTypes: ["studio_owner"] },
+  trainer: { label: "Trainer", modelType: "trainer", providerTypes: ["trainer"], includesLegacy: true },
+  coach: { label: "Coach", modelType: "trainer", providerTypes: ["coach"] },
+  nutritionist: { label: "Nutritionist", modelType: "nutritionist", providerTypes: ["nutritionist"] },
+});
+
+export const buildAdminListingTypeFilter = ({ listingType, modelType, ownerIdsByProviderType = {}, recognizedOwnerIdsByModel = {} }) => {
+  if (!listingType) return {};
+  const config = ADMIN_LISTING_TYPES[listingType];
+  if (!config || config.modelType !== modelType) return null;
+  if (modelType === "nutritionist") return {};
+  const exactOwnerIds = config.providerTypes.flatMap((providerType) => ownerIdsByProviderType[providerType] || []);
+  if (!config.includesLegacy) return { owner: { $in: exactOwnerIds } };
+  return { $or: [{ owner: { $in: exactOwnerIds } }, { owner: null }, { owner: { $nin: recognizedOwnerIdsByModel[modelType] || [] } }] };
+};
+
+export const buildAdminListingTaxonomyFilter = ({ listingType, categorySlug, mainCategory, selectedSubcategory, activeMainCategories = [] }) => {
+  if (!categorySlug) return {};
+  if (categorySlug === "unclassified") {
+    if (listingType === "nutritionist") return {};
+    return { category: { $nin: activeMainCategories.map((item) => listingType === "gym" ? item.name : item.slug) } };
+  }
+  if (listingType === "nutritionist") return null;
+  const filter = { category: listingType === "gym" ? mainCategory.name : mainCategory.slug };
+  if (selectedSubcategory) filter[listingType === "gym" ? "tags" : "role"] = selectedSubcategory.name;
+  return filter;
 };
 
 const ADMIN_GYM_PHASE_A_FIELDS = new Set([
