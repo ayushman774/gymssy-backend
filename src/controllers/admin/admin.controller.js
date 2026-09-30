@@ -869,11 +869,15 @@ export const getAdminProviderById = async (req, res) => {
 export const normalizeAdminListing = (doc, type) => {
   const providerType = doc.owner?.providerType;
   const listingType = type === "nutritionist" ? "nutritionist" : type === "trainer" ? (providerType === "coach" ? "coach" : "trainer") : ({ gym_owner: "gym", fitness_centre_owner: "fitness_centre", wellness_centre_owner: "wellness_centre", sports_academy_owner: "sports_academy", studio_owner: "studio" })[providerType] || "gym";
+  const providerMainCategory = ({ gym_owner: "fitness", fitness_centre_owner: "fitness", wellness_centre_owner: "wellness", sports_academy_owner: "sports" })[providerType] || null;
+  const normalizedMainCategory = type === "nutritionist" ? "wellness" : type === "trainer" ? doc.category : ["Fitness", "Wellness", "Sports"].includes(doc.category) ? doc.category.toLowerCase() : providerMainCategory;
   return {
     id: doc._id,
     type,
     modelType: type,
     listingType,
+    mainCategory: normalizedMainCategory,
+    marketplaceSubcategorySlugs: type === "nutritionist" ? ["nutrition"] : type === "trainer" && doc.category === "fitness" ? ["personal-trainers"] : [],
     name: doc.name,
     slug: doc.slug,
     owner: doc.owner,
@@ -983,6 +987,7 @@ export const getAdminListings = async (req, res) => {
       if (!mainCategory) {
         return res.status(404).json({ success: false, message: "Listing category not found" });
       }
+      activeMainCategories = await Category.find({ type: "main", parentCategory: null, isActive: true }).lean();
       if (normalizedSubcategory) {
         selectedSubcategory = await Category.findOne({
           slug: normalizedSubcategory,
@@ -1003,7 +1008,7 @@ export const getAdminListings = async (req, res) => {
         message: "A main category is required when filtering by subcategory",
       });
     }
-    if (normalizedCategory && normalizedCategory !== "unclassified" && type === "nutritionist") {
+    if (normalizedCategory && !["unclassified", "wellness"].includes(normalizedCategory) && type === "nutritionist") {
       return res.status(400).json({ success: false, message: "Nutritionist listings are not classified under marketplace categories" });
     }
 
@@ -1026,6 +1031,7 @@ export const getAdminListings = async (req, res) => {
       mainCategory,
       selectedSubcategory,
       activeMainCategories,
+      ownerIdsByProviderType,
     });
     const filterFor = (listingType, options = {}) => {
       const taxonomyFilter = taxonomyFilterFor(listingType);
@@ -1114,7 +1120,7 @@ export const getAdminListings = async (req, res) => {
         listings: paginatedListings,
         summary,
         listingTypeOptions: Object.entries(ADMIN_LISTING_TYPES)
-          .filter(([, config]) => normalizedCategory === "unclassified" || config.modelType !== "nutritionist")
+          .filter(([, config]) => config.modelType !== "nutritionist" || normalizedCategory === "wellness")
           .map(([value, config]) => ({ value, label: config.label })),
         classification:
           normalizedCategory === "unclassified"
@@ -1412,16 +1418,36 @@ export const buildAdminListingTypeFilter = ({ listingType, modelType, ownerIdsBy
   return { $or: [{ owner: { $in: exactOwnerIds } }, { owner: null }, { owner: { $nin: recognizedOwnerIdsByModel[modelType] || [] } }] };
 };
 
-export const buildAdminListingTaxonomyFilter = ({ listingType, categorySlug, mainCategory, selectedSubcategory, activeMainCategories = [] }) => {
+export const buildAdminListingTaxonomyFilter = ({ listingType, categorySlug, mainCategory, selectedSubcategory, activeMainCategories = [], ownerIdsByProviderType = {} }) => {
   if (!categorySlug) return {};
   if (categorySlug === "unclassified") {
-    if (listingType === "nutritionist") return {};
-    return { category: { $nin: activeMainCategories.map((item) => listingType === "gym" ? item.name : item.slug) } };
+    if (listingType === "nutritionist") return null;
+    const categoryFilter = { category: { $nin: activeMainCategories.map((item) => listingType === "gym" ? item.name : item.slug) } };
+    if (listingType !== "gym") return categoryFilter;
+    const classifiedOwnerIds = ["gym_owner", "fitness_centre_owner", "wellness_centre_owner", "sports_academy_owner"].flatMap((providerType) => ownerIdsByProviderType[providerType] || []);
+    return classifiedOwnerIds.length ? { $and: [categoryFilter, { owner: { $nin: classifiedOwnerIds } }] } : categoryFilter;
   }
-  if (listingType === "nutritionist") return null;
-  const filter = { category: listingType === "gym" ? mainCategory.name : mainCategory.slug };
-  if (selectedSubcategory) filter[listingType === "gym" ? "tags" : "role"] = selectedSubcategory.name;
-  return filter;
+  if (listingType === "nutritionist") {
+    if (mainCategory.slug !== "wellness") return null;
+    if (selectedSubcategory && selectedSubcategory.slug !== "nutrition") return null;
+    return {};
+  }
+  if (listingType === "trainer") {
+    const filter = { category: mainCategory.slug };
+    if (selectedSubcategory && mainCategory.slug === "fitness" && selectedSubcategory.slug === "personal-trainers") {
+      const trainerOwnerIds = ownerIdsByProviderType.trainer || [];
+      const recognizedProfessionalOwnerIds = [...trainerOwnerIds, ...(ownerIdsByProviderType.coach || [])];
+      return { $and: [filter, { $or: [{ owner: { $in: trainerOwnerIds } }, { owner: null }, { owner: { $nin: recognizedProfessionalOwnerIds } }] }] };
+    }
+    if (selectedSubcategory) filter.role = selectedSubcategory.name;
+    return filter;
+  }
+  const canonicalNames = activeMainCategories.map((item) => item.name);
+  const fallbackProviderTypes = { fitness: ["gym_owner", "fitness_centre_owner"], wellness: ["wellness_centre_owner"], sports: ["sports_academy_owner"] }[mainCategory.slug] || [];
+  const fallbackOwnerIds = fallbackProviderTypes.flatMap((providerType) => ownerIdsByProviderType[providerType] || []);
+  const mainFilter = fallbackOwnerIds.length ? { $or: [{ category: mainCategory.name }, { category: { $nin: canonicalNames }, owner: { $in: fallbackOwnerIds } }] } : { category: mainCategory.name };
+  if (!selectedSubcategory) return mainFilter;
+  return { $and: [mainFilter, { tags: selectedSubcategory.name }] };
 };
 
 const ADMIN_GYM_PHASE_A_FIELDS = new Set([
