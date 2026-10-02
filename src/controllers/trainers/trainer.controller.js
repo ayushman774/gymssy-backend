@@ -1,13 +1,14 @@
 import Trainer from "../../models/trainers/Trainer.js";
+import { withPublicListingVisibility } from "../../utils/publicListing.js";
+import { toPublicTrainer, toPublicTrainers } from "../../utils/publicProfessional.js";
 
 export const getFeaturedTrainers = async (req, res) => {
   try {
     const { category } = req.query;
 
-    const filter = {
-      isActive: true,
+    const filter = withPublicListingVisibility({
       featured: true,
-    };
+    });
 
     // Optional category filter
     // Example:
@@ -37,7 +38,7 @@ export const getFeaturedTrainers = async (req, res) => {
     return res.status(200).json({
       success: true,
       count: trainers.length,
-      data: trainers,
+      data: toPublicTrainers(trainers),
     });
   } catch (error) {
     console.error("Get featured trainers error:", error);
@@ -53,10 +54,9 @@ export const getTrainerBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const trainer = await Trainer.findOne({
+    const trainer = await Trainer.findOne(withPublicListingVisibility({
       slug,
-      isActive: true,
-    }).lean();
+    })).lean();
 
     if (!trainer) {
       return res.status(404).json({
@@ -67,7 +67,7 @@ export const getTrainerBySlug = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: trainer,
+      data: toPublicTrainer(trainer),
     });
   } catch (error) {
     console.error("Get trainer by slug error:", error);

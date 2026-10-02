@@ -10,6 +10,18 @@ import {
   removeProviderAvatar,
 } from "../../controllers/admin/adminProviderAvatar.controller.js";
 import { createAdminProviderListing } from "../../controllers/admin/adminProviderListing.controller.js";
+import {
+  createAdminCategory,
+  createAdminCity,
+  deleteAdminCategory,
+  deleteAdminCity,
+  getAdminCategories,
+  getAdminCategoryById,
+  getAdminCities,
+  getAdminCityById,
+  updateAdminCategory,
+  updateAdminCity,
+} from "../../controllers/admin/adminMarketplaceSetup.controller.js";
 
 import {
   getAdminDashboard,
@@ -48,6 +60,22 @@ router.get("/test", authMiddleware, adminMiddleware, (req, res) => {
 // ============================================================
 
 router.get("/dashboard", authMiddleware, adminMiddleware, getAdminDashboard);
+
+// ============================================================
+// MARKETPLACE SETUP
+// ============================================================
+
+router.get("/categories", authMiddleware, adminMiddleware, getAdminCategories);
+router.post("/categories", authMiddleware, adminMiddleware, createAdminCategory);
+router.get("/categories/:id", authMiddleware, adminMiddleware, getAdminCategoryById);
+router.put("/categories/:id", authMiddleware, adminMiddleware, updateAdminCategory);
+router.delete("/categories/:id", authMiddleware, adminMiddleware, deleteAdminCategory);
+
+router.get("/cities", authMiddleware, adminMiddleware, getAdminCities);
+router.post("/cities", authMiddleware, adminMiddleware, createAdminCity);
+router.get("/cities/:id", authMiddleware, adminMiddleware, getAdminCityById);
+router.put("/cities/:id", authMiddleware, adminMiddleware, updateAdminCity);
+router.delete("/cities/:id", authMiddleware, adminMiddleware, deleteAdminCity);
 
 // ============================================================
 // ADMIN PROVIDERS

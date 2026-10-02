@@ -1,10 +1,20 @@
 import City from "../../models/cities/City.js";
-import connectDB from "../../config/db.js";
+
+export const getActiveCities = async (req, res) => {
+  try {
+    const cities = await City.find({ isActive: true })
+      .sort({ order: 1, name: 1 })
+      .select("name slug state country image isPopular order")
+      .lean();
+    return res.status(200).json({ success: true, count: cities.length, data: cities });
+  } catch (error) {
+    console.error("Get active cities error:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch cities" });
+  }
+};
 
 export const getPopularCities = async (req, res) => {
   try {
-    await connectDB();
-
     const cities = await City.aggregate([
       {
         $match: {
@@ -26,6 +36,7 @@ export const getPopularCities = async (req, res) => {
                   $eq: ["$city", "$$cityId"],
                 },
                 isActive: true,
+                moderationStatus: { $nin: ["pending", "rejected"] },
               },
             },
           ],

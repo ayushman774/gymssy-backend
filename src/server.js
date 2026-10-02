@@ -1,5 +1,15 @@
+import dns from "node:dns";
 import dotenv from "dotenv";
 dotenv.config();
+
+const dnsServers = process.env.DNS_SERVERS
+  ?.split(",")
+  .map((server) => server.trim())
+  .filter(Boolean);
+
+if (dnsServers?.length) {
+  dns.setServers(dnsServers);
+}
 
 import app from "./app.js";
 import connectDB from "./config/db.js";

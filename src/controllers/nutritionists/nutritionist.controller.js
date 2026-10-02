@@ -1,4 +1,9 @@
 import Nutritionist from "../../models/nutritionists/Nutritionist.js";
+import { withPublicListingVisibility } from "../../utils/publicListing.js";
+import {
+  toPublicNutritionist,
+  toPublicNutritionists,
+} from "../../utils/publicProfessional.js";
 
 /* =========================================
    GET FEATURED NUTRITIONISTS
@@ -6,10 +11,9 @@ import Nutritionist from "../../models/nutritionists/Nutritionist.js";
 
 export const getFeaturedNutritionists = async (req, res) => {
   try {
-    const nutritionists = await Nutritionist.find({
-      isActive: true,
+    const nutritionists = await Nutritionist.find(withPublicListingVisibility({
       featured: true,
-    })
+    }))
       .sort({
         rating: -1,
         reviews: -1,
@@ -20,7 +24,7 @@ export const getFeaturedNutritionists = async (req, res) => {
     return res.status(200).json({
       success: true,
       count: nutritionists.length,
-      data: nutritionists,
+      data: toPublicNutritionists(nutritionists),
     });
   } catch (error) {
     console.error("Get featured nutritionists error:", error);
@@ -40,10 +44,9 @@ export const getNutritionistBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const nutritionist = await Nutritionist.findOne({
+    const nutritionist = await Nutritionist.findOne(withPublicListingVisibility({
       slug,
-      isActive: true,
-    }).lean();
+    })).lean();
 
     if (!nutritionist) {
       return res.status(404).json({
@@ -54,7 +57,7 @@ export const getNutritionistBySlug = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: nutritionist,
+      data: toPublicNutritionist(nutritionist),
     });
   } catch (error) {
     console.error("Get nutritionist by slug error:", error);
@@ -72,9 +75,7 @@ export const getNutritionistBySlug = async (req, res) => {
 
 export const getNutritionists = async (req, res) => {
   try {
-    const nutritionists = await Nutritionist.find({
-      isActive: true,
-    })
+    const nutritionists = await Nutritionist.find(withPublicListingVisibility())
       .sort({
         featured: -1,
         rating: -1,
@@ -85,7 +86,7 @@ export const getNutritionists = async (req, res) => {
     return res.status(200).json({
       success: true,
       count: nutritionists.length,
-      data: nutritionists,
+      data: toPublicNutritionists(nutritionists),
     });
   } catch (error) {
     console.error("Get nutritionists error:", error);

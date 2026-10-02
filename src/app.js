@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import mongoose from "mongoose";
 
 import connectDB from "./config/db.js";
 
@@ -18,6 +19,7 @@ import partnerApplicationRoutes from "./routes/partnerApplications/partnerApplic
 import nutritionistRoutes from "./routes/nutritionists/nutritionist.routes.js";
 import providerRoutes from "./routes/providers/provider.routes.js";
 import adminRoutes from "./routes/admin/admin.routes.js";
+import discoveryRoutes from "./routes/discovery/discovery.routes.js";
 
 const app = express();
 
@@ -123,6 +125,7 @@ app.use("/api/recently-viewed", recentlyViewedRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/providers", providerRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/discover", discoveryRoutes);
 app.use("/api/gyms", gymRoutes);
 app.use("/api/trainers", trainerRoutes);
 app.use("/api/experiences", experienceRoutes);

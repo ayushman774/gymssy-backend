@@ -3,14 +3,13 @@ import City from "../../models/cities/City.js";
 import Category from "../../models/categories/Category.js";
 import { toPublicGym, toPublicGyms } from "../../utils/publicGym.js";
 import { escapeRegex } from "../../utils/regex.js";
+import { withPublicListingVisibility } from "../../utils/publicListing.js";
 
 export const getFeaturedGyms = async (req, res) => {
   try {
     const { type } = req.query;
 
-    const filter = {
-      isActive: true,
-    };
+    const filter = withPublicListingVisibility();
 
     /*
     =================================
@@ -128,10 +127,9 @@ export const getGymBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const gym = await Gym.findOne({
+    const gym = await Gym.findOne(withPublicListingVisibility({
       slug: slug.toLowerCase(),
-      isActive: true,
-    }).lean();
+    })).lean();
 
     if (!gym) {
       return res.status(404).json({
@@ -168,8 +166,7 @@ export const getGymsByCategory = async (req, res) => {
     const normalizedCategory = category.trim().replace(/-/g, " ");
     const escapedCategory = escapeRegex(normalizedCategory);
 
-    const gyms = await Gym.find({
-      isActive: true,
+    const gyms = await Gym.find(withPublicListingVisibility({
       $or: [
         {
           category: {
@@ -184,7 +181,7 @@ export const getGymsByCategory = async (req, res) => {
           },
         },
       ],
-    })
+    }))
       .sort({
         featured: -1,
         rating: -1,
@@ -212,9 +209,7 @@ export const getGyms = async (req, res) => {
   try {
     const { city, category } = req.query;
 
-    const filter = {
-      isActive: true,
-    };
+    const filter = withPublicListingVisibility();
 
     /* ================================
        CITY FILTER
