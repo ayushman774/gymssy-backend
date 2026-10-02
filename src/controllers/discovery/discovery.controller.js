@@ -20,7 +20,7 @@ const MAX_SEARCH_LENGTH = 100;
 const MAX_LIMIT = 50;
 const MAX_PAGE = 1000;
 
-const MODEL_TARGETS = Object.freeze([
+export const DISCOVERY_MODEL_TARGETS = Object.freeze([
   { model: Gym, modelType: "gym", rank: 0, fields: "name slug owner category tags location.area location.state images.cover verified rating reviewCount featured priceFrom city createdAt" },
   { model: Trainer, modelType: "trainer", rank: 1, fields: "name slug owner category role specialty experience image isVerified rating reviews featured createdAt" },
   { model: Nutritionist, modelType: "nutritionist", rank: 2, fields: "name slug owner role specialty experience image isVerified rating reviews featured createdAt" },
@@ -95,7 +95,7 @@ function taxonomySubcategorySlugs(doc, modelType, classification, taxonomy) {
   return slugs;
 }
 
-function normalizeDiscoveryResult(doc, target, taxonomy) {
+export function normalizeDiscoveryResult(doc, target, taxonomy) {
   const classification = getMarketplaceClassification(doc, target.modelType);
   const isGym = target.modelType === "gym";
   const image = isGym
@@ -134,7 +134,7 @@ function normalizeDiscoveryResult(doc, target, taxonomy) {
   return result;
 }
 
-async function loadClassificationContext() {
+export async function loadDiscoveryClassificationContext() {
   const providerTypes = [...new Set(Object.values(MARKETPLACE_LISTING_TYPES).flatMap((config) => config.providerTypes))];
   const [owners, categories] = await Promise.all([
     User.find({ role: "business", providerType: { $in: providerTypes } }).select("_id providerType").lean(),
@@ -152,7 +152,7 @@ async function loadClassificationContext() {
   return { ownerIdsByProviderType, recognizedOwnerIdsByModel, mainCategories, mainBySlug, subcategories };
 }
 
-function buildTaxonomyMap(context) {
+export function buildDiscoveryTaxonomyMap(context) {
   const result = new Map(context.mainCategories.map((main) => [main.slug, new Map()]));
   const mainSlugById = new Map(context.mainCategories.map((main) => [String(main._id), main.slug]));
   for (const subcategory of context.subcategories) {
@@ -212,7 +212,7 @@ export const getDiscoveryListings = async (req, res) => {
     }
     if (!ALLOWED_SORTS.has(sort)) return validationError(res, `Invalid sort. Allowed values: ${[...ALLOWED_SORTS].join(", ")}`, "sort");
 
-    const context = await loadClassificationContext();
+    const context = await loadDiscoveryClassificationContext();
     let mainCategory = categorySlug ? context.mainBySlug.get(categorySlug) : null;
     if (categorySlug && !mainCategory) return validationError(res, "Unknown or inactive marketplace category", "category");
     let selectedSubcategory = null;
@@ -245,7 +245,7 @@ export const getDiscoveryListings = async (req, res) => {
     }
 
     const requestedModelType = listingType ? MARKETPLACE_LISTING_TYPES[listingType].modelType : null;
-    const targets = MODEL_TARGETS.filter((target) => (!requestedModelType || target.modelType === requestedModelType) && (!city || target.modelType === "gym") && (entity !== "venue" || target.modelType === "gym"));
+    const targets = DISCOVERY_MODEL_TARGETS.filter((target) => (!requestedModelType || target.modelType === requestedModelType) && (!city || target.modelType === "gym") && (entity !== "venue" || target.modelType === "gym"));
     const fetchLimit = (pageResult.value - 1) * limitResult.value + limitResult.value;
     const queryResults = await Promise.all(targets.map(async (target) => {
       const typeFilter = buildMarketplaceListingTypeFilter({ listingType, modelType: target.modelType, ...context });
@@ -265,7 +265,7 @@ export const getDiscoveryListings = async (req, res) => {
       return { target, docs, total };
     }));
 
-    const taxonomy = buildTaxonomyMap(context);
+    const taxonomy = buildDiscoveryTaxonomyMap(context);
     const merged = queryResults
       .flatMap(({ docs, target }) => docs.map((doc) => normalizeDiscoveryResult(doc, target, taxonomy)))
       .sort((left, right) => compareDiscoveryResults(left, right, sort));

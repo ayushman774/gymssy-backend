@@ -38,6 +38,7 @@ import {
   getAdminListingById,
   updateAdminListingContent,
 } from "../../controllers/admin/admin.controller.js";
+import { getAdminEnquiries, getAdminEnquirySummary, getAdminEnquiryById } from "../../controllers/admin/adminEnquiry.controller.js";
 
 const router = express.Router();
 
@@ -60,6 +61,10 @@ router.get("/test", authMiddleware, adminMiddleware, (req, res) => {
 // ============================================================
 
 router.get("/dashboard", authMiddleware, adminMiddleware, getAdminDashboard);
+
+router.get("/enquiries", authMiddleware, adminMiddleware, getAdminEnquiries);
+router.get("/enquiries/summary", authMiddleware, adminMiddleware, getAdminEnquirySummary);
+router.get("/enquiries/:id", authMiddleware, adminMiddleware, getAdminEnquiryById);
 
 // ============================================================
 // MARKETPLACE SETUP

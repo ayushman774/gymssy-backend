@@ -20,6 +20,9 @@ import nutritionistRoutes from "./routes/nutritionists/nutritionist.routes.js";
 import providerRoutes from "./routes/providers/provider.routes.js";
 import adminRoutes from "./routes/admin/admin.routes.js";
 import discoveryRoutes from "./routes/discovery/discovery.routes.js";
+import favoriteRoutes from "./routes/favorites/favorite.routes.js";
+import enquiryRoutes from "./routes/enquiries/enquiry.routes.js";
+import bookingRoutes from "./routes/bookings/booking.routes.js";
 
 const app = express();
 
@@ -126,6 +129,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/providers", providerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/discover", discoveryRoutes);
+app.use("/api/favorites", favoriteRoutes);
+app.use("/api/enquiries", enquiryRoutes);
+app.use("/api/bookings", bookingRoutes);
 app.use("/api/gyms", gymRoutes);
 app.use("/api/trainers", trainerRoutes);
 app.use("/api/experiences", experienceRoutes);

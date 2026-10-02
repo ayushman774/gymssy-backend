@@ -15,8 +15,19 @@ import {
   updateMyProviderListing,
   deleteMyProviderListing,
 } from "../../controllers/providers/providerListing.controller.js";
+import {
+  getProviderEnquiries,
+  getProviderEnquirySummary,
+  getProviderEnquiryById,
+  updateProviderEnquiryStatus,
+} from "../../controllers/providers/providerEnquiry.controller.js";
 
 const router = express.Router();
+
+router.get("/enquiries", authMiddleware, authorizeRoles("business"), getProviderEnquiries);
+router.get("/enquiries/summary", authMiddleware, authorizeRoles("business"), getProviderEnquirySummary);
+router.get("/enquiries/:id", authMiddleware, authorizeRoles("business"), getProviderEnquiryById);
+router.patch("/enquiries/:id/status", authMiddleware, authorizeRoles("business"), updateProviderEnquiryStatus);
 
 /*
 |--------------------------------------------------------------------------
