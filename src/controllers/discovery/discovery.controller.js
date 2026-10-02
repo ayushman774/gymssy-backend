@@ -163,6 +163,17 @@ function buildTaxonomyMap(context) {
 }
 
 export const getDiscoveryListings = async (req, res) => {
+  let diagnosticContext = {
+    search: "",
+    category: "",
+    subcategory: "",
+    type: "",
+    entity: "",
+    city: "",
+    sort: "recommended",
+    page: 1,
+    limit: 20,
+  };
   try {
     const unsupportedFields = Object.keys(req.query).filter((field) => !ALLOWED_QUERY_FIELDS.has(field));
     if (unsupportedFields.length) return validationError(res, "Unsupported discovery query fields", "query", { unsupportedFields });
@@ -183,6 +194,17 @@ export const getDiscoveryListings = async (req, res) => {
     const entity = normalizedQueryValue(req.query.entity);
     const citySlug = normalizedQueryValue(req.query.city);
     const sort = normalizedQueryValue(req.query.sort) || "recommended";
+    diagnosticContext = {
+      search,
+      category: categorySlug,
+      subcategory: subcategorySlug,
+      type: listingType,
+      entity,
+      city: citySlug,
+      sort,
+      page: pageResult.value,
+      limit: limitResult.value,
+    };
     if (listingType && !MARKETPLACE_LISTING_TYPES[listingType]) return validationError(res, "Invalid listing type", "type");
     if (entity && entity !== "venue") return validationError(res, "Invalid entity. Allowed value: venue", "entity");
     if (entity === "venue" && listingType && MARKETPLACE_LISTING_TYPES[listingType].modelType !== "gym") {
@@ -261,7 +283,10 @@ export const getDiscoveryListings = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Get discovery listings error:", error);
+    console.error("Discovery request failed", {
+      ...diagnosticContext,
+      error: error?.message || "Unknown error",
+    }, error);
     return res.status(500).json({ success: false, message: "Failed to discover marketplace listings" });
   }
 };

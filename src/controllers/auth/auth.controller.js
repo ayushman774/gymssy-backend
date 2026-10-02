@@ -19,6 +19,11 @@ const ALLOWED_PROVIDER_TYPES = [
   "other",
 ];
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isNonEmptyString = (value) =>
+  typeof value === "string" && value.trim().length > 0;
+
 // ============================================================
 // REGISTER USER / PROVIDER
 // ============================================================
@@ -38,7 +43,11 @@ export const registerUser = async (req, res) => {
     // BASIC VALIDATION
     // ----------------------------------------------------------
 
-    if (!name || !email || !password) {
+    if (
+      !isNonEmptyString(name) ||
+      !isNonEmptyString(email) ||
+      !isNonEmptyString(password)
+    ) {
       return res.status(400).json({
         success: false,
         message: "Name, email and password are required",
@@ -55,6 +64,13 @@ export const registerUser = async (req, res) => {
     // ----------------------------------------------------------
     // NORMALIZE ACCOUNT TYPE
     // ----------------------------------------------------------
+
+    if (typeof accountType !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid account type",
+      });
+    }
 
     const normalizedAccountType = accountType.trim().toLowerCase();
 
@@ -74,7 +90,7 @@ export const registerUser = async (req, res) => {
     let normalizedProviderType = null;
 
     if (normalizedAccountType === "business") {
-      if (!providerType) {
+      if (!isNonEmptyString(providerType)) {
         return res.status(400).json({
           success: false,
           message: "Provider type is required for business accounts",
@@ -97,6 +113,13 @@ export const registerUser = async (req, res) => {
     // ----------------------------------------------------------
 
     const normalizedEmail = email.toLowerCase().trim();
+
+    if (!EMAIL_PATTERN.test(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a valid email address",
+      });
+    }
 
     // ----------------------------------------------------------
     // CHECK EXISTING USER
@@ -173,6 +196,13 @@ export const registerUser = async (req, res) => {
   } catch (error) {
     console.error("Register error:", error);
 
+    if (error?.code === 11000 && error?.keyPattern?.email) {
+      return res.status(409).json({
+        success: false,
+        message: "An account with this email already exists",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Failed to create account",
@@ -192,7 +222,7 @@ export const loginUser = async (req, res) => {
     // VALIDATION
     // ----------------------------------------------------------
 
-    if (!email || !password) {
+    if (!isNonEmptyString(email) || !isNonEmptyString(password)) {
       return res.status(400).json({
         success: false,
         message: "Email and password are required",

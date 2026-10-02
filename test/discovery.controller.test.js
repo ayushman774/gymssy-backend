@@ -258,3 +258,61 @@ test("every supported sort uses deterministic cross-model semantics", async () =
     assert.equal(new Set(one.body.data.map((item) => item.id)).size, one.body.data.length);
   }
 });
+
+test("the production customer-search contract accepts explicit recommended sorting at limit 20", async () => {
+  const res = await discover({ search: "gym", sort: "recommended", page: "1", limit: "20" });
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.success, true);
+  assert.ok(Array.isArray(res.body.data));
+  assert.ok(res.body.data.length <= 20);
+  assert.deepEqual(res.body.pagination, {
+    page: 1,
+    limit: 20,
+    total: res.body.data.length,
+    totalPages: res.body.data.length > 0 ? 1 : 0,
+  });
+});
+
+test("legacy optional fields and missing provider records remain safe for every sort", async () => {
+  gyms.push(base("Legacy Search Gym", null, 14, {
+    featured: undefined,
+    rating: null,
+    reviewCount: null,
+    createdAt: undefined,
+    images: undefined,
+    location: undefined,
+  }));
+  trainers.push(base("Orphan Trainer", { _id: oid() }, 15, {
+    featured: undefined,
+    rating: null,
+    reviews: null,
+    createdAt: undefined,
+    image: undefined,
+    role: undefined,
+    specialty: undefined,
+    experience: undefined,
+  }));
+  nutritionists.push(base("Legacy Nutritionist", null, 16, {
+    featured: undefined,
+    rating: null,
+    reviews: null,
+    createdAt: undefined,
+    image: undefined,
+    role: undefined,
+    specialty: undefined,
+    experience: undefined,
+  }));
+
+  for (const sort of ["recommended", "rating", "reviews", "newest"]) {
+    const first = await discover({ sort, page: "1", limit: "20" });
+    const second = await discover({ sort, page: "1", limit: "20" });
+    assert.equal(first.statusCode, 200, sort);
+    assert.equal(first.body.success, true, sort);
+    assert.ok(first.body.data.length <= 20, sort);
+    assert.deepEqual(first.body.data.map((item) => item.id), second.body.data.map((item) => item.id), sort);
+    assert.ok(first.body.data.some((item) => item.name === "Legacy Search Gym"), sort);
+    assert.ok(first.body.data.some((item) => item.name === "Orphan Trainer"), sort);
+    assert.ok(first.body.data.some((item) => item.name === "Legacy Nutritionist"), sort);
+  }
+});

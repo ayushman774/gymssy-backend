@@ -1,5 +1,10 @@
 import RecentlyViewed from "../../models/recentlyViewed/RecentlyViewed.js";
 import Gym from "../../models/gyms/Gym.js";
+import mongoose from "mongoose";
+import { toPublicGym } from "../../utils/publicGym.js";
+import { withPublicListingVisibility } from "../../utils/publicListing.js";
+
+const HISTORY_LIMIT = 10;
 
 /**
  * Add or update a recently viewed gym
@@ -9,10 +14,16 @@ export const addRecentlyViewed = async (req, res) => {
     const { gymId } = req.params;
     const userId = req.user.id;
 
-    const gym = await Gym.findOne({
+    if (!mongoose.isValidObjectId(gymId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid gym ID",
+      });
+    }
+
+    const gym = await Gym.findOne(withPublicListingVisibility({
       _id: gymId,
-      isActive: true,
-    });
+    })).lean();
 
     if (!gym) {
       return res.status(404).json({
@@ -36,6 +47,19 @@ export const addRecentlyViewed = async (req, res) => {
         upsert: true,
       },
     );
+
+    const overflow = await RecentlyViewed.find({ user: userId })
+      .sort({ viewedAt: -1 })
+      .skip(HISTORY_LIMIT)
+      .select("_id")
+      .lean();
+
+    if (overflow.length) {
+      await RecentlyViewed.deleteMany({
+        user: userId,
+        _id: { $in: overflow.map((item) => item._id) },
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -63,10 +87,10 @@ export const getRecentlyViewed = async (req, res) => {
       user: userId,
     })
       .sort({ viewedAt: -1 })
-      .limit(10)
+      .limit(HISTORY_LIMIT)
       .populate({
         path: "gym",
-        match: { isActive: true },
+        match: withPublicListingVisibility(),
       })
       .lean();
 
@@ -74,7 +98,7 @@ export const getRecentlyViewed = async (req, res) => {
     const gyms = recentlyViewed
       .filter((item) => item.gym)
       .map((item) => ({
-        ...item.gym,
+        ...toPublicGym(item.gym),
         viewedAt: item.viewedAt,
       }));
 
