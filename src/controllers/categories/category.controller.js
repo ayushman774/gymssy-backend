@@ -1,5 +1,10 @@
 import Category from "../../models/categories/Category.js";
 
+function toPublicCategory(category) {
+  const { isActive, __v, ...publicCategory } = category;
+  return publicCategory;
+}
+
 // GET /api/categories
 export const getCategories = async (req, res) => {
   try {
@@ -22,11 +27,11 @@ export const getCategories = async (req, res) => {
       .lean();
 
     const data = mainCategories.map((category) => ({
-      ...category,
+      ...toPublicCategory(category),
       subcategories: subcategories.filter(
         (subcategory) =>
           subcategory.parentCategory.toString() === category._id.toString(),
-      ),
+      ).map(toPublicCategory),
     }));
 
     return res.status(200).json({
@@ -72,8 +77,8 @@ export const getCategoryBySlug = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        ...category,
-        subcategories,
+        ...toPublicCategory(category),
+        subcategories: subcategories.map(toPublicCategory),
       },
     });
   } catch (error) {

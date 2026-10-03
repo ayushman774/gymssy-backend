@@ -14,23 +14,26 @@ function response() { return { statusCode: 200, body: null, status(code) { this.
 function sortedLean(value) { return { sort() { return this; }, lean: async () => value }; }
 
 test("public Categories contract remains active-only and hierarchically nested", { concurrency: false }, async () => {
-  const main = { _id: new mongoose.Types.ObjectId(), name: "Fitness", slug: "fitness", type: "main", parentCategory: null, isActive: true };
-  const sub = { _id: new mongoose.Types.ObjectId(), name: "Gyms", slug: "gyms", type: "subcategory", parentCategory: main._id, isActive: true };
+  const main = { _id: new mongoose.Types.ObjectId(), name: "Fitness", slug: "fitness", type: "main", parentCategory: null, isActive: true, __v: 2 };
+  const sub = { _id: new mongoose.Types.ObjectId(), name: "Gyms", slug: "gyms", type: "subcategory", parentCategory: main._id, isActive: true, __v: 3 };
   const filters = [];
   mock(Category, "find", (filter) => { filters.push(filter); return sortedLean(filters.length === 1 ? [main] : [sub]); });
   const res = response(); await getCategories({}, res);
   assert.equal(res.statusCode, 200); assert.equal(res.body.count, 1); assert.equal(res.body.data[0].subcategories[0].slug, "gyms");
   assert.equal(filters[0].isActive, true); assert.equal(filters[1].isActive, true);
+  assert.equal("isActive" in res.body.data[0], false); assert.equal("__v" in res.body.data[0], false);
+  assert.equal("isActive" in res.body.data[0].subcategories[0], false); assert.equal("__v" in res.body.data[0].subcategories[0], false);
 });
 
 test("public Category detail keeps its response wrapper and active subcategory filter", { concurrency: false }, async () => {
-  const main = { _id: new mongoose.Types.ObjectId(), name: "Fitness", slug: "fitness", type: "main", isActive: true };
+  const main = { _id: new mongoose.Types.ObjectId(), name: "Fitness", slug: "fitness", type: "main", isActive: true, __v: 2 };
   let detailFilter; let childFilter;
   mock(Category, "findOne", (filter) => { detailFilter = filter; return { lean: async () => main }; });
   mock(Category, "find", (filter) => { childFilter = filter; return sortedLean([]); });
   const res = response(); await getCategoryBySlug({ params: { slug: "fitness" } }, res);
   assert.equal(res.statusCode, 200); assert.equal(res.body.data.slug, "fitness"); assert.deepEqual(res.body.data.subcategories, []);
   assert.deepEqual(detailFilter, { slug: "fitness", isActive: true }); assert.equal(childFilter.isActive, true);
+  assert.equal("isActive" in res.body.data, false); assert.equal("__v" in res.body.data, false);
 });
 
 test("public Popular Cities keeps its shape, order and live publishable Gym count", { concurrency: false }, async () => {
