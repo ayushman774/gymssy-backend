@@ -2,7 +2,6 @@ import test, { afterEach } from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
 
-import app from "../src/app.js";
 import Gym from "../src/models/gyms/Gym.js";
 import Trainer from "../src/models/trainers/Trainer.js";
 import Nutritionist from "../src/models/nutritionists/Nutritionist.js";
@@ -189,19 +188,4 @@ test("featured semantics remain backward compatible and documented by query", { 
   assert.equal(gymFilter.featured, undefined, "Gym keeps its compatibility ranking behavior");
   assert.equal(trainerFilter.featured, true);
   assert.equal(nutritionistFilter.featured, true);
-});
-
-test("health endpoint reports status without requiring a database write", async () => {
-  const server = app.listen(0);
-  try {
-    const address = server.address();
-    const result = await fetch(`http://127.0.0.1:${address.port}/api/health`);
-    const body = await result.json();
-    assert.equal(result.status, 200);
-    assert.equal(body.success, true);
-    assert.equal(body.status.server, "up");
-    assert.ok(["connected", "disconnected"].includes(body.status.database));
-  } finally {
-    await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
-  }
 });

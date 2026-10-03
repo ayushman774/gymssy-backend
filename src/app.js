@@ -3,9 +3,9 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import mongoose from "mongoose";
 
 import connectDB from "./config/db.js";
+import { getHealth } from "./controllers/health.controller.js";
 
 import categoryRoutes from "./routes/categories/category.routes.js";
 import recentlyViewedRoutes from "./routes/recentlyViewed/recentlyViewed.routes.js";
@@ -88,18 +88,7 @@ app.use(cookieParser());
    HEALTH CHECK
 ================================ */
 
-app.get("/api/health", (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
-  res.status(200).json({
-    success: true,
-    message: "Gymssy API is running 🚀",
-    status: {
-      server: "up",
-      database: dbStatus,
-    },
-    timestamp: new Date().toISOString(),
-  });
-});
+app.get("/api/health", getHealth);
 
 /* ================================
    DATABASE CONNECTION
