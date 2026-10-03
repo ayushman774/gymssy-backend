@@ -125,6 +125,13 @@ export const removeRecentlyViewed = async (req, res) => {
     const { gymId } = req.params;
     const userId = req.user.id;
 
+    if (!mongoose.isValidObjectId(gymId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid gym ID",
+      });
+    }
+
     await RecentlyViewed.findOneAndDelete({
       user: userId,
       gym: gymId,

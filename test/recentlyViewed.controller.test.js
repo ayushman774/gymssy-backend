@@ -38,3 +38,13 @@ test("removal is scoped to the authenticated customer", { concurrency: false }, 
   const res = response(); await removeRecentlyViewed({ params: { gymId }, user: { id: userId } }, res);
   assert.equal(res.statusCode, 200); assert.equal(String(filter.user), String(userId)); assert.equal(String(filter.gym), String(gymId));
 });
+
+test("removal rejects a malformed gym ID before querying MongoDB", { concurrency: false }, async () => {
+  let queried = false;
+  mock(RecentlyViewed, "findOneAndDelete", async () => { queried = true; });
+  const res = response();
+  await removeRecentlyViewed({ params: { gymId: "not-an-object-id" }, user: { id: new mongoose.Types.ObjectId() } }, res);
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.body, { success: false, message: "Invalid gym ID" });
+  assert.equal(queried, false);
+});
