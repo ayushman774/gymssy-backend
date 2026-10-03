@@ -21,6 +21,7 @@ import {
   getProviderEnquiryById,
   updateProviderEnquiryStatus,
 } from "../../controllers/providers/providerEnquiry.controller.js";
+import { getProviderBookings, getProviderBookingSummary, getProviderBookingById, updateProviderBookingStatus } from "../../controllers/providers/providerBooking.controller.js";
 
 const router = express.Router();
 
@@ -28,6 +29,11 @@ router.get("/enquiries", authMiddleware, authorizeRoles("business"), getProvider
 router.get("/enquiries/summary", authMiddleware, authorizeRoles("business"), getProviderEnquirySummary);
 router.get("/enquiries/:id", authMiddleware, authorizeRoles("business"), getProviderEnquiryById);
 router.patch("/enquiries/:id/status", authMiddleware, authorizeRoles("business"), updateProviderEnquiryStatus);
+
+router.get("/bookings", authMiddleware, authorizeRoles("business"), getProviderBookings);
+router.get("/bookings/summary", authMiddleware, authorizeRoles("business"), getProviderBookingSummary);
+router.get("/bookings/:id", authMiddleware, authorizeRoles("business"), getProviderBookingById);
+router.patch("/bookings/:id/status", authMiddleware, authorizeRoles("business"), updateProviderBookingStatus);
 
 /*
 |--------------------------------------------------------------------------

@@ -39,6 +39,7 @@ import {
   updateAdminListingContent,
 } from "../../controllers/admin/admin.controller.js";
 import { getAdminEnquiries, getAdminEnquirySummary, getAdminEnquiryById } from "../../controllers/admin/adminEnquiry.controller.js";
+import { getAdminBookings, getAdminBookingSummary, getAdminBookingById } from "../../controllers/admin/adminBooking.controller.js";
 
 const router = express.Router();
 
@@ -65,6 +66,9 @@ router.get("/dashboard", authMiddleware, adminMiddleware, getAdminDashboard);
 router.get("/enquiries", authMiddleware, adminMiddleware, getAdminEnquiries);
 router.get("/enquiries/summary", authMiddleware, adminMiddleware, getAdminEnquirySummary);
 router.get("/enquiries/:id", authMiddleware, adminMiddleware, getAdminEnquiryById);
+router.get("/bookings", authMiddleware, adminMiddleware, getAdminBookings);
+router.get("/bookings/summary", authMiddleware, adminMiddleware, getAdminBookingSummary);
+router.get("/bookings/:id", authMiddleware, adminMiddleware, getAdminBookingById);
 
 // ============================================================
 // MARKETPLACE SETUP

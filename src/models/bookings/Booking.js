@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { BOOKING_STATUSES, BOOKING_TARGET_TYPES } from "../../utils/bookingDomain.js";
+import { BOOKING_STATUSES, BOOKING_TARGET_TYPES, BOOKING_TYPES } from "../../utils/bookingDomain.js";
 
 const contactSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true, maxlength: 100 },
@@ -19,6 +19,8 @@ const serviceSnapshotSchema = new mongoose.Schema({
   type: { type: String, required: true, trim: true },
   name: { type: String, required: true, trim: true },
   duration: { type: String, default: "", trim: true },
+  schedule: { type: String, default: "", trim: true },
+  time: { type: String, default: "", trim: true },
   trainer: { type: String, default: "", trim: true },
   specialty: { type: String, default: "", trim: true },
   description: { type: String, default: "", trim: true },
@@ -44,7 +46,7 @@ const bookingSchema = new mongoose.Schema({
   provider: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
   targetType: { type: String, enum: BOOKING_TARGET_TYPES, required: true },
   target: { type: mongoose.Schema.Types.ObjectId, required: true },
-  bookingType: { type: String, required: true, trim: true },
+  bookingType: { type: String, enum: [...new Set(Object.values(BOOKING_TYPES).flat())], required: true, trim: true },
   scheduledFor: { type: Date, required: true },
   timezone: { type: String, required: true, trim: true, maxlength: 100 },
   status: { type: String, enum: BOOKING_STATUSES, default: "requested", required: true },
