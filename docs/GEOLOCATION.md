@@ -69,3 +69,104 @@ Geoapify will later resolve typed places to coordinates, and browser geolocation
 provide a customer's current coordinates. Both are clients of this backend contract;
 neither supplies Gymssy marketplace inventory. Autocomplete, maps, directions, and UI
 distance badges are outside this phase.
+
+## Location resolution service
+
+Geoapify resolves human-entered Indian places and addresses. It does not provide
+Gymssy's businesses or marketplace inventory. Once a result supplies coordinates,
+`/api/discover` searches Gymssy's own MongoDB inventory through the geospatial contract
+described above.
+
+Configure the backend-only environment variable:
+
+```text
+GEOAPIFY_API_KEY=
+```
+
+The value must be configured in the backend deployment environment. It must never be
+placed in frontend source, API responses, logs, or committed files. Missing configuration
+returns a sanitized `503` only from location-resolution endpoints; it does not prevent the
+rest of the API from starting.
+
+### Autocomplete
+
+```http
+GET /api/locations/autocomplete?q=Indiranagar&limit=5
+GET /api/locations/autocomplete?q=Indira&lat=12.97&lng=77.64
+```
+
+- Public endpoint intended for customer search inputs.
+- `q` is trimmed, whitespace-normalized, and must contain 2–120 characters.
+- `limit` defaults to 5 and must be an integer from 1 through 10.
+- Optional `lat` and `lng` must be supplied together and form a valid coordinate pair.
+- All upstream requests use the hard country filter `countrycode:in`.
+- Optional coordinates add Geoapify proximity bias in `longitude,latitude` order; they do
+  not remove the India restriction.
+- No arbitrary query parameters are forwarded.
+
+### Forward geocoding
+
+```http
+GET /api/locations/geocode?q=100%20Feet%20Road%2C%20Indiranagar
+Authorization: Bearer <business-or-admin-token>
+```
+
+Forward geocoding is limited to authenticated Admin and business users. Customer
+autocomplete selections already provide coordinates, so exposing a second public paid
+lookup is unnecessary. Its `q` is 3–250 characters and `limit` defaults to 1 with a
+maximum of 5.
+
+Both endpoints return normalized Gymssy results rather than raw Geoapify objects:
+
+```json
+{
+  "success": true,
+  "data": [{
+    "id": "provider-owned-place-id",
+    "label": "Indiranagar, Bengaluru, Karnataka, India",
+    "name": "Indiranagar",
+    "area": "Indiranagar",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "country": "India",
+    "postcode": "560038",
+    "latitude": 12.9784,
+    "longitude": 77.6408,
+    "type": "suburb"
+  }]
+}
+```
+
+Optional address fields are `null` when Geoapify omits them. `id` comes from Geoapify's
+`place_id`; treat it as a provider-owned lookup identifier, not a permanent Gymssy ID.
+
+### Availability, quota protection, and caching
+
+Requests use native server-side `fetch` with a 5-second timeout. Missing configuration,
+timeouts, network failures, and provider quota exhaustion return sanitized `503`
+responses. Other invalid provider responses return `502`. Upstream response bodies,
+authenticated URLs, and API keys are never returned or logged.
+
+Location routes use a separate 60-requests-per-minute IP policy. This is intentionally
+less restrictive than authentication throttling because autocomplete generates several
+legitimate requests while typing. The current `express-rate-limit` memory store is
+instance-local in Netlify Functions and therefore best-effort, not a globally coordinated
+quota guarantee. Frontend debouncing remains required.
+
+Successful responses use a bounded 200-entry in-memory cache. Autocomplete entries live
+for 5 minutes and geocoding entries for 30 minutes. Cache keys contain normalized query
+inputs but no secret. Netlify instances are ephemeral, so this cache reduces repeated
+requests within warm instances only; it is not distributed or durable.
+
+### Attribution and official references
+
+The future UI displaying Geoapify-derived information must always show OpenStreetMap
+attribution. When Gymssy uses Geoapify's Free plan it must also show a follow-link such as
+`Powered by Geoapify` near the supplied information. Plan quotas and rate limits must be
+monitored; autocomplete and geocoding currently cost one credit per request.
+
+- [Geoapify Address Autocomplete API](https://apidocs.geoapify.com/docs/geocoding/address-autocomplete/)
+- [Geoapify Forward Geocoding API](https://apidocs.geoapify.com/docs/geocoding/forward-geocoding/)
+- [Geoapify country restriction guidance](https://apidocs.geoapify.com/how-to/addresses/restrict-address-search-country/)
+- [Geoapify pricing and rate limits](https://www.geoapify.com/pricing/)
+- [Geoapify terms and attribution](https://www.geoapify.com/terms-and-conditions/)

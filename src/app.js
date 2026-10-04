@@ -23,6 +23,7 @@ import discoveryRoutes from "./routes/discovery/discovery.routes.js";
 import favoriteRoutes from "./routes/favorites/favorite.routes.js";
 import enquiryRoutes from "./routes/enquiries/enquiry.routes.js";
 import bookingRoutes from "./routes/bookings/booking.routes.js";
+import locationRoutes from "./routes/locations/location.routes.js";
 
 const app = express();
 
@@ -121,6 +122,7 @@ app.use("/api/discover", discoveryRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/api/enquiries", enquiryRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/locations", locationRoutes);
 app.use("/api/gyms", gymRoutes);
 app.use("/api/trainers", trainerRoutes);
 app.use("/api/experiences", experienceRoutes);
