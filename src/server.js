@@ -21,7 +21,6 @@ import connectDB from "./config/db.js";
 const requiredEnvVars = [
   "MONGO_URI",
   "JWT_SECRET",
-  "ADMIN_CREATION_SECRET",
 ];
 
 const missingEnvVars = requiredEnvVars.filter((v) => !process.env[v]);

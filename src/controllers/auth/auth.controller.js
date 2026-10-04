@@ -360,16 +360,33 @@ export const getCurrentUser = async (req, res) => {
 
 export const createAdmin = async (req, res) => {
   try {
-    const { name, email, password, phone, adminSecret } = req.body;
+    const allowedFields = ["name", "email", "password", "phone"];
+    const unsupportedFields = Object.keys(req.body || {}).filter(
+      (field) => !allowedFields.includes(field),
+    );
+
+    if (unsupportedFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Unsupported admin creation fields",
+        unsupportedFields,
+      });
+    }
+
+    const { name, email, password, phone } = req.body;
 
     // ----------------------------------------------------------
     // VALIDATION
     // ----------------------------------------------------------
 
-    if (!name || !email || !password || !adminSecret) {
+    if (
+      !isNonEmptyString(name) ||
+      !isNonEmptyString(email) ||
+      !isNonEmptyString(password)
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Name, email, password and admin secret are required",
+        message: "Name, email and password are required",
       });
     }
 
@@ -381,24 +398,17 @@ export const createAdmin = async (req, res) => {
     }
 
     // ----------------------------------------------------------
-    // CHECK ADMIN SECRET
-    // ----------------------------------------------------------
-
-    if (
-      !process.env.ADMIN_CREATION_SECRET ||
-      adminSecret !== process.env.ADMIN_CREATION_SECRET
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Invalid admin creation secret",
-      });
-    }
-
-    // ----------------------------------------------------------
     // NORMALIZE EMAIL
     // ----------------------------------------------------------
 
     const normalizedEmail = email.toLowerCase().trim();
+
+    if (!EMAIL_PATTERN.test(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a valid email address",
+      });
+    }
 
     // ----------------------------------------------------------
     // CHECK EXISTING ACCOUNT
@@ -429,7 +439,7 @@ export const createAdmin = async (req, res) => {
       name: name.trim(),
       email: normalizedEmail,
       password: hashedPassword,
-      phone: phone?.trim() || "",
+      phone: typeof phone === "string" ? phone.trim() : "",
 
       role: "admin",
 
@@ -439,12 +449,6 @@ export const createAdmin = async (req, res) => {
       isActive: true,
       isEmailVerified: true,
     });
-
-    // ----------------------------------------------------------
-    // GENERATE TOKEN
-    // ----------------------------------------------------------
-
-    const token = generateToken(admin._id);
 
     // ----------------------------------------------------------
     // RESPONSE
@@ -467,7 +471,6 @@ export const createAdmin = async (req, res) => {
           isEmailVerified: admin.isEmailVerified,
         },
 
-        token,
       },
     });
   } catch (error) {
