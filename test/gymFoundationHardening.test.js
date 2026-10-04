@@ -43,6 +43,7 @@ test("Gym nested partial updates preserve omitted sibling fields", async () => {
 
   assert.deepEqual(updates.location, { ...listing.location, area: "Sector 2" });
   assert.deepEqual(updates.coordinates, { lat: 28.5, lng: 77.0266 });
+  assert.deepEqual(updates.geoLocation, { type: "Point", coordinates: [77.0266, 28.5] });
   assert.equal(updates.images.cover, "cover-new.jpg");
   assert.deepEqual(updates.images.gallery, listing.images.gallery);
   assert.deepEqual(updates.images.coverMeta, { publicId: "", width: null, height: null, format: "" });
@@ -58,6 +59,7 @@ test("Gym coordinate longitude-only updates preserve latitude", async () => {
   });
 
   assert.deepEqual(updates.coordinates, { lat: 28.4595, lng: 77.1 });
+  assert.deepEqual(updates.geoLocation, { type: "Point", coordinates: [77.1, 28.4595] });
 });
 
 test("Gym nested partial updates support intentional empty-string and empty-array clearing", async () => {

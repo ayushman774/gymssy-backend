@@ -309,6 +309,25 @@ const ratingBreakdownSchema = new mongoose.Schema(
   { _id: false },
 );
 
+const geoPointSchema = new mongoose.Schema(
+  {
+    type: { type: String, enum: ["Point"], required: true },
+    coordinates: {
+      type: [Number],
+      required: true,
+      validate: {
+        validator(value) {
+          return Array.isArray(value) && value.length === 2 &&
+            Number.isFinite(value[0]) && value[0] >= -180 && value[0] <= 180 &&
+            Number.isFinite(value[1]) && value[1] >= -90 && value[1] <= 90;
+        },
+        message: "geoLocation coordinates must be [longitude, latitude] within valid ranges",
+      },
+    },
+  },
+  { _id: false },
+);
+
 const gymSchema = new mongoose.Schema(
   {
     name: {
@@ -498,6 +517,12 @@ const gymSchema = new mongoose.Schema(
       default: false,
     },
 
+    geoLocation: {
+      type: geoPointSchema,
+      default: undefined,
+      select: false,
+    },
+
     moderationStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],
@@ -546,6 +571,8 @@ const gymSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+gymSchema.index({ geoLocation: "2dsphere" });
 
 const Gym = mongoose.model("Gym", gymSchema);
 

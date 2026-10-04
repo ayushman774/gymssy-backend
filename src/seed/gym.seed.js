@@ -7,6 +7,7 @@ import connectDB from "../config/db.js";
 import Gym from "../models/gyms/Gym.js";
 import City from "../models/cities/City.js";
 import { gymsData } from "../data/gymsData.js";
+import { geoPointFromLegacyCoordinates } from "../utils/geoCoordinates.js";
 
 const seedGyms = async () => {
   try {
@@ -62,6 +63,8 @@ const seedGyms = async () => {
           lat: gym.coordinates?.lat ?? null,
           lng: gym.coordinates?.lng ?? null,
         },
+
+        geoLocation: geoPointFromLegacyCoordinates(gym.coordinates),
 
         distance: parseDistance(gym.distance),
 

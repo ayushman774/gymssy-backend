@@ -90,16 +90,18 @@ test("Admin Gym Phase A required, slug, and City validation", { concurrency: fal
   });
 });
 
-test("Admin Gym Phase A preserves nested siblings and accepts coordinate clearing", { concurrency: false }, async () => {
-  const listing = gym(); const res = await update(listing, { location: { landmark: "" }, coordinates: { lat: null }, tags: [], highlights: [] });
+test("Admin Gym Phase A preserves nested siblings and accepts paired coordinate clearing", { concurrency: false }, async () => {
+  const listing = gym(); const res = await update(listing, { location: { landmark: "" }, coordinates: { lat: null, lng: null }, tags: [], highlights: [] });
   assert.equal(res.statusCode, 200); assert.equal(listing.location.landmark, ""); assert.equal(listing.location.area, "Area");
-  assert.deepEqual(listing.coordinates, { lat: null, lng: 77 }); assert.deepEqual(listing.tags, []); assert.deepEqual(listing.highlights, []);
+  assert.deepEqual(listing.coordinates, { lat: null, lng: null }); assert.equal(listing.geoLocation, undefined); assert.deepEqual(listing.tags, []); assert.deepEqual(listing.highlights, []);
 });
 
 test("Admin Gym Phase A validates coordinate ranges and longitude-only merging", { concurrency: false }, async (t) => {
   await t.test("longitude only", async () => { const listing = gym(); const res = await update(listing, { coordinates: { lng: -180 } }); assert.equal(res.statusCode, 200); assert.deepEqual(listing.coordinates, { lat: 12, lng: -180 }); });
-  for (const [field, value] of [["lat", 90.01], ["lat", -91], ["lng", 180.01], ["lng", -181], ["lat", "12"]]) await t.test(`rejects ${field} ${value}`, async () => {
-    const listing = gym(); const res = await update(listing, { coordinates: { [field]: value } }); assert.equal(res.statusCode, 400); assert.equal(res.body.errors[0].field, `coordinates.${field}`);
+  await t.test("preferred aliases and numeric strings normalize", async () => { const listing = gym(); const res = await update(listing, { coordinates: { latitude: "0", longitude: "0" } }); assert.equal(res.statusCode, 200); assert.deepEqual(listing.coordinates, { lat: 0, lng: 0 }); assert.deepEqual(listing.geoLocation, { type: "Point", coordinates: [0, 0] }); });
+  await t.test("partial clearing is rejected", async () => { const listing = gym(); const res = await update(listing, { coordinates: { lat: null } }); assert.equal(res.statusCode, 400); assert.equal(res.body.errors[0].field, "coordinates"); });
+  for (const [field, value, errorField] of [["lat", 90.01, "coordinates.latitude"], ["lat", -91, "coordinates.latitude"], ["lng", 180.01, "coordinates.longitude"], ["lng", -181, "coordinates.longitude"], ["lat", "north", "coordinates.latitude"]]) await t.test(`rejects ${field} ${value}`, async () => {
+    const listing = gym(); const res = await update(listing, { coordinates: { [field]: value } }); assert.equal(res.statusCode, 400); assert.equal(res.body.errors[0].field, errorField);
   });
 });
 

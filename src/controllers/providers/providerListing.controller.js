@@ -6,6 +6,7 @@ import Nutritionist from "../../models/nutritionists/Nutritionist.js";
 import City from "../../models/cities/City.js";
 import { sanitizeProviderGymImages } from "../../utils/gymMedia.js";
 import { isTaxonomyChange, validateAndNormalizeListingTaxonomy } from "../../utils/listingTaxonomy.js";
+import { normalizeCoordinateWrite } from "../../utils/geoCoordinates.js";
 
 /*
 |--------------------------------------------------------------------------
@@ -269,6 +270,20 @@ export const prepareListingContentUpdate = async ({ model, type, listing, body }
   }
   const updates = pickAllowedFields(body, allowedFields);
   if (type === "gym" && updates.images !== undefined) updates.images = sanitizeProviderGymImages(updates.images);
+  if (type === "gym" && updates.coordinates !== undefined) {
+    const coordinateResult = normalizeCoordinateWrite(updates.coordinates, {
+      existing: listing.coordinates?.toObject?.() || listing.coordinates,
+    });
+    if (coordinateResult.errors) {
+      throw new ListingContractError(400, {
+        success: false,
+        message: "Listing validation failed",
+        errors: coordinateResult.errors,
+      });
+    }
+    updates.coordinates = coordinateResult.coordinates;
+    updates.geoLocation = coordinateResult.geoLocation;
+  }
   if (!Object.keys(updates).length) {
     throw new ListingContractError(400, { success: false, message: "No valid listing fields provided for update" });
   }
@@ -342,6 +357,18 @@ export const prepareProviderOwnedListing = async ({
 
   const listingData = pickAllowedFields(body, allowedFields);
   if (config.type === "gym" && listingData.images !== undefined) listingData.images = sanitizeProviderGymImages(listingData.images);
+  if (config.type === "gym" && listingData.coordinates !== undefined) {
+    const coordinateResult = normalizeCoordinateWrite(listingData.coordinates);
+    if (coordinateResult.errors) {
+      throw new ListingContractError(400, {
+        success: false,
+        message: "Listing validation failed",
+        errors: coordinateResult.errors,
+      });
+    }
+    listingData.coordinates = coordinateResult.coordinates;
+    listingData.geoLocation = coordinateResult.geoLocation;
+  }
   const requiredFields = REQUIRED_FIELDS[config.type];
   normalizeRequiredStrings(listingData, requiredFields);
   const validationErrors = getRequiredFieldErrors(listingData, requiredFields);

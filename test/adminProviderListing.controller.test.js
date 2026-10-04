@@ -78,11 +78,26 @@ test("admin creates a provider-owned Gym with a real City reference", { concurre
   mock(Gym, "create", async (data) => { created = data; return data; });
   const { res, providerId } = await runCreate("gym_owner", {
     name: " Gym ", slug: " Gym ", category: " Fitness ", city: city.toString(),
+    coordinates: { latitude: 0, longitude: 0 },
   });
   assert.equal(res.statusCode, 201);
   assert.equal(created.owner.toString(), providerId.toString());
   assert.equal(created.verified, false);
   assert.equal(created.slug, "gym");
+  assert.deepEqual(created.coordinates, { lat: 0, lng: 0 });
+  assert.deepEqual(created.geoLocation, { type: "Point", coordinates: [0, 0] });
+});
+
+test("admin Gym creation rejects partial coordinates with a field-level 400", { concurrency: false }, async () => {
+  const city = new mongoose.Types.ObjectId();
+  mock(City, "exists", async () => true);
+  mock(Gym, "exists", async () => false);
+  const { res } = await runCreate("gym_owner", {
+    name: "Gym", slug: "gym", category: "Fitness", city: city.toString(),
+    coordinates: { latitude: 12 },
+  });
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.errors[0].field, "coordinates.longitude");
 });
 
 for (const [name, providerValues, status] of [

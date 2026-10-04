@@ -14,11 +14,14 @@ import {
 import { withPublicListingVisibility } from "../../utils/publicListing.js";
 import { escapeRegex } from "../../utils/regex.js";
 
-const ALLOWED_QUERY_FIELDS = new Set(["search", "category", "subcategory", "type", "entity", "city", "page", "limit", "sort"]);
+const ALLOWED_QUERY_FIELDS = new Set(["search", "category", "subcategory", "type", "entity", "city", "page", "limit", "sort", "lat", "lng", "radius"]);
 const ALLOWED_SORTS = new Set(["recommended", "rating", "reviews", "newest"]);
 const MAX_SEARCH_LENGTH = 100;
 const MAX_LIMIT = 50;
 const MAX_PAGE = 1000;
+const DEFAULT_RADIUS_KM = 10;
+const MIN_RADIUS_KM = 0.1;
+const MAX_RADIUS_KM = 100;
 
 export const DISCOVERY_MODEL_TARGETS = Object.freeze([
   { model: Gym, modelType: "gym", rank: 0, fields: "name slug owner category tags location.area location.state images.cover verified rating reviewCount featured priceFrom city createdAt" },
@@ -127,11 +130,45 @@ export function normalizeDiscoveryResult(doc, target, taxonomy) {
         ? `/nutritionists/${doc.slug}`
         : `/trainers/${doc.slug}`,
   };
+  if (isGym && Number.isFinite(doc.distanceMeters)) {
+    result.distance = { value: Math.round((doc.distanceMeters / 1000) * 10) / 10, unit: "km" };
+  }
   Object.defineProperties(result, {
     createdAtValue: { value: doc.createdAt ? new Date(doc.createdAt).getTime() : 0 },
     modelRank: { value: target.rank },
   });
   return result;
+}
+
+function parseFiniteQueryNumber(value, field) {
+  if (value === undefined || value === "") return { missing: true };
+  if (Array.isArray(value) || typeof value !== "string" || value.trim() === "" || !Number.isFinite(Number(value))) {
+    return { error: `${field} must be a finite number` };
+  }
+  return { value: Number(value) };
+}
+
+export function buildNearbyPipeline({ filter, latitude, longitude, radiusKm, sort, explicitSort, skip, limit }) {
+  const resultSort = explicitSort ? mongoSort("gym", sort) : { distanceMeters: 1, _id: 1 };
+  return [
+    {
+      $geoNear: {
+        near: { type: "Point", coordinates: [longitude, latitude] },
+        key: "geoLocation",
+        distanceField: "distanceMeters",
+        maxDistance: radiusKm * 1000,
+        spherical: true,
+        query: filter,
+      },
+    },
+    { $sort: resultSort },
+    {
+      $facet: {
+        docs: [{ $skip: skip }, { $limit: limit }],
+        metadata: [{ $count: "total" }],
+      },
+    },
+  ];
 }
 
 export async function loadDiscoveryClassificationContext() {
@@ -173,6 +210,9 @@ export const getDiscoveryListings = async (req, res) => {
     sort: "recommended",
     page: 1,
     limit: 20,
+    latitude: null,
+    longitude: null,
+    radiusKm: null,
   };
   try {
     const unsupportedFields = Object.keys(req.query).filter((field) => !ALLOWED_QUERY_FIELDS.has(field));
@@ -194,6 +234,24 @@ export const getDiscoveryListings = async (req, res) => {
     const entity = normalizedQueryValue(req.query.entity);
     const citySlug = normalizedQueryValue(req.query.city);
     const sort = normalizedQueryValue(req.query.sort) || "recommended";
+    const explicitSort = typeof req.query.sort === "string" && req.query.sort.trim() !== "";
+    const latitudeResult = parseFiniteQueryNumber(req.query.lat, "lat");
+    const longitudeResult = parseFiniteQueryNumber(req.query.lng, "lng");
+    const hasLatitude = !latitudeResult.missing;
+    const hasLongitude = !longitudeResult.missing;
+    if (latitudeResult.error) return validationError(res, latitudeResult.error, "lat");
+    if (longitudeResult.error) return validationError(res, longitudeResult.error, "lng");
+    if (hasLatitude !== hasLongitude) return validationError(res, "lat and lng must be supplied together", hasLatitude ? "lng" : "lat");
+    if (hasLatitude && (latitudeResult.value < -90 || latitudeResult.value > 90)) return validationError(res, "lat must be between -90 and 90", "lat");
+    if (hasLongitude && (longitudeResult.value < -180 || longitudeResult.value > 180)) return validationError(res, "lng must be between -180 and 180", "lng");
+    const hasCoordinates = hasLatitude && hasLongitude;
+    const radiusResult = parseFiniteQueryNumber(req.query.radius, "radius");
+    if (radiusResult.error) return validationError(res, radiusResult.error, "radius");
+    if (!hasCoordinates && !radiusResult.missing) return validationError(res, "radius requires lat and lng", "radius");
+    const radiusKm = radiusResult.missing ? DEFAULT_RADIUS_KM : radiusResult.value;
+    if (hasCoordinates && (radiusKm < MIN_RADIUS_KM || radiusKm > MAX_RADIUS_KM)) {
+      return validationError(res, `radius must be between ${MIN_RADIUS_KM} and ${MAX_RADIUS_KM} kilometers`, "radius");
+    }
     diagnosticContext = {
       search,
       category: categorySlug,
@@ -204,6 +262,9 @@ export const getDiscoveryListings = async (req, res) => {
       sort,
       page: pageResult.value,
       limit: limitResult.value,
+      latitude: hasCoordinates ? latitudeResult.value : null,
+      longitude: hasCoordinates ? longitudeResult.value : null,
+      radiusKm: hasCoordinates ? radiusKm : null,
     };
     if (listingType && !MARKETPLACE_LISTING_TYPES[listingType]) return validationError(res, "Invalid listing type", "type");
     if (entity && entity !== "venue") return validationError(res, "Invalid entity. Allowed value: venue", "entity");
@@ -245,8 +306,12 @@ export const getDiscoveryListings = async (req, res) => {
     }
 
     const requestedModelType = listingType ? MARKETPLACE_LISTING_TYPES[listingType].modelType : null;
-    const targets = DISCOVERY_MODEL_TARGETS.filter((target) => (!requestedModelType || target.modelType === requestedModelType) && (!city || target.modelType === "gym") && (entity !== "venue" || target.modelType === "gym"));
+    if (hasCoordinates && requestedModelType && requestedModelType !== "gym") {
+      return validationError(res, "Nearby discovery supports only physical venue listings", "type");
+    }
+    const targets = DISCOVERY_MODEL_TARGETS.filter((target) => (!requestedModelType || target.modelType === requestedModelType) && (!city || target.modelType === "gym") && (entity !== "venue" || target.modelType === "gym") && (!hasCoordinates || target.modelType === "gym"));
     const fetchLimit = (pageResult.value - 1) * limitResult.value + limitResult.value;
+    const skip = (pageResult.value - 1) * limitResult.value;
     const queryResults = await Promise.all(targets.map(async (target) => {
       const typeFilter = buildMarketplaceListingTypeFilter({ listingType, modelType: target.modelType, ...context });
       if (typeFilter === null) return { target, total: 0, docs: [] };
@@ -256,6 +321,23 @@ export const getDiscoveryListings = async (req, res) => {
       if (taxonomyFilter === null) return { target, total: 0, docs: [] };
       const operationalFilter = withPublicListingVisibility(city ? { city: city._id } : {});
       const filter = combineMarketplaceFilters(operationalFilter, typeFilter, taxonomyFilter, buildSearchFilter(target.modelType, search));
+      if (hasCoordinates) {
+        const [aggregation = { docs: [], metadata: [] }] = await target.model.aggregate(buildNearbyPipeline({
+          filter,
+          latitude: latitudeResult.value,
+          longitude: longitudeResult.value,
+          radiusKm,
+          sort,
+          explicitSort,
+          skip,
+          limit: limitResult.value,
+        }));
+        const docs = await target.model.populate(aggregation.docs || [], [
+          { path: "owner", select: "providerType" },
+          { path: "city", select: "name slug state country" },
+        ]);
+        return { target, docs, total: aggregation.metadata?.[0]?.total || 0 };
+      }
       const query = target.model.find(filter).select(target.fields).populate("owner", "providerType");
       if (target.modelType === "gym") query.populate("city", "name slug state country");
       const [docs, total] = await Promise.all([
@@ -266,15 +348,17 @@ export const getDiscoveryListings = async (req, res) => {
     }));
 
     const taxonomy = buildDiscoveryTaxonomyMap(context);
-    const merged = queryResults
-      .flatMap(({ docs, target }) => docs.map((doc) => normalizeDiscoveryResult(doc, target, taxonomy)))
-      .sort((left, right) => compareDiscoveryResults(left, right, sort));
+    const normalizedResults = queryResults
+      .flatMap(({ docs, target }) => docs.map((doc) => normalizeDiscoveryResult(doc, target, taxonomy)));
+    const merged = hasCoordinates && !explicitSort
+      ? normalizedResults
+      : normalizedResults.sort((left, right) => compareDiscoveryResults(left, right, sort));
     const total = queryResults.reduce((sum, result) => sum + result.total, 0);
-    const skip = (pageResult.value - 1) * limitResult.value;
+    const pageData = hasCoordinates ? merged : merged.slice(skip, skip + limitResult.value);
 
     return res.status(200).json({
       success: true,
-      data: merged.slice(skip, skip + limitResult.value),
+      data: pageData,
       pagination: {
         page: pageResult.value,
         limit: limitResult.value,
@@ -291,4 +375,11 @@ export const getDiscoveryListings = async (req, res) => {
   }
 };
 
-export const DISCOVERY_LIMITS = Object.freeze({ maxPage: MAX_PAGE, maxLimit: MAX_LIMIT, maxSearchLength: MAX_SEARCH_LENGTH });
+export const DISCOVERY_LIMITS = Object.freeze({
+  maxPage: MAX_PAGE,
+  maxLimit: MAX_LIMIT,
+  maxSearchLength: MAX_SEARCH_LENGTH,
+  defaultRadiusKm: DEFAULT_RADIUS_KM,
+  minRadiusKm: MIN_RADIUS_KM,
+  maxRadiusKm: MAX_RADIUS_KM,
+});

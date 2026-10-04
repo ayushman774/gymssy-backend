@@ -48,6 +48,7 @@ const base = (name, owner, day, overrides = {}) => ({
 let gyms;
 let trainers;
 let nutritionists;
+let lastNearbyPipeline;
 
 function valueAt(document, path) {
   return path.split(".").reduce((value, key) => value?.[key], document);
@@ -118,6 +119,7 @@ async function discover(query = {}) {
 }
 
 beforeEach(() => {
+  lastNearbyPipeline = null;
   gyms = [
     base("Alpha Gym", owners.gym_owner, 10, { category: "Fitness", tags: ["Gyms", "HIIT"], city: delhi, location: { area: "Saket", state: "Delhi" }, images: { cover: "alpha.jpg" }, priceFrom: 1000, reviewCount: 50, featured: true, verified: true }),
     base("Fit Centre", owners.fitness_centre_owner, 9, { category: "Fitness", tags: ["Gyms"], city: delhi, reviewCount: 20 }),
@@ -143,6 +145,26 @@ beforeEach(() => {
     mock(Model, "find", (filter) => queryFor(getDocuments(), filter));
     mock(Model, "countDocuments", async (filter) => getDocuments().filter((document) => matches(document, filter)).length);
   }
+  mock(Gym, "aggregate", async (pipeline) => {
+    lastNearbyPipeline = pipeline;
+    const geoNear = pipeline[0].$geoNear;
+    const sort = pipeline[1].$sort;
+    const [{ $skip: skip }, { $limit: limit }] = pipeline[2].$facet.docs;
+    const eligible = gyms
+      .filter((document) => document.geoLocation && matches(document, geoNear.query) && document.testDistanceMeters <= geoNear.maxDistance)
+      .map((document) => ({ ...document, distanceMeters: document.testDistanceMeters }))
+      .sort((left, right) => {
+        for (const [field, direction] of Object.entries(sort)) {
+          const a = scalar(valueAt(left, field)) ?? 0;
+          const b = scalar(valueAt(right, field)) ?? 0;
+          if (String(a) === String(b)) continue;
+          return a > b ? direction : -direction;
+        }
+        return 0;
+      });
+    return [{ docs: eligible.slice(skip, skip + limit), metadata: eligible.length ? [{ total: eligible.length }] : [] }];
+  });
+  mock(Gym, "populate", async (documents) => documents);
 });
 
 test("default discovery returns only active approved/legacy records and a safe normalized card contract", async () => {
@@ -315,4 +337,78 @@ test("legacy optional fields and missing provider records remain safe for every 
     assert.ok(first.body.data.some((item) => item.name === "Orphan Trainer"), sort);
     assert.ok(first.body.data.some((item) => item.name === "Legacy Nutritionist"), sort);
   }
+});
+
+test("nearby discovery validates coordinates and radius with field-level 400 responses", async () => {
+  for (const [query, field] of [
+    [{ lat: "12" }, "lng"],
+    [{ lng: "77" }, "lat"],
+    [{ lat: "north", lng: "77" }, "lat"],
+    [{ lat: "91", lng: "77" }, "lat"],
+    [{ lat: "12", lng: "181" }, "lng"],
+    [{ radius: "5" }, "radius"],
+    [{ lat: "12", lng: "77", radius: "0" }, "radius"],
+    [{ lat: "12", lng: "77", radius: "101" }, "radius"],
+  ]) {
+    const res = await discover(query);
+    assert.equal(res.statusCode, 400, JSON.stringify(query));
+    assert.equal(res.body.errors[0].field, field);
+  }
+});
+
+test("nearby discovery accepts zero coordinates, uses publication filters, and defaults to nearest-first", async () => {
+  gyms[0].geoLocation = { type: "Point", coordinates: [0, 0] };
+  gyms[0].testDistanceMeters = 2400;
+  gyms[1].geoLocation = { type: "Point", coordinates: [0, 0] };
+  gyms[1].testDistanceMeters = 500;
+  gyms[5].geoLocation = { type: "Point", coordinates: [0, 0] };
+  gyms[5].testDistanceMeters = 100;
+
+  const res = await discover({ lat: "0", lng: "0" });
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.body.data.map((item) => item.name), ["Fit Centre", "Alpha Gym"]);
+  assert.deepEqual(res.body.data.map((item) => item.distance), [
+    { value: 0.5, unit: "km" },
+    { value: 2.4, unit: "km" },
+  ]);
+  assert.equal(lastNearbyPipeline[0].$geoNear.maxDistance, 10000);
+  assert.equal(lastNearbyPipeline[0].$geoNear.query.isActive, true);
+  assert.deepEqual(lastNearbyPipeline[0].$geoNear.query.moderationStatus, { $nin: ["pending", "rejected"] });
+  assert.ok(res.body.data.every((item) => !("geoLocation" in item) && !("distanceMeters" in item)));
+
+  const blankSort = await discover({ lat: "0", lng: "0", sort: " " });
+  assert.deepEqual(blankSort.body.data.map((item) => item.name), ["Fit Centre", "Alpha Gym"]);
+  assert.deepEqual(lastNearbyPipeline[1].$sort, { distanceMeters: 1, _id: 1 });
+});
+
+test("nearby discovery preserves radius, taxonomy, city, explicit sorting, and stable pagination", async () => {
+  gyms.slice(0, 4).forEach((gym, index) => {
+    gym.geoLocation = { type: "Point", coordinates: [77, 12] };
+    gym.testDistanceMeters = [4000, 500, 1200, 700][index];
+  });
+
+  const filtered = await discover({ lat: "12", lng: "77", radius: "1", category: "fitness", city: "delhi", sort: "rating", page: "1", limit: "1" });
+  assert.equal(filtered.statusCode, 200);
+  assert.deepEqual(filtered.body.pagination, { page: 1, limit: 1, total: 1, totalPages: 1 });
+  assert.deepEqual(filtered.body.data.map((item) => item.name), ["Fit Centre"]);
+  assert.equal(lastNearbyPipeline[0].$geoNear.maxDistance, 1000);
+  assert.match(JSON.stringify(lastNearbyPipeline[0].$geoNear.query), new RegExp(String(delhi._id)));
+  assert.equal(lastNearbyPipeline[1].$sort.rating, -1);
+
+  const maximum = await discover({ lat: "12", lng: "77", radius: "100", page: "2", limit: "2" });
+  assert.equal(maximum.statusCode, 200);
+  assert.deepEqual(maximum.body.pagination, { page: 2, limit: 2, total: 4, totalPages: 2 });
+  assert.deepEqual(maximum.body.data.map((item) => item.name), ["Calm Wellness", "Alpha Gym"]);
+  assert.equal(lastNearbyPipeline[0].$geoNear.maxDistance, 100000);
+});
+
+test("nearby discovery rejects professional-only types and legacy records without GeoJSON do not crash", async () => {
+  const professional = await discover({ lat: "12", lng: "77", type: "trainer" });
+  assert.equal(professional.statusCode, 400);
+  assert.equal(professional.body.errors[0].field, "type");
+
+  const empty = await discover({ lat: "12", lng: "77" });
+  assert.equal(empty.statusCode, 200);
+  assert.deepEqual(empty.body.data, []);
+  assert.deepEqual(empty.body.pagination, { page: 1, limit: 20, total: 0, totalPages: 0 });
 });

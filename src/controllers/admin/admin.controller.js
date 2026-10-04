@@ -1423,7 +1423,7 @@ const ADMIN_GYM_PHASE_A_FIELDS = new Set([
 const ADMIN_GYM_LOCATION_FIELDS = new Set([
   "address", "area", "city", "state", "pincode", "landmark", "parking",
 ]);
-const ADMIN_GYM_COORDINATE_FIELDS = new Set(["lat", "lng"]);
+const ADMIN_GYM_COORDINATE_FIELDS = new Set(["lat", "lng", "latitude", "longitude"]);
 const ADMIN_GYM_TIMING_FIELDS = new Set(["day", "open", "close", "isOpen"]);
 const TIME_24_HOUR_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -1442,12 +1442,6 @@ const getAdminGymPhaseAUnsupportedFields = (body = {}) => {
 
 const validateAdminGymPhaseA = (body) => {
   const errors = [];
-  if (body.coordinates && typeof body.coordinates === "object" && !Array.isArray(body.coordinates)) {
-    for (const [field, min, max] of [["lat", -90, 90], ["lng", -180, 180]]) {
-      const value = body.coordinates[field];
-      if (value !== undefined && value !== null && (typeof value !== "number" || !Number.isFinite(value) || value < min || value > max)) errors.push({ field: `coordinates.${field}`, message: `coordinates.${field} must be null or a number from ${min} to ${max}` });
-    }
-  }
   for (const field of ["tags", "highlights"]) if (body[field] !== undefined && (!Array.isArray(body[field]) || body[field].some((item) => typeof item !== "string"))) errors.push({ field, message: `${field} must be an array of strings` });
   if (body.priceFrom !== undefined && body.priceFrom !== null && (typeof body.priceFrom !== "number" || !Number.isFinite(body.priceFrom))) errors.push({ field: "priceFrom", message: "priceFrom must be null or a finite number" });
   if (body.timings !== undefined) {
