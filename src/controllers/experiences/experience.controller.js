@@ -77,3 +77,40 @@ export const getTrendingExperiences = async (req, res) => {
     });
   }
 };
+
+export const getExperienceBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    if (!slug || typeof slug !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Valid experience slug is required",
+      });
+    }
+
+    const experience = await Experience.findOne({
+      slug: slug.trim().toLowerCase(),
+      isActive: true,
+    }).lean();
+
+    if (!experience) {
+      return res.status(404).json({
+        success: false,
+        message: "Experience not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: experience,
+    });
+  } catch (error) {
+    console.error("Get experience by slug error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch experience details",
+    });
+  }
+};
