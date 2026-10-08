@@ -31,7 +31,11 @@ export const MARKETPLACE_LISTING_TYPES = Object.freeze({
     providerTypes: ["trainer"],
     includesLegacy: true,
   },
-  coach: { label: "Coach", modelType: "trainer", providerTypes: ["coach"] },
+  coach: {
+    label: "Coach",
+    modelType: "trainer",
+    providerTypes: ["coach"],
+  },
   nutritionist: {
     label: "Nutritionist",
     modelType: "nutritionist",
@@ -54,8 +58,19 @@ const GYM_PROVIDER_LISTING_TYPE = Object.freeze({
   studio_owner: "studio",
 });
 
+const MARKETPLACE_CATEGORIES = ["fitness", "wellness", "sports"];
+
+const normalizeCategory = (value) => {
+  if (typeof value !== "string") return null;
+
+  const normalized = value.trim().toLowerCase();
+
+  return MARKETPLACE_CATEGORIES.includes(normalized) ? normalized : null;
+};
+
 export function getMarketplaceClassification(doc, modelType) {
   const providerType = doc?.owner?.providerType;
+
   const listingType =
     modelType === "nutritionist"
       ? "nutritionist"
@@ -64,16 +79,25 @@ export function getMarketplaceClassification(doc, modelType) {
           ? "coach"
           : "trainer"
         : GYM_PROVIDER_LISTING_TYPE[providerType] || "gym";
-  const mainCategory =
-    modelType === "nutritionist"
-      ? "wellness"
-      : modelType === "trainer"
-        ? doc?.category || null
-        : ["Fitness", "Wellness", "Sports"].includes(doc?.category)
-          ? doc.category.toLowerCase()
-          : GYM_PROVIDER_MAIN_CATEGORY[providerType] || null;
 
-  return { listingType, mainCategory };
+  let mainCategory = null;
+
+  if (modelType === "nutritionist") {
+    mainCategory = "wellness";
+  } else if (modelType === "trainer") {
+    mainCategory = doc?.category || null;
+  } else {
+    mainCategory =
+      normalizeCategory(doc?.marketplaceCategory) ||
+      normalizeCategory(doc?.category) ||
+      GYM_PROVIDER_MAIN_CATEGORY[providerType] ||
+      null;
+  }
+
+  return {
+    listingType,
+    mainCategory,
+  };
 }
 
 export function buildMarketplaceListingTypeFilter({
@@ -83,18 +107,36 @@ export function buildMarketplaceListingTypeFilter({
   recognizedOwnerIdsByModel = {},
 }) {
   if (!listingType) return {};
+
   const config = MARKETPLACE_LISTING_TYPES[listingType];
-  if (!config || config.modelType !== modelType) return null;
-  if (modelType === "nutritionist") return {};
+
+  if (!config || config.modelType !== modelType) {
+    return null;
+  }
+
+  if (modelType === "nutritionist") {
+    return {};
+  }
+
   const exactOwnerIds = config.providerTypes.flatMap(
     (providerType) => ownerIdsByProviderType[providerType] || [],
   );
-  if (!config.includesLegacy) return { owner: { $in: exactOwnerIds } };
+
+  if (!config.includesLegacy) {
+    return {
+      owner: { $in: exactOwnerIds },
+    };
+  }
+
   return {
     $or: [
       { owner: { $in: exactOwnerIds } },
       { owner: null },
-      { owner: { $nin: recognizedOwnerIdsByModel[modelType] || [] } },
+      {
+        owner: {
+          $nin: recognizedOwnerIdsByModel[modelType] || [],
+        },
+      },
     ],
   };
 }
@@ -103,9 +145,18 @@ export function combineMarketplaceFilters(...filters) {
   const activeFilters = filters.filter(
     (filter) => filter && Object.keys(filter).length > 0,
   );
-  if (activeFilters.length === 0) return {};
-  if (activeFilters.length === 1) return activeFilters[0];
-  return { $and: activeFilters };
+
+  if (activeFilters.length === 0) {
+    return {};
+  }
+
+  if (activeFilters.length === 1) {
+    return activeFilters[0];
+  }
+
+  return {
+    $and: activeFilters,
+  };
 }
 
 export function buildMarketplaceTaxonomyFilter({
@@ -117,94 +168,193 @@ export function buildMarketplaceTaxonomyFilter({
   ownerIdsByProviderType = {},
 }) {
   if (!categorySlug) return {};
+
+  const canonicalNames = activeMainCategories.map((item) => item.name);
+
+  const canonicalSlugs = activeMainCategories.map((item) => item.slug);
+
+  // Preserve the existing unclassified filter,
+  // while excluding explicitly classified venues.
   if (categorySlug === "unclassified") {
-    if (modelType === "nutritionist") return null;
+    if (modelType === "nutritionist") {
+      return null;
+    }
+
     const categoryFilter = {
       category: {
-        $nin: activeMainCategories.map((item) =>
-          modelType === "gym" ? item.name : item.slug,
-        ),
+        $nin: modelType === "gym" ? canonicalNames : canonicalSlugs,
       },
     };
-    if (modelType !== "gym") return categoryFilter;
+
+    if (modelType !== "gym") {
+      return categoryFilter;
+    }
+
     const classifiedOwnerIds = [
       "gym_owner",
       "fitness_centre_owner",
       "wellness_centre_owner",
       "sports_academy_owner",
     ].flatMap((providerType) => ownerIdsByProviderType[providerType] || []);
-    return classifiedOwnerIds.length
-      ? { $and: [categoryFilter, { owner: { $nin: classifiedOwnerIds } }] }
-      : categoryFilter;
+
+    return {
+      $and: [
+        categoryFilter,
+        {
+          marketplaceCategory: {
+            $in: [null, ""],
+          },
+        },
+        ...(classifiedOwnerIds.length
+          ? [
+              {
+                owner: {
+                  $nin: classifiedOwnerIds,
+                },
+              },
+            ]
+          : []),
+      ],
+    };
   }
+
+  // Nutritionist classification.
   if (modelType === "nutritionist") {
-    if (mainCategory.slug !== "wellness") return null;
-    if (selectedSubcategory && selectedSubcategory.slug !== "nutrition")
+    if (mainCategory.slug !== "wellness") {
       return null;
+    }
+
+    if (selectedSubcategory && selectedSubcategory.slug !== "nutrition") {
+      return null;
+    }
+
     return {};
   }
+
+  // Trainer classification.
   if (modelType === "trainer") {
-    const filter = { category: mainCategory.slug };
-    // Fitness -> Personal Trainers denotes the Trainer listing class, not a literal role value.
+    const filter = {
+      category: mainCategory.slug,
+    };
+
     if (
       selectedSubcategory &&
       mainCategory.slug === "fitness" &&
       selectedSubcategory.slug === "personal-trainers"
     ) {
       const trainerOwnerIds = ownerIdsByProviderType.trainer || [];
+
       const recognizedProfessionalOwnerIds = [
         ...trainerOwnerIds,
         ...(ownerIdsByProviderType.coach || []),
       ];
+
       return {
         $and: [
           filter,
           {
             $or: [
-              { owner: { $in: trainerOwnerIds } },
+              {
+                owner: {
+                  $in: trainerOwnerIds,
+                },
+              },
               { owner: null },
-              { owner: { $nin: recognizedProfessionalOwnerIds } },
+              {
+                owner: {
+                  $nin: recognizedProfessionalOwnerIds,
+                },
+              },
             ],
           },
         ],
       };
     }
-    if (selectedSubcategory) filter.role = selectedSubcategory.name;
+
+    if (selectedSubcategory) {
+      filter.role = selectedSubcategory.name;
+    }
+
     return filter;
   }
-  const canonicalNames = activeMainCategories.map((item) => item.name);
+
+  // Gym-model marketplace classification.
   const fallbackProviderTypes =
     {
       fitness: ["gym_owner", "fitness_centre_owner"],
       wellness: ["wellness_centre_owner"],
       sports: ["sports_academy_owner"],
     }[mainCategory.slug] || [];
+
   const fallbackOwnerIds = fallbackProviderTypes.flatMap(
     (providerType) => ownerIdsByProviderType[providerType] || [],
   );
-  const mainFilter = fallbackOwnerIds.length
-    ? {
-        $or: [
-          { category: mainCategory.name },
-          {
-            category: { $nin: canonicalNames },
-            owner: { $in: fallbackOwnerIds },
-          },
-        ],
-      }
-    : { category: mainCategory.name };
 
-  if (!selectedSubcategory) return mainFilter;
+  const legacyMainFilter = {
+    $or: [
+      {
+        category: mainCategory.name,
+      },
+      {
+        category: {
+          $nin: canonicalNames,
+        },
+        owner: {
+          $in: fallbackOwnerIds,
+        },
+      },
+    ],
+  };
 
-  // The Fitness > Gyms subcategory represents gym listings,
-  // not a requirement for the literal "Gyms" tag.
+  const explicitMainFilter = {
+    marketplaceCategory: mainCategory.slug,
+  };
 
-  if (mainCategory.slug === "fitness" && selectedSubcategory.slug === "gyms") {
-    const fitnessVenueOwnerIds = [
-      ...(ownerIdsByProviderType.gym_owner || []),
-      ...(ownerIdsByProviderType.fitness_centre_owner || []),
-    ];
+  const legacyClassificationCondition = {
+    $or: [
+      {
+        marketplaceCategory: {
+          $exists: false,
+        },
+      },
+      {
+        marketplaceCategory: null,
+      },
+      {
+        marketplaceCategory: "",
+      },
+    ],
+  };
 
+  const legacyMainCategoryFilter = {
+    $and: [legacyClassificationCondition, legacyMainFilter],
+  };
+
+  // Main category only.
+  if (!selectedSubcategory) {
+    return {
+      $or: [explicitMainFilter, legacyMainCategoryFilter],
+    };
+  }
+
+  const subcategorySlug = selectedSubcategory.slug;
+
+  // Explicitly classified listings must match
+  // both the main category and subcategory.
+  const explicitSubcategoryFilter = {
+    $and: [
+      explicitMainFilter,
+      {
+        marketplaceSubcategories: subcategorySlug,
+      },
+    ],
+  };
+
+  // Preserve legacy Fitness > Gyms behavior.
+  // Other legacy subcategories continue to use tags.
+  let legacySubcategoryCondition;
+
+  if (mainCategory.slug === "fitness" && subcategorySlug === "gyms") {
     const recognizedVenueOwnerIds = [
       "gym_owner",
       "fitness_centre_owner",
@@ -213,21 +363,34 @@ export function buildMarketplaceTaxonomyFilter({
       "studio_owner",
     ].flatMap((providerType) => ownerIdsByProviderType[providerType] || []);
 
-    return {
-      $and: [
-        mainFilter,
+    legacySubcategoryCondition = {
+      $or: [
         {
-          $or: [
-            { owner: { $in: fitnessVenueOwnerIds } },
-            { owner: null },
-            { owner: { $nin: recognizedVenueOwnerIds } },
-          ],
+          owner: {
+            $in: fallbackOwnerIds,
+          },
+        },
+        {
+          owner: null,
+        },
+        {
+          owner: {
+            $nin: recognizedVenueOwnerIds,
+          },
         },
       ],
     };
+  } else {
+    legacySubcategoryCondition = {
+      tags: selectedSubcategory.name,
+    };
   }
 
+  const legacySubcategoryFilter = {
+    $and: [legacyMainCategoryFilter, legacySubcategoryCondition],
+  };
+
   return {
-    $and: [mainFilter, { tags: selectedSubcategory.name }],
+    $or: [explicitSubcategoryFilter, legacySubcategoryFilter],
   };
 }

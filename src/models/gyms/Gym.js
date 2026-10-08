@@ -317,11 +317,19 @@ const geoPointSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator(value) {
-          return Array.isArray(value) && value.length === 2 &&
-            Number.isFinite(value[0]) && value[0] >= -180 && value[0] <= 180 &&
-            Number.isFinite(value[1]) && value[1] >= -90 && value[1] <= 90;
+          return (
+            Array.isArray(value) &&
+            value.length === 2 &&
+            Number.isFinite(value[0]) &&
+            value[0] >= -180 &&
+            value[0] <= 180 &&
+            Number.isFinite(value[1]) &&
+            value[1] >= -90 &&
+            value[1] <= 90
+          );
         },
-        message: "geoLocation coordinates must be [longitude, latitude] within valid ranges",
+        message:
+          "geoLocation coordinates must be [longitude, latitude] within valid ranges",
       },
     },
   },
@@ -357,6 +365,19 @@ const gymSchema = new mongoose.Schema(
     },
 
     tags: {
+      type: [String],
+      default: [],
+    },
+
+    // Marketplace taxonomy, separate from the legacy business category.
+    marketplaceCategory: {
+      type: String,
+      enum: ["fitness", "wellness", "sports"],
+      default: null,
+      index: true,
+    },
+
+    marketplaceSubcategories: {
       type: [String],
       default: [],
     },
