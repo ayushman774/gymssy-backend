@@ -24,7 +24,7 @@ const MIN_RADIUS_KM = 0.1;
 const MAX_RADIUS_KM = 100;
 
 export const DISCOVERY_MODEL_TARGETS = Object.freeze([
-  { model: Gym, modelType: "gym", rank: 0, fields: "name slug owner category tags location.area location.state images.cover verified rating reviewCount featured priceFrom city createdAt" },
+  { model: Gym, modelType: "gym", rank: 0, fields: "name slug owner category tags location.area location.state images.cover verified rating reviewCount featured priceFrom city createdAt +geoLocation" },
   { model: Trainer, modelType: "trainer", rank: 1, fields: "name slug owner category role specialty experience image isVerified rating reviews featured createdAt" },
   { model: Nutritionist, modelType: "nutritionist", rank: 2, fields: "name slug owner role specialty experience image isVerified rating reviews featured createdAt" },
 ]);
@@ -98,6 +98,14 @@ function taxonomySubcategorySlugs(doc, modelType, classification, taxonomy) {
   return slugs;
 }
 
+function publicVenueCoordinates(geoLocation) {
+  if (geoLocation?.type !== "Point" || !Array.isArray(geoLocation.coordinates) || geoLocation.coordinates.length !== 2) return null;
+  const [longitude, latitude] = geoLocation.coordinates;
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) return null;
+  if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) return null;
+  return { lat: latitude, lng: longitude };
+}
+
 export function normalizeDiscoveryResult(doc, target, taxonomy) {
   const classification = getMarketplaceClassification(doc, target.modelType);
   const isGym = target.modelType === "gym";
@@ -133,6 +141,8 @@ export function normalizeDiscoveryResult(doc, target, taxonomy) {
   if (isGym && Number.isFinite(doc.distanceMeters)) {
     result.distance = { value: Math.round((doc.distanceMeters / 1000) * 10) / 10, unit: "km" };
   }
+  const coordinates = isGym ? publicVenueCoordinates(doc.geoLocation) : null;
+  if (coordinates) result.coordinates = coordinates;
   Object.defineProperties(result, {
     createdAtValue: { value: doc.createdAt ? new Date(doc.createdAt).getTime() : 0 },
     modelRank: { value: target.rank },

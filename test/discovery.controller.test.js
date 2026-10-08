@@ -2,7 +2,7 @@ import test, { afterEach, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
 
-import { getDiscoveryListings } from "../src/controllers/discovery/discovery.controller.js";
+import { getDiscoveryListings, normalizeDiscoveryResult } from "../src/controllers/discovery/discovery.controller.js";
 import Category from "../src/models/categories/Category.js";
 import City from "../src/models/cities/City.js";
 import Gym from "../src/models/gyms/Gym.js";
@@ -371,10 +371,18 @@ test("nearby discovery accepts zero coordinates, uses publication filters, and d
     { value: 0.5, unit: "km" },
     { value: 2.4, unit: "km" },
   ]);
+  assert.deepEqual(res.body.data.map((item) => item.coordinates), [
+    { lat: 0, lng: 0 },
+    { lat: 0, lng: 0 },
+  ]);
   assert.equal(lastNearbyPipeline[0].$geoNear.maxDistance, 10000);
   assert.equal(lastNearbyPipeline[0].$geoNear.query.isActive, true);
   assert.deepEqual(lastNearbyPipeline[0].$geoNear.query.moderationStatus, { $nin: ["pending", "rejected"] });
   assert.ok(res.body.data.every((item) => !("geoLocation" in item) && !("distanceMeters" in item)));
+
+  gyms[0].geoLocation = { type: "Point", coordinates: [181, 0] };
+  const invalidCanonical = normalizeDiscoveryResult(gyms[0], { modelType: "gym", rank: 0 }, new Map());
+  assert.equal("coordinates" in invalidCanonical, false);
 
   const blankSort = await discover({ lat: "0", lng: "0", sort: " " });
   assert.deepEqual(blankSort.body.data.map((item) => item.name), ["Fit Centre", "Alpha Gym"]);
