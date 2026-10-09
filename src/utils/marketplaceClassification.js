@@ -292,9 +292,12 @@ export function buildMarketplaceTaxonomyFilter({
 
   const legacyMainFilter = {
     $or: [
+      // Legacy records using canonical main-category names.
       {
         category: mainCategory.name,
       },
+
+      // Legacy records classified through their provider.
       {
         category: {
           $nin: canonicalNames,
@@ -303,6 +306,20 @@ export function buildMarketplaceTaxonomyFilter({
           $in: fallbackOwnerIds,
         },
       },
+
+      // Older fitness venues may have descriptive business
+      // categories rather than the canonical "Fitness" value.
+      // Match only recognizable gym category names.
+      ...(mainCategory.slug === "fitness"
+        ? [
+            {
+              category: {
+                $regex:
+                  /^(?:24\s*\/\s*7\s+)?(?:gym|gyms|fitness\s+(?:gym|centre|center|club)|health\s+club|weightlifting\s+gym)$/i,
+              },
+            },
+          ]
+        : []),
     ],
   };
 

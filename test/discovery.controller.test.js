@@ -179,6 +179,17 @@ function matchesCondition(actual, expected) {
       }
     }
 
+    if (Object.hasOwn(expected, "$regex")) {
+      const regex =
+        expected.$regex instanceof RegExp
+          ? expected.$regex
+          : new RegExp(expected.$regex, expected.$options || "");
+
+      if (!values.some((value) => regex.test(String(value ?? "")))) {
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -872,6 +883,12 @@ test("nearby discovery preserves radius, taxonomy, city, explicit sorting, and s
     page: "1",
     limit: "1",
   });
+
+  console.log(
+    "NEARBY FILTER:",
+    JSON.stringify(lastNearbyPipeline[0].$geoNear.query, null, 2),
+  );
+
   assert.equal(filtered.statusCode, 200);
   assert.deepEqual(filtered.body.pagination, {
     page: 1,
