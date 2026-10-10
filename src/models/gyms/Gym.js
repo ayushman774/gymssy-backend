@@ -538,6 +538,13 @@ const gymSchema = new mongoose.Schema(
       default: false,
     },
 
+    // Curated by admins; separate from the general featured flag.
+    featuredCollections: {
+      type: [String],
+      enum: ["luxury-wellness"],
+      default: [],
+    },
+
     geoLocation: {
       type: geoPointSchema,
       default: undefined,
