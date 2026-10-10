@@ -188,7 +188,7 @@ function buildCollectionFilter(collection, modelType) {
     case "budget-gyms":
       return { $and: [fitness, { priceFrom: { $gt: 0, $lte: 1500 } }] };
     case "luxury-wellness":
-      return { $and: [wellness, { featuredCollections: "luxury-wellness" }, { name: { $not: /^Gymssy Demo/i } }] };
+      return { featuredCollections: "luxury-wellness" };
     default:
       return null;
   }
