@@ -153,18 +153,41 @@ function buildCollectionFilter(collection, modelType) {
   if (!collection) return {};
   if (collection === "top-trainers") return modelType === "trainer" ? {} : null;
   if (modelType !== "gym") return null;
-  const tagsByCollection = {
-    "beginner-gyms": ["beginner-friendly", "beginners", "beginner"],
-    "womens-studios": ["women-only", "women-friendly", "women\u0027s fitness", "women"],
-    "premium-clubs": ["premium", "premium-club"],
-    "luxury-wellness": ["luxury", "luxury-wellness"],
+
+  // Match existing structured and descriptive data; never invent collection membership.
+  const textFields = ["tags", "category", "description", "highlights", "classes.name", "classes.category"];
+  const textMatch = (phrases) => ({
+    $or: textFields.map((field) => ({
+      [field]: { $regex: phrases.map(escapeRegex).join("|"), $options: "i" },
+    })),
+  });
+  const fitness = {
+    $or: [
+      { marketplaceCategory: "fitness" },
+      { category: /gym|fitness|studio|training|crossfit|pilates/i },
+    ],
   };
-  const tags = tagsByCollection[collection];
-  if (tags) {
-    return { tags: { $in: tags.map((tag) => new RegExp("^" + escapeRegex(tag) + "$", "i")) } };
+  const wellness = {
+    $or: [
+      { marketplaceCategory: "wellness" },
+      { category: /wellness|spa|recovery|yoga|meditation/i },
+    ],
+  };
+
+  switch (collection) {
+    case "beginner-gyms":
+      return { $and: [fitness, textMatch(["beginner", "first-time", "starter", "all levels", "all-levels"])] };
+    case "womens-studios":
+      return { $and: [fitness, textMatch(["women", "woman", "female", "ladies", "girls-only", "ladies-only"])] };
+    case "premium-clubs":
+      return { $and: [fitness, textMatch(["premium", "luxury", "exclusive", "high-end"])] };
+    case "budget-gyms":
+      return { $and: [fitness, { priceFrom: { $gt: 0, $lte: 1500 } }] };
+    case "luxury-wellness":
+      return { $and: [wellness, textMatch(["luxury", "premium", "exclusive", "high-end"])] };
+    default:
+      return null;
   }
-  if (collection === "budget-gyms") return { priceFrom: { $gt: 0, $lte: 1500 } };
-  return null;
 }
 function mongoSort(modelType, sort) {
   const reviewField = modelType === "gym" ? "reviewCount" : "reviews";
