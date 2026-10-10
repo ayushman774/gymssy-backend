@@ -3,6 +3,7 @@ import {
   LocationServiceError,
   autocompleteLocations,
   geocodeLocation,
+  reverseGeocodeLocation,
 } from "../../services/location/location.service.js";
 
 const AUTOCOMPLETE_FIELDS = new Set(["q", "limit", "lat", "lng"]);
@@ -115,6 +116,34 @@ export const geocodeLocationQuery = async (req, res) => {
     if (serviceErrorResponse(error, res, "geocode")) return;
     console.error("Location service request failed", { operation: "geocode", category: "INTERNAL" });
     return res.status(500).json({ success: false, message: "Failed to geocode location" });
+  }
+};
+
+export const reverseLocation = async (req, res) => {
+  const keys = Object.keys(req.query || {});
+  if (keys.some((key) => !["lat", "lng"].includes(key))) {
+    return validationError(res, "query", "Only lat and lng are supported");
+  }
+  const latitude = Number(req.query.lat);
+  const longitude = Number(req.query.lng);
+  if (
+    typeof req.query.lat !== "string" ||
+    typeof req.query.lng !== "string" ||
+    !req.query.lat.trim() ||
+    !req.query.lng.trim() ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 || latitude > 90 ||
+    longitude < -180 || longitude > 180
+  ) return validationError(res, "coordinates", "Valid lat and lng are required");
+
+  try {
+    const data = await reverseGeocodeLocation({ latitude, longitude });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    if (serviceErrorResponse(error, res, "reverse")) return;
+    console.error("Location reverse geocoding failed", { category: "INTERNAL" });
+    return res.status(500).json({ success: false, message: "Failed to resolve location address" });
   }
 };
 
