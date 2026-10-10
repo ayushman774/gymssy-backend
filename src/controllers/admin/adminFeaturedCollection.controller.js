@@ -28,16 +28,6 @@ export const updateAdminFeaturedCollections = async (req, res) => {
     }
 
     const unique = [...new Set(featuredCollections)];
-    if (unique.includes("luxury-wellness")) {
-      const wellness = gym.marketplaceCategory === "wellness" ||
-        /wellness|spa|recovery|yoga|meditation/i.test(gym.category || "");
-      if (!wellness || /^Gymssy Demo/i.test(gym.name || "")) {
-        return res.status(400).json({
-          success: false,
-          message: "Only genuine wellness venues can be assigned to Luxury Wellness Centers",
-        });
-      }
-    }
 
     gym.featuredCollections = unique;
     await gym.save();
