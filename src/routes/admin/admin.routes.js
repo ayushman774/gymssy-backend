@@ -10,6 +10,7 @@ import {
   removeProviderAvatar,
 } from "../../controllers/admin/adminProviderAvatar.controller.js";
 import { createAdminProviderListing } from "../../controllers/admin/adminProviderListing.controller.js";
+import { updateAdminFeaturedCollections } from "../../controllers/admin/adminFeaturedCollection.controller.js";
 import {
   createAdminCategory,
   createAdminCity,
@@ -161,6 +162,7 @@ router.post(
 // ============================================================
 
 router.get("/listings", authMiddleware, adminMiddleware, getAdminListings);
+router.patch("/listings/gym/:id/collections", authMiddleware, adminMiddleware, updateAdminFeaturedCollections);
 
 router.get(
   "/listings/:type/:id",
