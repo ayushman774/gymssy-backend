@@ -808,8 +808,8 @@ export const getDiscoveryListings = async (req, res) => {
 
     const citySlug = normalizedQueryValue(req.query.city);
 
-    const sort = normalizedQueryValue(req.query.sort) || "recommended";
     const collection = normalizedQueryValue(req.query.collection);
+    const sort = normalizedQueryValue(req.query.sort) || (collection === "top-trainers" ? "rating" : "recommended");
     if (collection && !COLLECTIONS.has(collection)) return validationError(res, "Invalid featured collection", "collection");
 
     const explicitSort =
@@ -895,6 +895,7 @@ export const getDiscoveryListings = async (req, res) => {
       radiusKm: hasCoordinates ? radiusKm : null,
     };
 
+    if (collection === "top-trainers" && listingType && !["trainer", "coach"].includes(listingType)) return validationError(res, "This collection contains trainers and coaches", "type");
     if (listingType && !MARKETPLACE_LISTING_TYPES[listingType]) {
       return validationError(res, "Invalid listing type", "type");
     }
