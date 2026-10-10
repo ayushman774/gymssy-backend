@@ -155,7 +155,7 @@ function buildCollectionFilter(collection, modelType) {
   if (modelType !== "gym") return null;
 
   // Match existing structured and descriptive data; never invent collection membership.
-  const textFields = ["tags", "category", "description", "highlights", "classes.name", "classes.category"];
+  const textFields = ["name", "tags", "category", "description", "highlights", "classes.name", "classes.category", "classes.description", "facilities.name", "facilities.description", "memberships.name", "memberships.features.text"];
   const textMatch = (phrases) => ({
     $or: textFields.map((field) => ({
       [field]: { $regex: phrases.map(escapeRegex).join("|"), $options: "i" },
@@ -176,7 +176,7 @@ function buildCollectionFilter(collection, modelType) {
 
   switch (collection) {
     case "beginner-gyms":
-      return { $and: [fitness, textMatch(["beginner", "first-time", "starter", "all levels", "all-levels"])] };
+      return { $and: [fitness, { $or: [textMatch(["beginner", "first-time", "first time", "starter", "all levels", "all-levels", "new to fitness", "introductory", "foundation", "basic training", "basic fitness"]), { "classes.level": /^(beginner|all levels|all-levels|basic|foundation)$/i }] }] };
     case "womens-studios":
       return { $and: [fitness, textMatch(["women", "woman", "female", "ladies", "girls-only", "ladies-only"])] };
     case "premium-clubs":
@@ -184,7 +184,7 @@ function buildCollectionFilter(collection, modelType) {
     case "budget-gyms":
       return { $and: [fitness, { priceFrom: { $gt: 0, $lte: 1500 } }] };
     case "luxury-wellness":
-      return { $and: [wellness, textMatch(["luxury", "premium", "exclusive", "high-end"])] };
+      return { $and: [wellness, { $or: [textMatch(["luxury", "premium", "exclusive", "high-end", "upscale", "five-star", "5-star", "signature spa", "luxurious"]), { "memberships.name": /^(premium|luxury|vip|platinum|signature|elite)(?:\\s|$)/i }] }] };
     default:
       return null;
   }
