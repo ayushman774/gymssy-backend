@@ -56,6 +56,7 @@ export const DISCOVERY_MODEL_TARGETS = Object.freeze([
       "owner",
       "category",
       "tags",
+      "featuredCollections",
       "marketplaceCategory",
       "marketplaceSubcategories",
       "location.area",
@@ -187,7 +188,7 @@ function buildCollectionFilter(collection, modelType) {
     case "budget-gyms":
       return { $and: [fitness, { priceFrom: { $gt: 0, $lte: 1500 } }] };
     case "luxury-wellness":
-      return { $and: [wellness, { $or: [textMatch(["luxury", "premium", "exclusive", "high-end", "upscale", "five-star", "5-star", "signature spa", "luxurious"]), { "memberships.name": /^(premium|luxury|vip|platinum|signature|elite)(?:\\s|$)/i }] }] };
+      return { $and: [wellness, { featuredCollections: "luxury-wellness" }, { name: { $not: /^Gymssy Demo/i } }] };
     default:
       return null;
   }
