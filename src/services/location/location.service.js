@@ -168,6 +168,22 @@ async function resolveLocations(operation, { query, limit, bias = null }, option
   return results;
 }
 
+export async function reverseGeocodeLocation({ latitude, longitude }, options = {}) {
+  const key = `reverse|${latitude.toFixed(4)}|${longitude.toFixed(4)}`;
+  const cached = readCache(key);
+  if (cached) return cached;
+  const results = await requestGeoapify("reverse", {
+    lat: latitude,
+    lon: longitude,
+    format: "json",
+    lang: "en",
+    limit: 1,
+  }, options);
+  const location = results[0] || null;
+  if (location) writeCache(key, location, GEOCODE_CACHE_TTL_MS);
+  return location;
+}
+
 export function autocompleteLocations(input, options) {
   return resolveLocations("autocomplete", input, options);
 }
