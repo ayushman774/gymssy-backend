@@ -29,9 +29,11 @@ const ALLOWED_QUERY_FIELDS = new Set([
   "lat",
   "lng",
   "radius",
+  "collection",
 ]);
 
 const ALLOWED_SORTS = new Set(["recommended", "rating", "reviews", "newest"]);
+const COLLECTIONS = new Set(["beginner-gyms", "top-trainers", "womens-studios", "premium-clubs", "budget-gyms", "luxury-wellness"]);
 
 const MAX_SEARCH_LENGTH = 100;
 const MAX_LIMIT = 50;
@@ -145,6 +147,172 @@ function buildSearchFilter(modelType, search) {
       [field]: expression,
     })),
   };
+}
+
+function buildCollectionFilter(collection, modelType) {
+  if (!collection) return {};
+  if (collection === "top-trainers") return modelType === "trainer" ? {} : null;
+  if (modelType !== "gym") return null;
+  const tags = {
+    "beginner-gyms": ["beginner-friendly", "beginners", "beginner"],
+    "womens-studios": ["women-only", "women-friendly", "women's fitness", "women"],
+    "premium-clubs": ["premium", "premium-club"],
+    "luxury-wellness": ["luxury", "luxury-wellness"],
+  }[collection];
+  if (tags) return { tags: { $in: tags.map((tag) => new RegExp(`^${escapeRegex(tag)}import Category from "../../models/categories/Category.js";
+import City from "../../models/cities/City.js";
+import Gym from "../../models/gyms/Gym.js";
+import Nutritionist from "../../models/nutritionists/Nutritionist.js";
+import Trainer from "../../models/trainers/Trainer.js";
+import User from "../../models/users/User.js";
+
+import {
+  MARKETPLACE_LISTING_TYPES,
+  buildMarketplaceListingTypeFilter,
+  buildMarketplaceTaxonomyFilter,
+  combineMarketplaceFilters,
+  getMarketplaceClassification,
+} from "../../utils/marketplaceClassification.js";
+
+import { withPublicListingVisibility } from "../../utils/publicListing.js";
+import { escapeRegex } from "../../utils/regex.js";
+
+const ALLOWED_QUERY_FIELDS = new Set([
+  "search",
+  "category",
+  "subcategory",
+  "type",
+  "entity",
+  "city",
+  "page",
+  "limit",
+  "sort",
+  "lat",
+  "lng",
+  "radius",
+  "collection",
+]);
+
+const ALLOWED_SORTS = new Set(["recommended", "rating", "reviews", "newest"]);
+const COLLECTIONS = new Set(["beginner-gyms", "top-trainers", "womens-studios", "premium-clubs", "budget-gyms", "luxury-wellness"]);
+
+const MAX_SEARCH_LENGTH = 100;
+const MAX_LIMIT = 50;
+const MAX_PAGE = 1000;
+
+const DEFAULT_RADIUS_KM = 10;
+const MIN_RADIUS_KM = 0.1;
+const MAX_RADIUS_KM = 100;
+
+const MARKETPLACE_MAIN_CATEGORIES = new Set(["fitness", "wellness", "sports"]);
+
+export const DISCOVERY_MODEL_TARGETS = Object.freeze([
+  {
+    model: Gym,
+    modelType: "gym",
+    rank: 0,
+    fields: [
+      "name",
+      "slug",
+      "owner",
+      "category",
+      "tags",
+      "marketplaceCategory",
+      "marketplaceSubcategories",
+      "location.area",
+      "location.state",
+      "images.cover",
+      "verified",
+      "rating",
+      "reviewCount",
+      "featured",
+      "priceFrom",
+      "city",
+      "createdAt",
+      "+geoLocation",
+    ].join(" "),
+  },
+  {
+    model: Trainer,
+    modelType: "trainer",
+    rank: 1,
+    fields:
+      "name slug owner category role specialty experience image isVerified rating reviews featured createdAt",
+  },
+  {
+    model: Nutritionist,
+    modelType: "nutritionist",
+    rank: 2,
+    fields:
+      "name slug owner role specialty experience image isVerified rating reviews featured createdAt",
+  },
+]);
+
+function validationError(res, message, field, details = {}) {
+  return res.status(400).json({
+    success: false,
+    message,
+    errors: [{ field, message }],
+    ...details,
+  });
+}
+
+function parsePositiveInteger(value, fallback, { field, max }) {
+  if (value === undefined || value === "") {
+    return { value: fallback };
+  }
+
+  if (Array.isArray(value) || !/^\d+$/.test(String(value))) {
+    return {
+      error: `${field} must be a positive integer`,
+    };
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || (max && parsed > max)) {
+    return {
+      error: max
+        ? `${field} must be between 1 and ${max}`
+        : `${field} must be a positive integer`,
+    };
+  }
+
+  return { value: parsed };
+}
+
+function normalizedQueryValue(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function buildSearchFilter(modelType, search) {
+  if (!search) return {};
+
+  const expression = new RegExp(escapeRegex(search), "i");
+
+  const fields =
+    modelType === "gym"
+      ? [
+          "name",
+          "category",
+          "tags",
+          "location.area",
+          "location.city",
+          "description",
+          "highlights",
+        ]
+      : ["name", "role", "specialty", "specializations", "bio"];
+
+  return {
+    $or: fields.map((field) => ({
+      [field]: expression,
+    })),
+  };
+}
+
+, "i")) } };
+  if (collection === "budget-gyms") return { priceFrom: { $gt: 0, $lte: 1500 } };
+  return null;
 }
 
 function mongoSort(modelType, sort) {
@@ -572,6 +740,7 @@ export const getDiscoveryListings = async (req, res) => {
     type: "",
     entity: "",
     city: "",
+    collection: "",
     sort: "recommended",
     page: 1,
     limit: 20,
@@ -640,6 +809,8 @@ export const getDiscoveryListings = async (req, res) => {
     const citySlug = normalizedQueryValue(req.query.city);
 
     const sort = normalizedQueryValue(req.query.sort) || "recommended";
+    const collection = normalizedQueryValue(req.query.collection);
+    if (collection && !COLLECTIONS.has(collection)) return validationError(res, "Invalid featured collection", "collection");
 
     const explicitSort =
       typeof req.query.sort === "string" && req.query.sort.trim() !== "";
@@ -715,6 +886,7 @@ export const getDiscoveryListings = async (req, res) => {
       type: listingType,
       entity,
       city: citySlug,
+      collection,
       sort,
       page: pageResult.value,
       limit: limitResult.value,
@@ -881,6 +1053,7 @@ export const getDiscoveryListings = async (req, res) => {
     const targets = DISCOVERY_MODEL_TARGETS.filter(
       (target) =>
         (!requestedModelType || target.modelType === requestedModelType) &&
+        (!collection || buildCollectionFilter(collection, target.modelType) !== null) &&
         (!city || target.modelType === "gym") &&
         (entity !== "venue" || target.modelType === "gym") &&
         (!hasCoordinates || target.modelType === "gym"),
@@ -935,6 +1108,7 @@ export const getDiscoveryListings = async (req, res) => {
           typeFilter,
           taxonomyFilter,
           buildSearchFilter(target.modelType, search),
+          buildCollectionFilter(collection, target.modelType),
         );
 
         if (hasCoordinates) {
