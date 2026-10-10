@@ -61,6 +61,9 @@ export const DISCOVERY_MODEL_TARGETS = Object.freeze([
       "location.area",
       "location.state",
       "images.cover",
+      "image",
+      "isVerified",
+      "reviews",
       "verified",
       "rating",
       "reviewCount",
@@ -348,8 +351,8 @@ export function normalizeDiscoveryResult(doc, target, taxonomy) {
 
   const image = isGym
     ? {
-        url: doc.images?.cover || "",
-        alt: doc.images?.gallery?.[0]?.alt || doc.name || "",
+        url: doc.images?.cover || doc.image?.url || "",
+        alt: doc.images?.gallery?.[0]?.alt || doc.image?.alt || doc.name || "",
       }
     : {
         url: doc.image?.src || "",
@@ -385,16 +388,18 @@ export function normalizeDiscoveryResult(doc, target, taxonomy) {
 
     rating: doc.rating ?? 0,
 
-    reviewCount: isGym ? (doc.reviewCount ?? 0) : (doc.reviews ?? 0),
+    reviewCount: isGym
+      ? (doc.reviewCount || (typeof doc.reviews === "number" ? doc.reviews : 0))
+      : (doc.reviews ?? 0),
 
-    verified: isGym ? Boolean(doc.verified) : Boolean(doc.isVerified),
+    verified: isGym ? Boolean(doc.verified || doc.isVerified) : Boolean(doc.isVerified),
 
     featured: Boolean(doc.featured),
 
     location: isGym
       ? {
           city,
-          area: doc.location?.area || "",
+          area: doc.location?.area || (typeof doc.location === "string" ? doc.location : ""),
           state: doc.location?.state || city?.state || "",
         }
       : null,
