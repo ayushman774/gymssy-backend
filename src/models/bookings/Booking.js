@@ -31,13 +31,13 @@ const serviceSnapshotSchema = new mongoose.Schema({
 const statusHistorySchema = new mongoose.Schema({
   status: { type: String, enum: BOOKING_STATUSES, required: true },
   changedAt: { type: Date, required: true },
-  changedByRole: { type: String, enum: ["customer", "provider", "system"], required: true },
+  changedByRole: { type: String, enum: ["customer", "provider", "admin", "system"], required: true },
   reason: { type: String, trim: true, maxlength: 500, default: "" },
 }, { _id: false });
 
 const resolutionSchema = new mongoose.Schema({
   reason: { type: String, trim: true, maxlength: 500, default: "" },
-  byRole: { type: String, enum: ["customer", "provider", "system"], default: null },
+  byRole: { type: String, enum: ["customer", "provider", "admin", "system"], default: null },
   at: { type: Date, default: null },
 }, { _id: false });
 
