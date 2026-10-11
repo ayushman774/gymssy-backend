@@ -40,7 +40,7 @@ import {
   updateAdminListingContent,
 } from "../../controllers/admin/admin.controller.js";
 import { getAdminEnquiries, getAdminEnquirySummary, getAdminEnquiryById } from "../../controllers/admin/adminEnquiry.controller.js";
-import { getAdminBookings, getAdminBookingSummary, getAdminBookingById } from "../../controllers/admin/adminBooking.controller.js";
+import { getAdminBookings, getAdminBookingSummary, getAdminBookingById, updateAdminBookingStatus } from "../../controllers/admin/adminBooking.controller.js";
 
 import { getAdminPartnerApplications, updateAdminPartnerApplicationStatus } from "../../controllers/partnerApplications/partnerApplication.controller.js";
 
@@ -83,6 +83,7 @@ router.get("/enquiries/:id", authMiddleware, adminMiddleware, getAdminEnquiryByI
 router.get("/bookings", authMiddleware, adminMiddleware, getAdminBookings);
 router.get("/bookings/summary", authMiddleware, adminMiddleware, getAdminBookingSummary);
 router.get("/bookings/:id", authMiddleware, adminMiddleware, getAdminBookingById);
+router.patch("/bookings/:id/status", authMiddleware, adminMiddleware, updateAdminBookingStatus);
 
 // ============================================================
 // MARKETPLACE SETUP
