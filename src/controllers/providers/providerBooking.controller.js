@@ -96,6 +96,22 @@ export async function updateProviderBookingStatus(req, res) {
     const changedAt = new Date();
     if (status === "confirmed" && new Date(current.scheduledFor).getTime() <= changedAt.getTime()) return res.status(409).json({ success: false, message: "A past booking request cannot be confirmed." });
     if (status === "completed" && new Date(current.scheduledFor).getTime() > changedAt.getTime()) return res.status(409).json({ success: false, message: "A future booking cannot be marked completed." });
+    if (status === "confirmed") {
+      const booking = await Booking.findById(current._id).select("targetType target scheduledFor bookingType").lean();
+      if (booking && ["trainer", "nutritionist"].includes(booking.targetType)) {
+        const conflict = await Booking.exists({
+          _id: { $ne: current._id },
+          targetType: booking.targetType,
+          target: booking.target,
+          scheduledFor: booking.scheduledFor,
+          status: "confirmed",
+        });
+        if (conflict) return res.status(409).json({
+          success: false,
+          message: "This professional already has a confirmed booking at the requested time.",
+        });
+      }
+    }
     const filter = { _id: current._id, provider: req.user.id, status: current.status };
     if (status === "confirmed") filter.scheduledFor = { $gt: changedAt };
     if (status === "completed") filter.scheduledFor = { $lte: changedAt };
