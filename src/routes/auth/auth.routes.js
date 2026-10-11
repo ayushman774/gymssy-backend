@@ -8,6 +8,7 @@ import {
 } from "../../controllers/auth/auth.controller.js";
 
 import { updateCustomerProfile } from "../../controllers/auth/customerProfile.controller.js";
+import { handleCustomerAvatarUpload, uploadCustomerAvatar } from "../../controllers/auth/customerAvatar.controller.js";
 import authMiddleware from "../../middleware/auth.middleware.js";
 import adminMiddleware from "../../middleware/auth/adminMiddleware.js";
 import {
@@ -25,6 +26,7 @@ router.post("/login", loginRateLimiter, loginUser);
 // Protected route
 router.get("/me", authMiddleware, getCurrentUser);
 router.patch("/profile", authMiddleware, updateCustomerProfile);
+router.post("/profile/avatar", authMiddleware, handleCustomerAvatarUpload, uploadCustomerAvatar);
 router.post(
   "/create-admin",
   authMiddleware,
