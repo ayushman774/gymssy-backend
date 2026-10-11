@@ -76,6 +76,17 @@ export async function createBooking(req, res) {
     if (!listing) return res.status(404).json({ success: false, message: "Published listing not found" });
     if (!listing.owner || listing.owner.role !== "business" || listing.owner.isActive !== true) return res.status(409).json({ success: false, message: "This listing is not currently available for online booking." });
     if (input.targetType !== "gym" && listing.available === false) return res.status(409).json({ success: false, message: "This listing is not currently accepting booking requests." });
+    const duplicate = await Booking.exists({
+      customer: req.user.id,
+      targetType: input.targetType,
+      target: input.targetId,
+      scheduledFor: input.scheduledFor,
+      status: { $in: ["requested", "confirmed"] },
+    });
+    if (duplicate) return res.status(409).json({
+      success: false,
+      message: "You already have an active booking for this listing at the selected time.",
+    });
     const service = serviceSnapshot(listing, input); if (service.error) return res.status(409).json({ success: false, message: service.error });
     const changedAt = new Date(); const booking = await Booking.create({ customer: req.user.id, provider: listing.owner._id, targetType: input.targetType, target: input.targetId, bookingType: input.bookingType, scheduledFor: input.scheduledFor, timezone: input.timezone, contact: input.contact, listingSnapshot: listingSnapshot(listing, input.targetType), serviceSnapshot: service.value, note: input.note, status: "requested", statusHistory: [{ status: "requested", changedAt, changedByRole: "customer", reason: "" }] });
     return res.status(201).json({ success: true, message: "Your booking request has been sent to the provider.", data: safeBooking(booking.toObject ? booking.toObject() : booking) });
