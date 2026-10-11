@@ -46,6 +46,8 @@ import { getAdminPartnerApplications, updateAdminPartnerApplicationStatus } from
 
 import { getAdminContactMessages, replyToContactMessage } from "../../controllers/contact/contactMessage.controller.js";
 
+import { getAdminUsers, getAdminUserById } from "../../controllers/admin/adminUsers.controller.js";
+
 const router = express.Router();
 
 // ============================================================
@@ -67,6 +69,8 @@ router.get("/test", authMiddleware, adminMiddleware, (req, res) => {
 // ============================================================
 
 router.get("/dashboard", authMiddleware, adminMiddleware, getAdminDashboard);
+router.get("/users", authMiddleware, adminMiddleware, getAdminUsers);
+router.get("/users/:id", authMiddleware, adminMiddleware, getAdminUserById);
 router.get("/contact-messages", authMiddleware, adminMiddleware, getAdminContactMessages);
 router.post("/contact-messages/:id/reply", authMiddleware, adminMiddleware, replyToContactMessage);
 
