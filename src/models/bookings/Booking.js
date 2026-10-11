@@ -43,7 +43,7 @@ const resolutionSchema = new mongoose.Schema({
 
 const bookingSchema = new mongoose.Schema({
   customer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-  provider: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  provider: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, index: true },
   targetType: { type: String, enum: BOOKING_TARGET_TYPES, required: true },
   target: { type: mongoose.Schema.Types.ObjectId, required: true },
   bookingType: { type: String, enum: [...new Set(Object.values(BOOKING_TYPES).flat())], required: true, trim: true },
