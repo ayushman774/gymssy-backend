@@ -88,3 +88,38 @@ export async function getAdminBookingById(req, res) {
   try { if (!mongoose.isValidObjectId(req.params.id)) return badRequest(res, "Booking ID must be a valid MongoDB ObjectId", "id"); const item = await Booking.findById(req.params.id).lean(); if (!item) return res.status(404).json({ success: false, message: "Booking not found" }); const maps = await identityMaps([item]); const base = serializeList(item, maps); const currentListing = await currentListingDiagnostic(item); return res.status(200).json({ success: true, data: { ...base, note: item.note || "", resolution: ["rejected", "cancelled"].includes(item.status) ? { reason: item.resolution?.reason || "", resolvedByRole: item.resolution?.byRole || null, resolvedAt: item.resolution?.at || null } : null, statusHistory: (item.statusHistory || []).map((entry) => ({ status: entry.status, changedAt: entry.changedAt, changedByRole: entry.changedByRole, reason: entry.reason || "" })), currentListing } }); }
   catch (error) { console.error("Admin booking detail error:", error?.message); return res.status(500).json({ success: false, message: "Failed to fetch admin booking" }); }
 }
+
+export async function updateAdminBookingStatus(req, res) {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return badRequest(res, "Invalid booking ID", "id");
+    const body = req.body;
+    if (!body || typeof body !== "object" || Array.isArray(body)) return badRequest(res, "Request body must be an object", "body");
+    if (Object.keys(body).some((key) => !["status", "reason"].includes(key))) return badRequest(res, "Unsupported status fields", "body");
+    const status = clean(body.status).toLowerCase();
+    const reason = clean(body.reason);
+    if (!["confirmed", "rejected"].includes(status)) return badRequest(res, "Admin can confirm or reject pending bookings", "status");
+    if (status === "rejected" && !reason) return badRequest(res, "Rejection reason is required", "reason");
+    if (reason.length > 500 || (status === "confirmed" && reason)) return badRequest(res, "Invalid decision reason", "reason");
+    const booking = await Booking.findById(req.params.id).select("status provider targetType target scheduledFor").lean();
+    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+    if (booking.provider) return res.status(409).json({ success: false, message: "This booking belongs to a provider. Ask the provider to manage it." });
+    if (booking.status !== "requested") return res.status(409).json({ success: false, message: "Only requested bookings can be reviewed." });
+    const now = new Date();
+    if (status === "confirmed" && new Date(booking.scheduledFor) <= now) return res.status(409).json({ success: false, message: "Past appointments cannot be confirmed." });
+    if (status === "confirmed" && ["trainer", "nutritionist"].includes(booking.targetType)) {
+      const conflict = await Booking.exists({ _id: { $ne: booking._id }, targetType: booking.targetType, target: booking.target, scheduledFor: booking.scheduledFor, status: "confirmed" });
+      if (conflict) return res.status(409).json({ success: false, message: "This professional is already booked at that time." });
+    }
+    const updated = await Booking.findOneAndUpdate(
+      { _id: booking._id, provider: null, status: "requested", ...(status === "confirmed" ? { scheduledFor: { $gt: now } } : {}) },
+      { $set: { status, resolution: status === "rejected" ? { reason, byRole: "admin", at: now } : { reason: "", byRole: null, at: null } }, $push: { statusHistory: { status, changedAt: now, changedByRole: "admin", reason } } },
+      { new: true, runValidators: true }
+    ).lean();
+    if (!updated) return res.status(409).json({ success: false, message: "Booking changed. Refresh and try again." });
+    const maps = await identityMaps([updated]);
+    return res.status(200).json({ success: true, message: `Booking ${status}.`, data: serializeList(updated, maps) });
+  } catch (error) {
+    console.error("Admin booking decision error:", error?.message);
+    return res.status(500).json({ success: false, message: "Failed to update booking" });
+  }
+}
