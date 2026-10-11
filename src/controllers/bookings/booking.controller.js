@@ -74,7 +74,7 @@ export async function createBooking(req, res) {
     const validation = validateCreate(req.body); if (validation.field) return badRequest(res, validation.message, validation.field, validation.unsupportedFields ? { unsupportedFields: validation.unsupportedFields } : {}); const input = validation.value;
     const config = TARGETS[input.targetType]; const listing = await config.model.findOne(withPublicListingVisibility({ _id: input.targetId })).select(config.fields).populate("owner", "role providerType isActive").lean();
     if (!listing) return res.status(404).json({ success: false, message: "Published listing not found" });
-    if (!listing.owner || listing.owner.role !== "business" || listing.owner.isActive !== true) return res.status(409).json({ success: false, message: "This listing is not currently available for online booking." });
+    if (listing.owner && (listing.owner.role !== "business" || listing.owner.isActive !== true)) return res.status(409).json({ success: false, message: "This listing is not currently available for online booking." });
     if (input.targetType !== "gym" && listing.available === false) return res.status(409).json({ success: false, message: "This listing is not currently accepting booking requests." });
     const duplicate = await Booking.exists({
       customer: req.user.id,
@@ -88,8 +88,8 @@ export async function createBooking(req, res) {
       message: "You already have an active booking for this listing at the selected time.",
     });
     const service = serviceSnapshot(listing, input); if (service.error) return res.status(409).json({ success: false, message: service.error });
-    const changedAt = new Date(); const booking = await Booking.create({ customer: req.user.id, provider: listing.owner._id, targetType: input.targetType, target: input.targetId, bookingType: input.bookingType, scheduledFor: input.scheduledFor, timezone: input.timezone, contact: input.contact, listingSnapshot: listingSnapshot(listing, input.targetType), serviceSnapshot: service.value, note: input.note, status: "requested", statusHistory: [{ status: "requested", changedAt, changedByRole: "customer", reason: "" }] });
-    return res.status(201).json({ success: true, message: "Your booking request has been sent to the provider.", data: safeBooking(booking.toObject ? booking.toObject() : booking) });
+    const changedAt = new Date(); const booking = await Booking.create({ customer: req.user.id, provider: listing.owner?._id || null, targetType: input.targetType, target: input.targetId, bookingType: input.bookingType, scheduledFor: input.scheduledFor, timezone: input.timezone, contact: input.contact, listingSnapshot: listingSnapshot(listing, input.targetType), serviceSnapshot: service.value, note: input.note, status: "requested", statusHistory: [{ status: "requested", changedAt, changedByRole: "customer", reason: "" }] });
+    return res.status(201).json({ success: true, message: listing.owner ? "Your booking request has been sent to the provider." : "Your booking request has been sent to Gymssy Admin for review.", data: safeBooking(booking.toObject ? booking.toObject() : booking) });
   } catch (error) { if (error?.name === "ValidationError") return badRequest(res, "Invalid booking details", "body"); console.error("Create booking error:", error?.message); return res.status(500).json({ success: false, message: "Failed to create booking request" }); }
 }
 
