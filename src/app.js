@@ -32,52 +32,53 @@ const app = express();
    MIDDLEWARE
 ================================*/
 
-const allowedOrigins = [
+const allowedOrigins = new Set([
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:5173",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:3001",
   "http://127.0.0.1:5173",
   "https://gymssy.com",
   "https://www.gymssy.com",
   "https://admin.gymssy.com",
-];
+]);
 
-const protectedApiCors = cors({
-    origin: (origin, callback) => {
-      // Allow requests with no Origin header
-      // (Postman, server-to-server requests, etc.)
-      if (!origin) {
-        return callback(null, true);
-      }
+const isPublicReferenceData = (path) =>
+  path === "/api/categories" || path.startsWith("/api/categories/") ||
+  path === "/api/cities" || path.startsWith("/api/cities/");
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      console.error(`❌ CORS blocked origin: ${origin}`);
-
-      return callback(new Error("Not allowed by CORS"));
-    },
-
-    credentials: true,
-  });
-
-// Categories and Cities are public, read-only reference data. A wildcard
-// response avoids a cached origin-specific header being served to a different
-// marketplace or Admin origin.
-const publicReferenceDataCors = cors({
+// Apply CORS before auth, database access, and all routes. This ensures
+// browser preflight OPTIONS requests never require an admin token.
+const apiCors = cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    console.warn("CORS rejected origin:", origin);
+    return callback(null, false);
+  },
+  methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
+  credentials: true,
+  optionsSuccessStatus: 204,
+  maxAge: 600,
+});
+const referenceCors = cors({
   origin: "*",
-  methods: ["GET", "OPTIONS"],
+  methods: ["GET", "HEAD", "OPTIONS"],
   credentials: false,
+  optionsSuccessStatus: 204,
+  maxAge: 600,
 });
 
 app.use((req, res, next) => {
-  const publicReferenceData = req.path === "/api/categories" || req.path.startsWith("/api/categories/") || req.path === "/api/cities" || req.path.startsWith("/api/cities/");
-  if (publicReferenceData) {
+  res.setHeader("Vary", "Origin");
+  // Never let a cached CORS preflight from one origin affect another.
+  if (req.method === "OPTIONS") res.setHeader("Cache-Control", "no-store");
+  if (isPublicReferenceData(req.path)) {
     res.setHeader("Cache-Control", "no-store");
-    return publicReferenceDataCors(req, res, next);
+    return referenceCors(req, res, next);
   }
-  return protectedApiCors(req, res, next);
+  return apiCors(req, res, next);
 });
 
 app.use(helmet());
