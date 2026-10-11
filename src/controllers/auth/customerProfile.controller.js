@@ -3,7 +3,7 @@ import User from "../../models/users/User.js";
 const genders = ["", "male", "female", "other", "prefer_not_to_say"];
 const addressFields = ["line1", "area", "city", "state", "pincode"];
 const presets = Array.from({ length: 12 }, (_, i) => "avatar-" + (i + 1));
-const allowed = ["name", "gender", "address", "avatarPreset", "avatar"];
+const allowed = ["name", "gender", "address", "avatarPreset"];
 
 export const updateCustomerProfile = async (req, res) => {
   try {
@@ -37,15 +37,6 @@ export const updateCustomerProfile = async (req, res) => {
       if (typeof body.avatarPreset !== "string" || (body.avatarPreset !== "" && !presets.includes(body.avatarPreset))) return res.status(400).json({ success: false, message: "Invalid avatar preset" });
       user.avatarPreset = body.avatarPreset;
       user.avatar = { url: "", alt: "" };
-    }
-    if ("avatar" in body) {
-      // Accept only HTTPS image URLs. Uploads must first be stored through a trusted media service.
-      const avatar = body.avatar;
-      if (!avatar || typeof avatar !== "object" || Array.isArray(avatar) || Object.keys(avatar).some((key) => !["url", "alt"].includes(key))) return res.status(400).json({ success: false, message: "Invalid avatar" });
-      const url = avatar.url ?? "";
-      if (typeof url !== "string" || url.length > 2048 || (url && !/^https:\/\//i.test(url))) return res.status(400).json({ success: false, message: "Invalid avatar URL" });
-      user.avatar = { url, alt: "Customer profile picture" };
-      user.avatarPreset = "";
     }
     await user.save();
     return res.json({ success: true, message: "Profile updated", data: { user: {
