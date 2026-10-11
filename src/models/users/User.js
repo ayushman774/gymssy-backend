@@ -54,6 +54,10 @@ const userSchema = new mongoose.Schema(
     },
 
     // ============================================================
+    gender: { type: String, default: "" },
+    address: { type: mongoose.Schema.Types.Mixed, default: {} },
+    avatarPreset: { type: String, default: "" },
+
     // ACCOUNT ROLE
     // ============================================================
 
