@@ -36,7 +36,7 @@ export const updateCustomerProfile = async (req, res) => {
     if ("avatarPreset" in body) {
       if (typeof body.avatarPreset !== "string" || (body.avatarPreset !== "" && !presets.includes(body.avatarPreset))) return res.status(400).json({ success: false, message: "Invalid avatar preset" });
       user.avatarPreset = body.avatarPreset;
-      if (body.avatarPreset) user.avatar = { url: "", alt: "" };
+      user.avatar = { url: "", alt: "" };
     }
     if ("avatar" in body) {
       // Accept only HTTPS image URLs. Uploads must first be stored through a trusted media service.
