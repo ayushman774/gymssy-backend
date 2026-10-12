@@ -9,7 +9,7 @@ import { BOOKING_STATUSES, BOOKING_TYPES, CUSTOMER_BOOKING_TRANSITIONS } from ".
 
 const TARGETS = Object.freeze({
   gym: { model: Gym, fields: "name slug owner images.cover memberships classes" },
-  trainer: { model: Trainer, fields: "name slug owner image.src available specialty sessions" },
+  trainer: { model: Trainer, fields: "name slug owner image.src available specialty sessions trainingOptions" },
   nutritionist: { model: Nutritionist, fields: "name slug owner image.src available specialty sessions" },
 });
 const CREATE_FIELDS = new Set(["targetType", "targetId", "bookingType", "scheduledFor", "timezone", "contact", "note", "service"]);
@@ -48,7 +48,7 @@ function validateCreate(body, now = Date.now()) {
   const requiresService = targetType === "gym" && ["class", "membership"].includes(bookingType);
   if (body.service !== undefined && !plainObject(body.service)) return { field: "service", message: "service must be an object" };
   const service = body.service || {}; const extraService = unsupported(service, SERVICE_FIELDS); if (extraService.length) return { field: "service", message: "Unsupported service fields", unsupportedFields: extraService.map((field) => `service.${field}`) };
-  const serviceName = clean(service.name); const serviceId = clean(service.id); if (serviceId.length > 150) return { field: "service.id", message: "service id must not exceed 150 characters" }; if (requiresService && !serviceName && !serviceId) return { field: "service.name", message: `service name is required for ${bookingType} bookings` }; if (serviceName.length > 150) return { field: "service.name", message: "service name must not exceed 150 characters" }; if (!requiresService && serviceName) return { field: "service", message: `service is not accepted for ${bookingType} bookings` };
+  const serviceName = clean(service.name); const serviceId = clean(service.id); if (serviceId.length > 150) return { field: "service.id", message: "service id must not exceed 150 characters" }; if (requiresService && !serviceName && !serviceId) return { field: "service.name", message: `service name is required for ${bookingType} bookings` }; if (serviceName.length > 150) return { field: "service.name", message: "service name must not exceed 150 characters" }; if (!requiresService && targetType !== "trainer" && (serviceName || serviceId)) return { field: "service", message: `service is not accepted for ${bookingType} bookings` };
   return { value: { targetType, targetId: body.targetId, bookingType, scheduledFor, timezone, contact: { name, email, phone }, note, serviceName, serviceId } };
 }
 
@@ -63,7 +63,21 @@ function serviceSnapshot(listing, input) {
     if (input.serviceName && clean(item.name).toLowerCase() !== input.serviceName.toLowerCase()) return { error: "The selected service has changed. Refresh and try again." };
     return { value: { serviceId: clean(item.id), type: input.bookingType, name: clean(item.name), duration: clean(item.duration), schedule: input.bookingType === "class" ? clean(item.schedule) : "", time: input.bookingType === "class" ? clean(item.time) : "", trainer: input.bookingType === "class" ? clean(item.trainer) : "", specialty: "", description: input.bookingType === "class" ? clean(item.description) : "", displayPrice: input.bookingType === "membership" && Number.isFinite(item.price) ? item.price : null, currency: input.bookingType === "membership" ? clean(item.currency) : "" } };
   }
-  if (input.targetType === "trainer") return { value: { type: input.bookingType, name: input.bookingType === "trial" ? "Trial session" : "Training session", duration: "", trainer: listing.name, specialty: clean(listing.specialty), description: clean(listing.sessions), displayPrice: null, currency: "" } };
+  if (input.targetType === "trainer") {
+    const options = listing.trainingOptions?.length ? listing.trainingOptions : [
+      { id: "personal-training", name: "1-on-1 Personal Training", description: "Sessions built around your goals, body, and schedule." },
+      { id: "goal-programming", name: "Goal-Focused Programming", description: "Structured plans with measurable milestones." },
+      { id: "flexible-training", name: "Flexible Personal Training", description: "Mornings, evenings, weekends — train on your terms." },
+    ];
+    if (input.serviceId || input.serviceName) {
+      const matches = options.filter((option) => input.serviceId ? clean(option.id) === input.serviceId : clean(option.name).toLowerCase() === input.serviceName.toLowerCase());
+      if (matches.length !== 1) return { error: "The selected training option is no longer available." };
+      const selected = matches[0];
+      if (input.serviceName && clean(selected.name).toLowerCase() !== input.serviceName.toLowerCase()) return { error: "The training option has changed. Refresh and try again." };
+      return { value: { serviceId: clean(selected.id), type: input.bookingType, name: clean(selected.name), duration: clean(selected.duration), trainer: listing.name, specialty: clean(listing.specialty), description: clean(selected.description), displayPrice: Number.isFinite(selected.price) ? selected.price : null, currency: clean(selected.currency) || "₹" } };
+    }
+    return { value: { type: input.bookingType, name: input.bookingType === "trial" ? "Trial session" : "Training session", duration: "", trainer: listing.name, specialty: clean(listing.specialty), description: clean(listing.sessions), displayPrice: null, currency: "" } };
+  }
   if (input.targetType === "nutritionist") return { value: { type: input.bookingType, name: "Nutrition consultation", duration: "", trainer: "", specialty: clean(listing.specialty), description: clean(listing.sessions), displayPrice: null, currency: "" } };
   return { value: { type: input.bookingType, name: input.bookingType === "trial" ? "Trial visit" : "Gym visit", duration: "", trainer: "", specialty: "", description: "", displayPrice: null, currency: "" } };
 }
