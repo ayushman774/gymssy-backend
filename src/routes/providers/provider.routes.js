@@ -23,7 +23,14 @@ import {
 } from "../../controllers/providers/providerEnquiry.controller.js";
 import { getProviderBookings, getProviderBookingSummary, getProviderBookingById, updateProviderBookingStatus } from "../../controllers/providers/providerBooking.controller.js";
 
+import { uploadProviderAvatarFile } from "../../middleware/uploads/providerAvatarUpload.js";
+import { createAdminProviderAvatarHandlers } from "../../controllers/admin/adminProviderAvatar.controller.js";
+
+const avatarHandlers = createAdminProviderAvatarHandlers({ getProviderId: (req) => req.user.id });
 const router = express.Router();
+
+router.post("/profile/avatar", authMiddleware, authorizeRoles("business"), uploadProviderAvatarFile, avatarHandlers.uploadProviderAvatar);
+router.delete("/profile/avatar", authMiddleware, authorizeRoles("business"), avatarHandlers.removeProviderAvatar);
 
 router.get("/enquiries", authMiddleware, authorizeRoles("business"), getProviderEnquiries);
 router.get("/enquiries/summary", authMiddleware, authorizeRoles("business"), getProviderEnquirySummary);

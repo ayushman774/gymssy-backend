@@ -26,12 +26,13 @@ function sendServerError(res, message) {
 export function createAdminProviderAvatarHandlers({
   uploadImage = uploadImageBuffer,
   deleteImage = deleteImageByPublicId,
+  getProviderId = (req) => req.params.id,
 } = {}) {
   const uploadProviderAvatar = async (req, res) => {
     let uploadedImage = null;
 
     try {
-      const { id } = req.params;
+      const id = getProviderId(req);
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
@@ -120,7 +121,7 @@ export function createAdminProviderAvatarHandlers({
 
   const removeProviderAvatar = async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = getProviderId(req);
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,

@@ -222,3 +222,26 @@ test("avatar file filter accepts JPEG, PNG, and WebP and rejects other MIME type
   });
   assert.equal(PROVIDER_AVATAR_MAX_BYTES, 4 * 1024 * 1024);
 });
+
+test("self-service upload and removal ignore a supplied target provider ID", async () => {
+  const ownId = new mongoose.Types.ObjectId();
+  const otherId = new mongoose.Types.ObjectId();
+  const queriedIds = [];
+  mock(User, "findOne", async (filter) => { queriedIds.push(filter._id); return provider(ownId); });
+  mock(ProviderProfile, "findOne", async () => null);
+  mock(ProviderProfile, "findOneAndUpdate", async (filter) => {
+    assert.equal(String(filter.user), String(ownId));
+    return { user: ownId, avatar: uploaded };
+  });
+  const handlers = createAdminProviderAvatarHandlers({
+    getProviderId: (req) => req.user.id,
+    uploadImage: async () => uploaded,
+    deleteImage: async () => {},
+  });
+  const req = { params: { id: String(otherId) }, user: { id: String(ownId) }, file: { buffer: Buffer.from("image") } };
+  const uploadedResponse = response();
+  await handlers.uploadProviderAvatar(req, uploadedResponse);
+  assert.equal(uploadedResponse.statusCode, 200);
+  await handlers.removeProviderAvatar(req, response());
+  assert.deepEqual(queriedIds, [String(ownId), String(ownId)]);
+});

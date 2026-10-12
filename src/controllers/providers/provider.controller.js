@@ -262,7 +262,11 @@ export const updateMyProviderProfile = async (req, res) => {
     // ----------------------------------------------------------
 
     if (avatar !== undefined) {
+      if (providerProfile.avatar?.publicId && avatar?.url?.trim() !== providerProfile.avatar.url) {
+        return res.status(400).json({ success: false, message: "Change uploaded profile pictures using the photo upload or removal option." });
+      }
       providerProfile.avatar = {
+        publicId: providerProfile.avatar?.publicId || "",
         url: avatar?.url?.trim() || "",
         alt: avatar?.alt?.trim() || "",
       };
