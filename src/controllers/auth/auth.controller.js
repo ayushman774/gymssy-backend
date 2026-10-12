@@ -90,16 +90,12 @@ export const registerUser = async (req, res) => {
     let normalizedProviderType = null;
 
     if (normalizedAccountType === "business") {
-      if (!isNonEmptyString(providerType)) {
-        return res.status(400).json({
-          success: false,
-          message: "Provider type is required for business accounts",
-        });
-      }
+      // Legacy provider types remain accepted, but are optional for new accounts.
+      normalizedProviderType = isNonEmptyString(providerType)
+        ? providerType.trim().toLowerCase()
+        : null;
 
-      normalizedProviderType = providerType.trim().toLowerCase();
-
-      if (!ALLOWED_PROVIDER_TYPES.includes(normalizedProviderType)) {
+      if (normalizedProviderType && !ALLOWED_PROVIDER_TYPES.includes(normalizedProviderType)) {
         return res.status(400).json({
           success: false,
           message: "Invalid provider type",
