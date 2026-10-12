@@ -1215,6 +1215,41 @@ export const updateListingStatus = async (req, res) => {
 };
 
 // ============================================================
+// UPDATE LISTING MODERATION - ADMIN
+// ============================================================
+export const updateListingModeration = async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const { moderationStatus, rejectionReason } = req.body || {};
+    if (!["approved", "rejected", "pending"].includes(moderationStatus)) {
+      return res.status(400).json({ success: false, message: "moderationStatus must be approved, rejected or pending" });
+    }
+    if (moderationStatus === "rejected" && (typeof rejectionReason !== "string" || !rejectionReason.trim())) {
+      return res.status(400).json({ success: false, message: "A rejection reason is required" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid listing ID format" });
+    }
+    const Model = getModelByType(type);
+    if (!Model) return res.status(400).json({ success: false, message: "Invalid listing type" });
+    const listing = await Model.findById(id);
+    if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
+    listing.moderationStatus = moderationStatus;
+    if (moderationStatus === "rejected") listing.rejectionReason = rejectionReason.trim();
+    else listing.rejectionReason = "";
+    await listing.save();
+    return res.status(200).json({
+      success: true,
+      message: `Listing ${moderationStatus}`,
+      data: normalizeAdminListing(listing, type),
+    });
+  } catch (error) {
+    console.error("Update listing moderation error:", error);
+    return res.status(500).json({ success: false, message: "Failed to update listing moderation" });
+  }
+};
+
+// ============================================================
 // UPDATE LISTING VERIFICATION - ADMIN
 // ============================================================
 
