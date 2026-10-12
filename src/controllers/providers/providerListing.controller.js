@@ -45,6 +45,26 @@ const getListingConfig = (providerType) => {
   }
 };
 
+
+// Listing model is selected per listing, never inferred from the account.
+// Legacy providerType is accepted only when older clients omit listingType.
+const LISTING_CONFIGS = [
+  { type: "gym", model: Gym },
+  { type: "trainer", model: Trainer },
+  { type: "nutritionist", model: Nutritionist },
+];
+
+const getListingConfigByType = (type) =>
+  LISTING_CONFIGS.find((config) => config.type === type) || null;
+
+const findOwnedListing = async (id, ownerId) => {
+  for (const config of LISTING_CONFIGS) {
+    const listing = await config.model.findOne({ _id: id, owner: ownerId });
+    if (listing) return { config, listing };
+  }
+  return null;
+};
+
 /*
 |--------------------------------------------------------------------------
 | Fields Provider Is Allowed To Create / Update
@@ -337,7 +357,10 @@ export const prepareProviderOwnedListing = async ({
   ownerId,
   body,
 }) => {
-  const config = getListingConfig(providerType);
+  const { listingType, ...listingFields } = body || {};
+  const config = listingType === undefined
+    ? getListingConfig(providerType)
+    : getListingConfigByType(listingType);
   if (!config) {
     throw new ListingContractError(400, {
       success: false,
@@ -346,7 +369,7 @@ export const prepareProviderOwnedListing = async ({
   }
 
   const allowedFields = FIELD_CONTRACTS[config.type].create;
-  const unsupportedFields = getUnsupportedFields(body, allowedFields);
+  const unsupportedFields = getUnsupportedFields(listingFields, allowedFields);
   if (unsupportedFields.length > 0) {
     throw new ListingContractError(400, {
       success: false,
@@ -355,7 +378,7 @@ export const prepareProviderOwnedListing = async ({
     });
   }
 
-  const listingData = pickAllowedFields(body, allowedFields);
+  const listingData = pickAllowedFields(listingFields, allowedFields);
   if (config.type === "gym" && listingData.images !== undefined) listingData.images = sanitizeProviderGymImages(listingData.images);
   if (config.type === "gym" && listingData.coordinates !== undefined) {
     const coordinateResult = normalizeCoordinateWrite(listingData.coordinates);
@@ -510,38 +533,18 @@ export const createProviderListing = async (req, res) => {
 
 export const getMyProviderListings = async (req, res) => {
   try {
-    const config = getListingConfig(req.user.providerType);
-
-    if (!config) {
-      return res.status(400).json({
-        success: false,
-        message: "This provider type does not have a supported listing type",
-      });
-    }
-
-    const listings = await config.model
-      .find({
-        owner: req.user.id,
-      })
-      .sort({ createdAt: -1 })
-      .lean();
-
+    const groups = await Promise.all(LISTING_CONFIGS.map(async (config) => {
+      const listings = await config.model.find({ owner: req.user.id }).sort({ createdAt: -1 }).lean();
+      return listings.map((listing) => ({ ...listing, type: config.type }));
+    }));
+    const listings = groups.flat().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     return res.status(200).json({
       success: true,
-      data: {
-        type: config.type,
-        providerType: req.user.providerType,
-        count: listings.length,
-        listings,
-      },
+      data: { type: "mixed", providerType: req.user.providerType, count: listings.length, listings },
     });
   } catch (error) {
     console.error("Get provider listings error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch provider listings",
-    });
+    return res.status(500).json({ success: false, message: "Failed to fetch provider listings" });
   }
 };
 
@@ -558,51 +561,13 @@ export const getMyProviderListings = async (req, res) => {
 
 export const getMyProviderListingById = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid listing ID format",
-      });
-    }
-
-    const config = getListingConfig(req.user.providerType);
-
-    if (!config) {
-      return res.status(400).json({
-        success: false,
-        message: "This provider type does not have a supported listing type",
-      });
-    }
-
-    const listing = await config.model
-      .findOne({
-        _id: req.params.id,
-        owner: req.user.id,
-      })
-      .lean();
-
-    if (!listing) {
-      return res.status(404).json({
-        success: false,
-        message: "Listing not found or you do not have access to it",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: {
-        type: config.type,
-        providerType: req.user.providerType,
-        listing,
-      },
-    });
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ success: false, message: "Invalid listing ID format" });
+    const owned = await findOwnedListing(req.params.id, req.user.id);
+    if (!owned) return res.status(404).json({ success: false, message: "Listing not found or you do not have access to it" });
+    return res.status(200).json({ success: true, data: { type: owned.config.type, providerType: req.user.providerType, listing: owned.listing } });
   } catch (error) {
     console.error("Get provider listing error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch provider listing",
-    });
+    return res.status(500).json({ success: false, message: "Failed to fetch provider listing" });
   }
 };
 
@@ -626,14 +591,9 @@ export const updateMyProviderListing = async (req, res) => {
       });
     }
 
-    const config = getListingConfig(req.user.providerType);
-
-    if (!config) {
-      return res.status(400).json({
-        success: false,
-        message: "This provider type does not have a supported listing type",
-      });
-    }
+    const owned = await findOwnedListing(req.params.id, req.user.id);
+    if (!owned) return res.status(404).json({ success: false, message: "Listing not found or you do not have access to it" });
+    const { config, listing } = owned;
 
     const unsupportedFields = getListingUpdateUnsupportedFields(config.type, req.body);
     if (unsupportedFields.length) return sendUnsupportedFieldsError(res, unsupportedFields);
@@ -643,18 +603,6 @@ export const updateMyProviderListing = async (req, res) => {
     | Ownership protection
     |--------------------------------------------------------------------------
     */
-
-    const listing = await config.model.findOne({
-      _id: req.params.id,
-      owner: req.user.id,
-    });
-
-    if (!listing) {
-      return res.status(404).json({
-        success: false,
-        message: "Listing not found or you do not have access to it",
-      });
-    }
 
     const updates = await prepareListingContentUpdate({ model: config.model, type: config.type, listing, body: req.body });
 
@@ -716,26 +664,9 @@ export const deleteMyProviderListing = async (req, res) => {
       });
     }
 
-    const config = getListingConfig(req.user.providerType);
-
-    if (!config) {
-      return res.status(400).json({
-        success: false,
-        message: "This provider type does not have a supported listing type",
-      });
-    }
-
-    const listing = await config.model.findOne({
-      _id: req.params.id,
-      owner: req.user.id,
-    });
-
-    if (!listing) {
-      return res.status(404).json({
-        success: false,
-        message: "Listing not found or you do not have access to it",
-      });
-    }
+    const owned = await findOwnedListing(req.params.id, req.user.id);
+    if (!owned) return res.status(404).json({ success: false, message: "Listing not found or you do not have access to it" });
+    const { config, listing } = owned;
 
     // Soft delete by setting isActive to false
     listing.isActive = false;
