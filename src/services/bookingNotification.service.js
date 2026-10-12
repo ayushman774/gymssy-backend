@@ -13,7 +13,8 @@ export async function notifyBookingEvent(booking, status, actor) {
     const titles = { confirmed: "Booking confirmed", rejected: "Booking rejected", cancelled: "Booking cancelled", completed: "Booking completed" };
     if (titles[status]) recipients.push({ recipient: booking.customer, href: `/bookings/${bookingId}`, title: titles[status], message: `Your booking for ${name} has been ${status}.` });
   }
-  const eventAt = booking.statusHistory?.at(-1)?.changedAt || booking.createdAt || new Date();
+  const history = booking.statusHistory || [];
+  const eventAt = history[history.length - 1]?.changedAt || booking.createdAt || new Date();
   await Promise.all(recipients.map(async ({ recipient, ...details }) => {
     const type = `booking_${status}`;
     const eventKey = `${bookingId}:${status}:${actor}:${new Date(eventAt).toISOString()}:${String(recipient)}`;
