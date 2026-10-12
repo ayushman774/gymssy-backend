@@ -16,6 +16,7 @@ const listingSnapshotSchema = new mongoose.Schema({
 }, { _id: false });
 
 const serviceSnapshotSchema = new mongoose.Schema({
+  serviceId: { type: String, trim: true, default: "" },
   type: { type: String, required: true, trim: true },
   name: { type: String, required: true, trim: true },
   duration: { type: String, default: "", trim: true },
