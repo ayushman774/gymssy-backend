@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Booking from "../../models/bookings/Booking.js";
+import { notifyBookingEvent } from "../../services/bookingNotification.service.js";
 import User from "../../models/users/User.js";
 import ProviderProfile from "../../models/providers/ProviderProfile.js";
 import Gym from "../../models/gyms/Gym.js";
@@ -117,6 +118,7 @@ export async function updateAdminBookingStatus(req, res) {
     ).lean();
     if (!updated) return res.status(409).json({ success: false, message: "Booking changed. Refresh and try again." });
     const maps = await identityMaps([updated]);
+    await notifyBookingEvent(updated, status, "admin");
     return res.status(200).json({ success: true, message: `Booking ${status}.`, data: serializeList(updated, maps) });
   } catch (error) {
     console.error("Admin booking decision error:", error?.message);
