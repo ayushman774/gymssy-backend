@@ -49,6 +49,15 @@ const trainerSchema = new mongoose.Schema(
       trim: true,
     },
 
+    trainingOptions: [{
+      id: { type: String, required: true, trim: true },
+      name: { type: String, required: true, trim: true },
+      description: { type: String, default: "" },
+      duration: { type: String, default: "" },
+      price: { type: Number, min: 0, default: null },
+      currency: { type: String, default: "₹" },
+    }],
+
     sessions: {
       type: String,
       required: true,
