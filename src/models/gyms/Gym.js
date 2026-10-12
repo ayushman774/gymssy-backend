@@ -63,6 +63,7 @@ const membershipFeatureSchema = new mongoose.Schema(
 
 const membershipSchema = new mongoose.Schema(
   {
+    id: { type: String, default: () => randomUUID(), trim: true },
     name: {
       type: String,
       required: true,
@@ -170,6 +171,7 @@ const trainerSchema = new mongoose.Schema(
 
 const classSchema = new mongoose.Schema(
   {
+    id: { type: String, default: () => randomUUID(), trim: true },
     name: {
       type: String,
       required: true,
