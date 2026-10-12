@@ -44,7 +44,7 @@ function providerIdentity(item, providers) {
 }
 
 function historicalListing(item) { const value = item.listingSnapshot || {}; return { id: item.target ? String(item.target) : null, name: value.name || "Unavailable listing", slug: value.slug || "", entityType: value.entityType || item.targetType, image: value.imageUrl ? { url: value.imageUrl, alt: value.name || "" } : null, href: value.href || "" }; }
-function historicalService(item) { const value = item.serviceSnapshot || {}; return { type: value.type || item.bookingType, name: value.name || "", duration: value.duration || "", schedule: value.schedule || "", time: value.time || "", trainer: value.trainer || "", specialty: value.specialty || "", description: value.description || "", displayPrice: Number.isFinite(value.displayPrice) ? value.displayPrice : null, currency: value.currency || "" }; }
+function historicalService(item) { const value = item.serviceSnapshot || {}; return { serviceId: value.serviceId || "", type: value.type || item.bookingType, name: value.name || "", duration: value.duration || "", schedule: value.schedule || "", time: value.time || "", trainer: value.trainer || "", specialty: value.specialty || "", description: value.description || "", displayPrice: Number.isFinite(value.displayPrice) ? value.displayPrice : null, currency: value.currency || "" }; }
 
 function serializeList(item, maps, now = Date.now()) {
   const note = item.note || "";
