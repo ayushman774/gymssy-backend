@@ -30,6 +30,7 @@ import {
   getAdminProviderById,
   getAdminListings,
   updateListingStatus,
+  updateListingModeration,
   updateListingVerification,
   updateListingFeatured,
   updateProviderStatus,
@@ -191,6 +192,8 @@ router.patch(
   adminMiddleware,
   updateListingStatus,
 );
+
+router.patch("/listings/:type/:id/moderation", authMiddleware, adminMiddleware, updateListingModeration);
 
 router.patch(
   "/listings/:type/:id/verification",
