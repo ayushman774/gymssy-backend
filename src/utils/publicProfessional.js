@@ -8,6 +8,7 @@ const PUBLIC_PROFESSIONAL_FIELDS = [
   "specialty",
   "experience",
   "sessions",
+  "trainingOptions",
   "rating",
   "reviews",
   "clients",
