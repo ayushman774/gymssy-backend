@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Booking from "../../models/bookings/Booking.js";
+import { notifyBookingEvent } from "../../services/bookingNotification.service.js";
 import Gym from "../../models/gyms/Gym.js";
 import Trainer from "../../models/trainers/Trainer.js";
 import Nutritionist from "../../models/nutritionists/Nutritionist.js";
@@ -118,6 +119,7 @@ export async function updateProviderBookingStatus(req, res) {
     const update = { $set: { status, resolution: ["rejected", "cancelled"].includes(status) ? { reason, byRole: "provider", at: changedAt } : { reason: "", byRole: null, at: null } }, $push: { statusHistory: { status, changedAt, changedByRole: "provider", reason } } };
     const updated = await Booking.findOneAndUpdate(filter, update, { new: true, runValidators: true }).lean();
     if (!updated) return res.status(409).json({ success: false, message: "Booking status changed before this action could be completed. Refresh and try again." });
+    await notifyBookingEvent(updated, status, "provider");
     return res.status(200).json({ success: true, message: `Booking ${status}.`, data: serializeDetail(updated, null) });
   } catch (error) { if (error?.name === "ValidationError") return badRequest(res, "Invalid booking status details", "body"); console.error("Provider booking status error:", error?.message); return res.status(500).json({ success: false, message: "Failed to update booking status" }); }
 }
