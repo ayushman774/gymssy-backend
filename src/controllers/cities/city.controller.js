@@ -10,7 +10,7 @@ export const getActiveCities = async (req, res) => {
     }
     if (req.query.search) {
       const search = String(req.query.search).trim().slice(0, 80);
-      if (search) filter.name = { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, "\\    const cities = await City.find({ isActive: true })"), $options: "i" };
+      if (search) filter.name = { $regex: search.replace(/[^a-zA-Z0-9\s-]/g, ""), $options: "i" };
     }
     const cities = await City.find(filter)
       .sort({ order: 1, name: 1 })
