@@ -13,7 +13,8 @@ async function visibleListing(type, id) {
   return models[type].findOne(withPublicListingVisibility({ _id: id })).select("_id").lean();
 }
 const parseReview = (body) => {
-  const keys = Object.keys(body || {});
+  if (!body || typeof body !== "object" || Array.isArray(body)) return { error: "Invalid review payload" };
+  const keys = Object.keys(body);
   if (keys.some((key) => !["rating", "title", "text"].includes(key))) return { error: "Unsupported review fields" };
   const rating = body?.rating;
   const title = body?.title ?? "";
@@ -62,6 +63,7 @@ export async function updateReview(req, res) {
   try {
     const { type, id } = req.params;
     if (!models[type] || !validId(id)) return fail(res, 400, "Invalid listing");
+    if (!await visibleListing(type, id)) return fail(res, 404, "Listing not found");
     const data = parseReview(req.body);
     if (data.error) return fail(res, 400, data.error);
     const review = await Review.findOneAndUpdate({ listingType: type, listingId: id, user: req.user.id }, { $set: data }, { new: true, runValidators: true });
