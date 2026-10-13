@@ -1,5 +1,6 @@
 import express from "express";
-import { uploadGymCoverFile } from "../../middleware/uploads/gymMediaUpload.js";
+import { uploadGymCoverFile, uploadGymGalleryFile } from "../../middleware/uploads/gymMediaUpload.js";
+import { uploadProviderGymImage } from "../../controllers/providers/providerGymMedia.controller.js";
 import { uploadVenueTrainerImage } from "../../controllers/providers/providerTrainerImage.controller.js";
 import authMiddleware from "../../middleware/auth.middleware.js";
 import authorizeRoles from "../../middleware/auth/roleMiddleware.js";
@@ -30,6 +31,9 @@ import { createAdminProviderAvatarHandlers } from "../../controllers/admin/admin
 
 const avatarHandlers = createAdminProviderAvatarHandlers({ getProviderId: (req) => req.user.id });
 const router = express.Router();
+
+router.post("/media/gym/cover", authMiddleware, authorizeRoles("business"), uploadGymCoverFile, (req, res) => { req.params.kind = "cover"; return uploadProviderGymImage(req, res); });
+router.post("/media/gym/gallery", authMiddleware, authorizeRoles("business"), uploadGymGalleryFile, (req, res) => { req.params.kind = "gallery"; return uploadProviderGymImage(req, res); });
 
 router.post("/media/venue-trainer", authMiddleware, authorizeRoles("business"), uploadGymCoverFile, uploadVenueTrainerImage);
 
