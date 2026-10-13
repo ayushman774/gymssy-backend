@@ -102,6 +102,7 @@ const GYM_CREATE_FIELDS = [
 const GYM_UPDATE_FIELDS = [...GYM_CREATE_FIELDS];
 
 const TRAINER_CREATE_FIELDS = [
+  "city",
   "name",
   "slug",
   "category",
@@ -122,6 +123,7 @@ const TRAINER_CREATE_FIELDS = [
 const TRAINER_UPDATE_FIELDS = [...TRAINER_CREATE_FIELDS];
 
 const NUTRITIONIST_CREATE_FIELDS = [
+  "city",
   "name",
   "slug",
   "role",
