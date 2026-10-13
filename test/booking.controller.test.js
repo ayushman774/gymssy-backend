@@ -2,6 +2,7 @@ import test, { afterEach } from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
 import Booking from "../src/models/bookings/Booking.js";
+import Notification from "../src/models/notifications/Notification.js";
 import Gym from "../src/models/gyms/Gym.js";
 import Trainer from "../src/models/trainers/Trainer.js";
 import Nutritionist from "../src/models/nutritionists/Nutritionist.js";
@@ -21,7 +22,7 @@ function listing(targetType, overrides = {}) {
   return { _id: new mongoose.Types.ObjectId(), name: `${targetType} listing`, slug: `${targetType}-listing`, isActive: true, moderationStatus: "approved", owner: { _id: providerId, role: "business", isActive: true, providerType: targetType === "trainer" ? "trainer" : targetType === "nutritionist" ? "nutritionist" : "gym_owner" }, images: { cover: "gym.jpg" }, image: { src: "pro.jpg" }, available: true, specialty: "Strength", sessions: "60 minute sessions", memberships: [{ name: "Annual", duration: "12 months", price: 12000, currency: "₹" }], classes: [{ name: "HIIT", duration: "45 min", trainer: "Alex", description: "Intervals" }], ...overrides };
 }
 function mockListing(Model, value) { mock(Model, "findOne", (filter) => { assert.equal(filter.isActive, true); assert.deepEqual(filter.moderationStatus, { $nin: ["pending", "rejected"] }); return chain(value); }); }
-function mockCreate(capture) { mock(Booking, "create", async (value) => { Object.assign(capture, value); const item = { _id: new mongoose.Types.ObjectId(), ...value, createdAt: new Date(), updatedAt: new Date() }; return { ...item, toObject: () => item }; }); }
+function mockCreate(capture) { mock(Booking, "exists", async () => false); mock(Notification, "updateOne", async () => ({ acknowledged: true })); mock(Booking, "create", async (value) => { Object.assign(capture, value); const item = { _id: new mongoose.Types.ObjectId(), ...value, createdAt: new Date(), updatedAt: new Date() }; return { ...item, toObject: () => item }; }); }
 function booking(overrides = {}) { return { _id: new mongoose.Types.ObjectId(), customer: customerId, provider: providerId, targetType: "gym", target: new mongoose.Types.ObjectId(), bookingType: "visit", scheduledFor: new Date(Date.now() + 86400000), timezone: "Asia/Kolkata", status: "requested", contact: { name: "C", email: "c@example.com", phone: "" }, note: "", listingSnapshot: { name: "Old Gym", slug: "old-gym", entityType: "gym", imageUrl: "old.jpg", href: "/gym-detail/old-gym" }, serviceSnapshot: { type: "visit", name: "Gym visit" }, resolution: {}, statusHistory: [{ status: "requested", changedAt: new Date(), changedByRole: "customer", reason: "" }], createdAt: new Date(), updatedAt: new Date(), ...overrides }; }
 
 test("booking routes accept only authenticated customers", () => { const middleware = authorizeRoles("user"); for (const [user, status] of [[undefined, 401], [{ role: "business" }, 403], [{ role: "admin" }, 403]]) { const res = response(); let next = false; middleware({ user }, res, () => { next = true; }); assert.equal(res.statusCode, status); assert.equal(next, false); } let next = false; middleware({ user: { role: "user" } }, response(), () => { next = true; }); assert.equal(next, true); });
