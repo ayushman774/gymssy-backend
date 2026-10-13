@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Notification from "../../models/notifications/Notification.js";
 
-const serialize = (item) => ({ id: String(item._id), type: item.type, title: item.title, message: item.message, href: item.href, bookingId: String(item.booking), readAt: item.readAt, createdAt: item.createdAt });
+const serialize = (item) => ({ id: String(item._id), type: item.type, title: item.title, message: item.message, href: item.href, bookingId: item.booking ? String(item.booking) : null, readAt: item.readAt, createdAt: item.createdAt });
 
 export async function listNotifications(req, res) {
   try {
