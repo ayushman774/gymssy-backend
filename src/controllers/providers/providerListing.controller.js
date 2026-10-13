@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { notifyAdmins, notifyUsers } from "../../services/platformNotification.service.js";
 import { randomUUID } from "node:crypto";
 import Gym from "../../models/gyms/Gym.js";
 import Trainer from "../../models/trainers/Trainer.js";
@@ -472,6 +473,18 @@ export const createProviderListing = async (req, res) => {
     */
 
     const listing = await config.model.create(listingData);
+    // Notifications are best-effort: a notification failure must not roll back a successful listing.
+    await notifyAdmins({
+      eventKey: `listing:${listing._id}:submitted`, type: "listing_submitted",
+      title: "New listing submitted", message: `${listing.name} is awaiting moderation.`,
+      href: `/admin/listings/${config.type}/${listing._id}`,
+    });
+    await notifyUsers({
+      recipients: [req.user.id], eventKey: `listing:${listing._id}:submitted:provider`,
+      type: "listing_submitted", title: "Listing submitted",
+      message: `${listing.name} was submitted for review.`,
+      href: `/provider/listings/${listing._id}`,
+    });
 
     return res.status(201).json({
       success: true,
