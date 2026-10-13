@@ -24,6 +24,11 @@ const nutritionistSchema = new mongoose.Schema(
     },
 
     city: { type: mongoose.Schema.Types.ObjectId, ref: "City", default: null, index: true },
+    location: { address: { type: String, default: "" }, area: { type: String, default: "" }, state: { type: String, default: "" }, pincode: { type: String, default: "" } },
+    phone: { type: String, default: "" },
+    email: { type: String, default: "" },
+    website: { type: String, default: "" },
+    priceFrom: { type: Number, min: 0, default: null },
 
     role: {
       type: String,
