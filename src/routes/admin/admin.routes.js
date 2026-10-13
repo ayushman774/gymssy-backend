@@ -49,7 +49,12 @@ import { getAdminContactMessages, replyToContactMessage } from "../../controller
 
 import { getAdminUsers, getAdminUserById } from "../../controllers/admin/adminUsers.controller.js";
 
+import { getAdminReviews, moderateReview } from "../../controllers/admin/adminReview.controller.js";
+
 const router = express.Router();
+
+router.get("/reviews", authMiddleware, adminMiddleware, getAdminReviews);
+router.patch("/reviews/:id/status", authMiddleware, adminMiddleware, moderateReview);
 
 // ============================================================
 // ADMIN TEST
