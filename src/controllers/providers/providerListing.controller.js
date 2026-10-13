@@ -322,7 +322,7 @@ export const prepareListingContentUpdate = async ({ model, type, listing, body }
     if (taxonomy.errors.length) throw new ListingContractError(400, { success: false, message: "Listing taxonomy validation failed", errors: taxonomy.errors });
     for (const field of Object.keys(taxonomy.normalized)) if (updates[field] !== undefined || field === "category") updates[field] = taxonomy.normalized[field];
   }
-  if (type === "gym" && updates.city !== undefined) {
+  if (updates.city !== undefined) {
     const cityError = await validateGymCity(updates.city);
     if (cityError) throw new ListingContractError(400, { success: false, message: "Listing validation failed", errors: [cityError] });
   }
@@ -410,7 +410,7 @@ export const prepareProviderOwnedListing = async ({
     Object.assign(listingData, taxonomy.normalized);
   }
 
-  if (config.type === "gym") {
+  if (listingData.city !== undefined || config.type === "gym") {
     const cityError = await validateGymCity(listingData.city);
     if (cityError) {
       throw new ListingContractError(400, {
