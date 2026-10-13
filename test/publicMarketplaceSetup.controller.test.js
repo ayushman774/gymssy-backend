@@ -50,7 +50,7 @@ test("public Popular Cities keeps its shape, order and live publishable Gym coun
 test("active City reference endpoint supports Admin and Provider Gym selectors", { concurrency: false }, async () => {
   let filter; let selection;
   mock(City, "find", (value) => { filter = value; return { sort() { return this; }, select(valueToSelect) { selection = valueToSelect; return this; }, lean: async () => [{ _id: new mongoose.Types.ObjectId(), name: "Pune", slug: "pune" }] }; });
-  const res = response(); await getActiveCities({}, res);
+  const res = response(); await getActiveCities({ query: {} }, res);
   assert.equal(res.statusCode, 200); assert.equal(res.body.data[0].name, "Pune");
   assert.deepEqual(filter, { isActive: true }); assert.match(selection, /name slug state/);
 });
