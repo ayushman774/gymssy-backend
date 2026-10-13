@@ -37,7 +37,31 @@ test("creation rejects target/type/date/timezone/contact and service contract vi
 
 test("creation rejects non-public or missing targets without exposing them", { concurrency: false }, async () => { mockListing(Gym, null); const res = response(); await createBooking({ user: { id: customerId }, body: validBody() }, res); assert.equal(res.statusCode, 404); assert.equal(res.body.message, "Published listing not found"); });
 
-test("creation rejects ownerless, deleted, inactive, non-business owners and unavailable professionals", { concurrency: false }, async () => { for (const doc of [listing("gym", { owner: null }), listing("gym", { owner: { _id: providerId, role: "business", isActive: false } }), listing("gym", { owner: { _id: providerId, role: "user", isActive: true } }), listing("trainer", { available: false })]) { const Model = doc.available === false ? Trainer : Gym; mockListing(Model, doc); const res = response(); await createBooking({ user: { id: customerId }, body: validBody({ targetType: Model === Trainer ? "trainer" : "gym", targetId: String(doc._id), bookingType: Model === Trainer ? "session" : "visit" }) }, res); assert.equal(res.statusCode, 409); while (originals.length) { const [target, key, value] = originals.pop(); target[key] = value; } } });
+test("ownerless published Gym bookings route to Admin without a provider", { concurrency: false }, async () => {
+  const doc = listing("gym", { owner: null });
+  mockListing(Gym, doc);
+  const created = {};
+  mockCreate(created);
+  const res = response();
+  await createBooking({ user: { id: customerId }, body: validBody({ targetId: String(doc._id) }) }, res);
+  assert.equal(res.statusCode, 201);
+  assert.equal(created.provider, null);
+  assert.match(res.body.message, /Gymssy Admin/);
+});
+
+test("creation rejects inactive, non-business owners and unavailable professionals", { concurrency: false }, async () => {
+  for (const [Model, doc, targetType, bookingType] of [
+    [Gym, listing("gym", { owner: { _id: providerId, role: "business", isActive: false } }), "gym", "visit"],
+    [Gym, listing("gym", { owner: { _id: providerId, role: "user", isActive: true } }), "gym", "visit"],
+    [Trainer, listing("trainer", { available: false }), "trainer", "session"],
+  ]) {
+    mockListing(Model, doc);
+    const res = response();
+    await createBooking({ user: { id: customerId }, body: validBody({ targetType, targetId: String(doc._id), bookingType }) }, res);
+    assert.equal(res.statusCode, 409);
+    while (originals.length) { const [target, key, value] = originals.pop(); target[key] = value; }
+  }
+});
 
 test("customer history is scoped, filtered, paginated and deterministically sorted", { concurrency: false }, async () => { const item = booking(); let filter; let order; mock(Booking, "find", (value) => { filter = value; const result = chain([item]); result.sort = (value) => { order = value; return result; }; return result; }); mock(Booking, "countDocuments", async () => 1); const res = response(); await getMyBookings({ user: { id: customerId }, query: { page: "2", limit: "10", status: "requested", bookingType: "visit" } }, res); assert.equal(String(filter.customer), String(customerId)); assert.equal(filter.status, "requested"); assert.equal(filter.bookingType, "visit"); assert.deepEqual(order, { createdAt: -1, _id: -1 }); assert.deepEqual(res.body.pagination, { page: 2, limit: 10, total: 1, totalPages: 1 }); assert.equal(res.body.data[0].listing.name, "Old Gym"); });
 
