@@ -31,6 +31,8 @@ const trainerSchema = new mongoose.Schema(
       index: true,
     },
 
+    city: { type: mongoose.Schema.Types.ObjectId, ref: "City", default: null, index: true },
+
     role: {
       type: String,
       required: true,
