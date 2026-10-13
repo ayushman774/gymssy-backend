@@ -258,6 +258,7 @@ test("returns 409 for a duplicate slug", { concurrency: false }, async () => {
 });
 
 test("prevents updating a listing not owned by the provider", { concurrency: false }, async () => {
+  mock(Gym, "findOne", async () => null); mock(Nutritionist, "findOne", async () => null);
   mock(Trainer, "findOne", async () => null);
   const req = request("trainer", { bio: "Updated" }, { id: new mongoose.Types.ObjectId().toString() });
   const res = response();
@@ -268,6 +269,7 @@ test("prevents updating a listing not owned by the provider", { concurrency: fal
 });
 
 test("rejects professional id changes", { concurrency: false }, async () => {
+  mock(Gym, "findOne", async () => null); mock(Trainer, "findOne", async () => ({ _id: new mongoose.Types.ObjectId() }));
   const req = request("trainer", { id: "replacement-id" }, { id: new mongoose.Types.ObjectId().toString() });
   const res = response();
 
@@ -278,6 +280,7 @@ test("rejects professional id changes", { concurrency: false }, async () => {
 });
 
 test("rejects moderation fields during provider update", { concurrency: false }, async () => {
+  mock(Gym, "findOne", async () => null); mock(Trainer, "findOne", async () => null); mock(Nutritionist, "findOne", async () => ({ _id: new mongoose.Types.ObjectId() }));
   const req = request(
     "nutritionist",
     {
@@ -304,6 +307,7 @@ test("rejects moderation fields during provider update", { concurrency: false },
 });
 
 test("performs a successful partial update", { concurrency: false }, async () => {
+  mock(Gym, "findOne", async () => null);
   const listing = {
     _id: new mongoose.Types.ObjectId(),
     ...professionalBody,
@@ -345,6 +349,7 @@ test("provider Gym JSON updates cannot replace existing managed media", { concur
 });
 
 test("rejects blanking a required field during update", { concurrency: false }, async () => {
+  mock(Gym, "findOne", async () => null);
   const listing = {
     _id: new mongoose.Types.ObjectId(),
     ...professionalBody,
