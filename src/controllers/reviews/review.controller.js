@@ -64,7 +64,7 @@ export async function updateReview(req, res) {
     if (!models[type] || !validId(id)) return fail(res, 400, "Invalid listing");
     const data = parseReview(req.body);
     if (data.error) return fail(res, 400, data.error);
-    const review = await Review.findOneAndUpdate({ listingType: type, listingId: id, user: req.user.id }, { $set: { ...data, status: "published" } }, { new: true, runValidators: true });
+    const review = await Review.findOneAndUpdate({ listingType: type, listingId: id, user: req.user.id }, { $set: data }, { new: true, runValidators: true });
     if (!review) return fail(res, 404, "Your review was not found");
     return res.json({ success: true, data: output(review) });
   } catch (error) { console.error("Update review error:", error); return fail(res, 500, "Failed to update review"); }
