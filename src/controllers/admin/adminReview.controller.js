@@ -1,4 +1,5 @@
 import Review from "../../models/reviews/Review.js";
+import mongoose from "mongoose";
 
 const fail = (res, code, message) => res.status(code).json({ success: false, message });
 
@@ -7,6 +8,10 @@ export async function getAdminReviews(req, res) {
     const page = Math.max(1, Math.min(10000, Number.parseInt(req.query.page, 10) || 1));
     const limit = Math.max(1, Math.min(50, Number.parseInt(req.query.limit, 10) || 20));
     const filter = {};
+    if (req.query.listingId) {
+      if (!mongoose.isValidObjectId(req.query.listingId)) return fail(res, 400, "Invalid listing ID");
+      filter.listingId = new mongoose.Types.ObjectId(req.query.listingId);
+    }
     if (req.query.status) {
       if (!["published", "hidden"].includes(req.query.status)) return fail(res, 400, "Invalid review status");
       filter.status = req.query.status;
