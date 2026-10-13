@@ -16,6 +16,10 @@ const citySchema = new mongoose.Schema(
       trim: true,
     },
 
+    stateId: { type: mongoose.Schema.Types.ObjectId, ref: "State", default: null, index: true },
+
+    aliases: { type: [String], default: [] },
+
     state: {
       type: String,
       required: true,
