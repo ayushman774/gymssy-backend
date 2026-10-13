@@ -23,6 +23,8 @@ const nutritionistSchema = new mongoose.Schema(
       trim: true,
     },
 
+    city: { type: mongoose.Schema.Types.ObjectId, ref: "City", default: null, index: true },
+
     role: {
       type: String,
       required: true,
