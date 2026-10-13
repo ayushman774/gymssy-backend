@@ -14,6 +14,7 @@ import gymRoutes from "./routes/gyms/gym.routes.js";
 import trainerRoutes from "./routes/trainers/trainer.routes.js";
 import experienceRoutes from "./routes/experiences/experience.routes.js";
 import cityRoutes from "./routes/cities/city.routes.js";
+import stateRoutes from "./routes/cities/state.routes.js";
 import partnerSuccessRoutes from "./routes/partnerSuccess/partnerSuccess.routes.js";
 import partnerApplicationRoutes from "./routes/partnerApplications/partnerApplication.routes.js";
 import nutritionistRoutes from "./routes/nutritionists/nutritionist.routes.js";
@@ -47,7 +48,8 @@ const allowedOrigins = new Set([
 
 const isPublicReferenceData = (path) =>
   path === "/api/categories" || path.startsWith("/api/categories/") ||
-  path === "/api/cities" || path.startsWith("/api/cities/");
+  path === "/api/cities" || path.startsWith("/api/cities/") ||
+  path === "/api/states" || path.startsWith("/api/states/");
 
 // Apply CORS before auth, database access, and all routes. This ensures
 // browser preflight OPTIONS requests never require an admin token.
@@ -118,6 +120,7 @@ app.use(async (req, res, next) => {
 ================================ */
 
 app.use("/api/categories", categoryRoutes);
+app.use("/api/states", stateRoutes);
 app.use("/api/recently-viewed", recentlyViewedRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/providers", providerRoutes);
