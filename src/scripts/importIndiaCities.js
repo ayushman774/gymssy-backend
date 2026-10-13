@@ -33,7 +33,9 @@ async function loadRows() {
 async function main() {
   const rows = await loadRows();
   if (!Array.isArray(rows) || rows.length < 1000) throw new Error("Dataset is missing or unexpectedly small. No database changes made.");
-  // Connect before any Mongoose query, including --dry-run (which reads but never writes).\n  await connectDB();\n  const states = await State.find({ isActive: true }).lean();
+  // Connect before any Mongoose query, including --dry-run (which reads but never writes).
+  await connectDB();
+  const states = await State.find({ isActive: true }).lean();
   if (states.length !== 36) throw new Error(`Expected 36 states/UTs; found ${states.length}. Run seedIndiaStates.js first.`);
   const stateByName = new Map(states.map((s) => [norm(s.name), s]));
   const mapped = [];
