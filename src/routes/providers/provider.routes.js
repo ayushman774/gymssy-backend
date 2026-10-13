@@ -1,3 +1,4 @@
+import { getProviderListingReviews } from "../../controllers/reviews/providerReview.controller.js";
 import express from "express";
 import { uploadGymCoverFile, uploadGymGalleryFile } from "../../middleware/uploads/gymMediaUpload.js";
 import { uploadProviderGymImage } from "../../controllers/providers/providerGymMedia.controller.js";
@@ -132,5 +133,7 @@ router.delete(
   authorizeRoles("business"),
   deleteMyProviderListing,
 );
+
+router.get("/listings/:type/:id/reviews", authMiddleware, authorizeRoles("business"), getProviderListingReviews);
 
 export default router;
