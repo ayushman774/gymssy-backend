@@ -15,6 +15,7 @@ if (dnsServers?.length) dns.setServers(dnsServers);
 const DEFAULT_URL = "https://raw.githubusercontent.com/kalyangupta12/indian-cities-data/main/data/generated/urban_local_bodies.json";
 const aliases = new Map([
   ["andaman and nicobar islands", "Andaman and Nicobar Islands"],
+  ["the dadra and nagar haveli and daman and diu", "Dadra and Nagar Haveli and Daman and Diu"],
   ["dadra and nagar haveli and daman and diu", "Dadra and Nagar Haveli and Daman and Diu"],
   ["jammu and kashmir", "Jammu and Kashmir"],
   ["nct of delhi", "Delhi"],
@@ -46,6 +47,9 @@ async function main() {
     mapped.push({ name, state, code: String(row.code || "") });
   }
   if (unmatched.size) throw new Error(`Unmapped state names; no changes made: ${JSON.stringify([...unmatched])}`);
+  // The source has no Lakshadweep urban local bodies; include Kavaratti explicitly.
+  const lakshadweep = stateByName.get("lakshadweep");
+  if (lakshadweep && !mapped.some((row) => String(row.state._id) === String(lakshadweep._id))) mapped.push({ name: "Kavaratti", state: lakshadweep, code: "lakshadweep-kavaratti" });
   const covered = new Set(mapped.map((row) => String(row.state._id)));
   if (covered.size !== 36) throw new Error(`Only ${covered.size}/36 states/UTs have urban local bodies. No changes made; review dataset coverage.`);
   await connectDB();
