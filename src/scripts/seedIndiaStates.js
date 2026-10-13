@@ -1,4 +1,10 @@
 import "dotenv/config";
+import dns from "node:dns";
+
+// Match the DNS override supported by src/server.js for Atlas SRV lookups.
+// DNS_SERVERS=8.8.8.8,1.1.1.1 is useful when Node cannot query the system resolver.
+const dnsServers = process.env.DNS_SERVERS?.split(",").map((server) => server.trim()).filter(Boolean);
+if (dnsServers?.length) dns.setServers(dnsServers);
 import connectDB from "../config/db.js";
 import State from "../models/cities/State.js";
 import City from "../models/cities/City.js";
