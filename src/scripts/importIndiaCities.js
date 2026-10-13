@@ -33,7 +33,7 @@ async function loadRows() {
 async function main() {
   const rows = await loadRows();
   if (!Array.isArray(rows) || rows.length < 1000) throw new Error("Dataset is missing or unexpectedly small. No database changes made.");
-  const states = await State.find({ isActive: true }).lean();
+  // Connect before any Mongoose query, including --dry-run (which reads but never writes).\n  await connectDB();\n  const states = await State.find({ isActive: true }).lean();
   if (states.length !== 36) throw new Error(`Expected 36 states/UTs; found ${states.length}. Run seedIndiaStates.js first.`);
   const stateByName = new Map(states.map((s) => [norm(s.name), s]));
   const mapped = [];
@@ -52,7 +52,6 @@ async function main() {
   if (lakshadweep && !mapped.some((row) => String(row.state._id) === String(lakshadweep._id))) mapped.push({ name: "Kavaratti", state: lakshadweep, code: "lakshadweep-kavaratti" });
   const covered = new Set(mapped.map((row) => String(row.state._id)));
   if (covered.size !== 36) throw new Error(`Only ${covered.size}/36 states/UTs have urban local bodies. No changes made; review dataset coverage.`);
-  await connectDB();
   const existing = await City.find({}).select("_id name slug state stateId").lean();
   const usedSlugs = new Set(existing.map((c) => c.slug));
   const existingByKey = new Map(existing.map((c) => [`${norm(c.state)}|${norm(c.name)}`, c]));
