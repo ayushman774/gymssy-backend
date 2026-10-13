@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { notifyUsers } from "../../services/platformNotification.service.js";
 import User from "../../models/users/User.js";
 import ProviderProfile from "../../models/providers/ProviderProfile.js";
 import Gym from "../../models/gyms/Gym.js";
@@ -1234,10 +1235,21 @@ export const updateListingModeration = async (req, res) => {
     if (!Model) return res.status(400).json({ success: false, message: "Invalid listing type" });
     const listing = await Model.findById(id);
     if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
+    const previousStatus = listing.moderationStatus;
     listing.moderationStatus = moderationStatus;
     if (moderationStatus === "rejected") listing.rejectionReason = rejectionReason.trim();
     else listing.rejectionReason = "";
     await listing.save();
+    if (listing.owner && previousStatus !== moderationStatus && ["approved", "rejected"].includes(moderationStatus)) {
+      await notifyUsers({
+        recipients: [listing.owner],
+        eventKey: `listing:${listing._id}:moderation:${moderationStatus}:${listing.updatedAt?.toISOString() || Date.now()}`,
+        type: moderationStatus === "approved" ? "listing_approved" : "listing_rejected",
+        title: moderationStatus === "approved" ? "Listing approved" : "Listing rejected",
+        message: moderationStatus === "approved" ? `${listing.name} has been approved.` : `${listing.name} was rejected. ${listing.rejectionReason}`,
+        href: `/provider/listings/${listing._id}`,
+      });
+    }
     return res.status(200).json({
       success: true,
       message: `Listing ${moderationStatus}`,
