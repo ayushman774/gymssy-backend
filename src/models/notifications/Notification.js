@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema({
   recipient: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-  booking: { type: mongoose.Schema.Types.ObjectId, ref: "Booking", required: true },
+  booking: { type: mongoose.Schema.Types.ObjectId, ref: "Booking", default: null },
   eventKey: { type: String, required: true, unique: true },
-  type: { type: String, enum: ["booking_requested", "booking_confirmed", "booking_rejected", "booking_cancelled", "booking_completed"], required: true },
+  type: { type: String, enum: ["booking_requested", "booking_confirmed", "booking_rejected", "booking_cancelled", "booking_completed", "provider_registered", "listing_submitted", "listing_approved", "listing_rejected", "provider_status_changed", "listing_status_changed"], required: true },
   title: { type: String, required: true },
   message: { type: String, required: true },
   href: { type: String, required: true },
