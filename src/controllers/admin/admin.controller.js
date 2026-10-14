@@ -6,6 +6,7 @@ import Gym from "../../models/gyms/Gym.js";
 import Trainer from "../../models/trainers/Trainer.js";
 import Nutritionist from "../../models/nutritionists/Nutritionist.js";
 import Category from "../../models/categories/Category.js";
+import Review from "../../models/reviews/Review.js";
 import { getListingUpdateUnsupportedFields, ListingContractError, prepareListingContentUpdate } from "../providers/providerListing.controller.js";
 import { toAdminGymImages } from "../../utils/gymMedia.js";
 import {
@@ -1095,6 +1096,34 @@ export const getAdminListings = async (req, res) => {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     const totalListings = results.reduce((sum, result) => sum + result.total, 0);
     const paginatedListings = allListings.slice(skip, skip + perPage);
+
+    // Customer ratings live in Review, not necessarily in the listing document.
+    // Aggregate only the visible page and only published reviews, matching the public reviews API.
+    if (paginatedListings.length) {
+      const reviewStats = await Review.aggregate([
+        { $match: {
+          status: "published",
+          $or: paginatedListings.map((listing) => ({
+            listingType: listing.type,
+            listingId: new mongoose.Types.ObjectId(String(listing.id)),
+          })),
+        } },
+        { $group: {
+          _id: { listingType: "$listingType", listingId: "$listingId" },
+          rating: { $avg: "$rating" },
+          reviewCount: { $sum: 1 },
+        } },
+      ]);
+      const statsByListing = new Map(reviewStats.map((stat) => [
+        `${stat._id.listingType}:${stat._id.listingId}`,
+        stat,
+      ]));
+      for (const listing of paginatedListings) {
+        const stats = statsByListing.get(`${listing.type}:${listing.id}`);
+        listing.rating = stats?.rating ?? 0;
+        listing.reviewCount = stats?.reviewCount ?? 0;
+      }
+    }
 
     const summaryParts = await Promise.all(
       targets.map(async (target) => {
